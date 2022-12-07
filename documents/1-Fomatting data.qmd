@@ -1,0 +1,58 @@
+---
+title: "Extracting dispersing events"
+author: "Aurore Ponchon"
+format: html
+editor: visual
+---
+
+## Formatting data to document group composition
+
+```{r}
+#| echo: false
+#| message: false
+#| warning: false
+
+library(here)
+library(tidyverse)
+library(readxl)
+
+dispersers<-c("OUT","Out","out","disp","Disp","DISP")
+
+files<-list.files(here("data","RawData","Groups"),pattern = "xlsx",recursive=T,
+                 full.names = T)
+
+test<-readxl::read_excel(files[1])
+
+#check first header contains month and year and extract it
+
+#cut dataset in 2 blocks before binding the second one under first one
+if(!is.na(test[3,17]) | !is.na(test[4,17])){
+test1<-test[,c(1:8)]
+test2<-test[,c(10:17)]
+
+names(test1)<-names(test2)<-test[ min(which(!is.na(test[,17]))),1:8]
+
+test<-rbind(test1,test2)  %>% 
+  filter_all(any_vars(!is.na(.)))# %>% 
+  # mutate(Disp=ifelse(Grupo %in% dispersers, 
+  #                    "Disp",
+  #                      NA),
+  #        Year=as.numeric(gsub(".*?([0-9]+).*", "\\1", files[1]))) 
+
+mini<-min(which(test$Grupo=="Grupo"))
+
+ testo<- test  %>% 
+  slice(-1:-mini) %>%
+    fill(Grupo) %>% 
+      dplyr::filter(Grupo!="Grupo") 
+  
+}
+
+
+
+}
+
+else{print("Number of columns does not match test file")}
+
+
+```
