@@ -16,43 +16,35 @@ library(here)
 library(tidyverse)
 library(readxl)
 
-dispersers<-c("OUT","Out","out","disp","Disp","DISP")
+source(here("R","extract_functions.R"))
 
-files<-list.files(here("data","RawData","Groups"),pattern = "xlsx",recursive=T,
-                 full.names = T)
+#regroup all dispersing data in Grupo column
+dispersers<-c("OUT","Out","out","disp","Disp","DISP","OUT PT")
+solo<-c("Sozinha","Sozinho","sozinha","sozinho","SOZINHA","soz.","SOZINHO")
+dead<-c("DEAD","died","Died")
+names<-c("chiquinho","Georgia","Luisa","Antônia","saiu","Luana",
+         "Camilo","André")
+regions<-c("Poço das Antas","Faz S. Helena 2","Faz Estreito","Faz Tamarins",
+"Faz Afetiva","Faz Sta Helena","Faz. Afetiva","Faz. Afetiva")
+#list all files
+files<-list.files(here("data","RawData","Groups"),
+                  pattern = "xls",recursive=T,
+                  full.names = T)
 
-test<-readxl::read_excel(files[1])
+#function to read each file separately
 
-#check first header contains month and year and extract it
+DAT<-data.frame()
 
-#cut dataset in 2 blocks before binding the second one under first one
-if(!is.na(test[3,17]) | !is.na(test[4,17])){
-test1<-test[,c(1:8)]
-test2<-test[,c(10:17)]
-
-names(test1)<-names(test2)<-test[ min(which(!is.na(test[,17]))),1:8]
-
-test<-rbind(test1,test2)  %>% 
-  filter_all(any_vars(!is.na(.)))# %>% 
-  # mutate(Disp=ifelse(Grupo %in% dispersers, 
-  #                    "Disp",
-  #                      NA),
-  #        Year=as.numeric(gsub(".*?([0-9]+).*", "\\1", files[1]))) 
-
-mini<-min(which(test$Grupo=="Grupo"))
-
- testo<- test  %>% 
-  slice(-1:-mini) %>%
-    fill(Grupo) %>% 
-      dplyr::filter(Grupo!="Grupo") 
+for (i in 1:length(files)){
   
-}
+  print(i)
+  
+  xx<-extract_long_data(files[i])
+  
+  DAT<-rbind(DAT,xx)}
+  
 
 
-
-}
-
-else{print("Number of columns does not match test file")}
 
 
 ```
