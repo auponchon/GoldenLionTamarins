@@ -7,6 +7,10 @@ editor: visual
 
 ## Formatting data to document group composition
 
+Data are stored in .xls or .xlsx files. They consist of blocks of data encompassing groups from the same region. A first formatting of the tables is made to ensure that each group name is one the first line of a block
+
+Region names are isolated before blocks.
+
 ```{r}
 #| echo: false
 #| message: false
@@ -15,17 +19,17 @@ editor: visual
 library(here)
 library(tidyverse)
 library(readxl)
+library(writexl)
 
 source(here("R","extract_functions.R"))
 
 #regroup all dispersing data in Grupo column
-dispersers<-c("OUT","Out","out","disp","Disp","DISP","OUT PT")
+dispersers<-c("OUT","Out","out","disp","Disp","DISP","OUT PT","Grace-disp
+","Alex-disp")
 solo<-c("Sozinha","Sozinho","sozinha","sozinho","SOZINHA","soz.","SOZINHO")
-dead<-c("DEAD","died","Died")
+dead<-c("DEAD","died","Died","DIED")
 names<-c("chiquinho","Georgia","Luisa","Antônia","saiu","Luana",
          "Camilo","André")
-regions<-c("Poço das Antas","Faz S. Helena 2","Faz Estreito","Faz Tamarins",
-"Faz Afetiva","Faz Sta Helena","Faz. Afetiva","Faz. Afetiva")
 #list all files
 files<-list.files(here("data","RawData","Groups"),
                   pattern = "xls",recursive=T,
@@ -41,10 +45,18 @@ for (i in 1:length(files)){
   
   xx<-extract_long_data(files[i])
   
-  DAT<-rbind(DAT,xx)}
+  DAT<-rbind(DAT,xx)
+}
+
+reg<-data.frame(Region=sort(unique(DAT$Region)))
+group<-data.frame(Group=sort(unique(DAT$Group)))
   
+write_xlsx(list(Region=reg, Group=group), path=here("Data","NewlyCreatedData","Region_names_check.xlsx"))
 
 
+check.names<-DAT %>% 
+  group_by(Region,Group) %>% 
+  count(.)
 
 
 ```
