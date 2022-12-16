@@ -77,7 +77,8 @@ block$GLT[block$GLT=="Mico"|block$GLT=="mico"]<-"GLT"
                           grepl("/", Grupo, fixed = T) |
                           !is.na(Other),
                         NA, 
-                        Grupo)) %>% 
+                        Grupo),
+           Idade = ifelse(GLT=="IN","IN",Idade)) %>% 
     fill(Grupo) %>%    #fill empty group column with site name
     mutate(Year=as.numeric(gsub(".*?([0-9]+).*", "\\1", file)),
            DateObs=as.Date(str_extract(file,
@@ -87,7 +88,8 @@ block$GLT[block$GLT=="Mico"|block$GLT=="mico"]<-"GLT"
                         Grupo,
                         NA))%>% 
    dplyr::select(Year,DateObs,Region,Group,Grupo, GLT, Nyanzol,Tattoo,Sexo,  #reorder columns
-                 Idade,Birth,Radio,Disp,Death,Other,DateEvent)
+                 Idade,Birth,Radio,Disp,Death,Other,DateEvent) %>% 
+   dplyr::arrange(DateObs, Region, Grupo)
   
 
   

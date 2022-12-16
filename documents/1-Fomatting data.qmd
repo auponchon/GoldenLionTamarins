@@ -5,11 +5,11 @@ format: html
 editor: visual
 ---
 
-## Formatting data to document group composition
+## 1- Formatting data to constitute a full long dataset
 
-Data are stored in .xls or .xlsx files. They consist of blocks of data encompassing groups from the same region. A first formatting of the tables is made to ensure that each group name is one the first line of a block
+Data are stored in .xls or .xlsx files. They consist of blocks of data encompassing groups from the same region. A first formatting of the tables is made to ensure that each group name is the first line of a block. Region names are isolated before blocks so that they are automatically assigned to following blocks.
 
-Region names are isolated before blocks.
+Duplicates are checked in names and region names, as well as duplicates in Individual names (same tag but different groups for the same observation file).
 
 ```{r}
 #| echo: false
@@ -20,6 +20,7 @@ library(here)
 library(tidyverse)
 library(readxl)
 library(writexl)
+library(purrr)
 
 source(here("R","extract_functions.R"))
 
@@ -37,26 +38,55 @@ files<-list.files(here("data","RawData","Groups"),
 
 #function to read each file separately
 
-DAT<-data.frame()
+# DAT<-data.frame()
+# 
+# for (i in 1:length(files)){
+#   
+#   print(i)
+#   
+#   xx<-extract_long_data(files[i])
+#   
+#   DAT<-rbind(DAT,xx)
+# }
 
-for (i in 1:length(files)){
+DATAT<- purrr::map_dfr(files, extract_long_data )
+
+reg<-data.frame(Region=sort(unique(DATAT$Region)))
+group<-data.frame(Group=sort(unique(DATAT$Group)))
   
-  print(i)
-  
-  xx<-extract_long_data(files[i])
-  
-  DAT<-rbind(DAT,xx)
-}
 
-reg<-data.frame(Region=sort(unique(DAT$Region)))
-group<-data.frame(Group=sort(unique(DAT$Group)))
-  
-write_xlsx(list(Region=reg, Group=group), path=here("Data","NewlyCreatedData","Region_names_check.xlsx"))
+#write_xlsx(DATAT, path=here("Data","NewlyCreatedData","DAT.xlsx"))
+
+save(DATAT,file=here("Data","NewlyCreatedData","all_long.RData"))
+
+```
+
+# Selecting individuals to include in observation dataset
+
+The dataset for capture-recapture analyses includes individuals which have been clearly identified. So dispersed individuals and dead individuals are removed.
+
+```{r}
+
+load(here("Data","NewlyCreatedData","all_long.RData"))
 
 
-check.names<-DAT %>% 
-  group_by(Region,Group) %>% 
-  count(.)
 
+
+dat<-DATAT %>% 
+  dplyr::filter(Disp=="0" & Death=="0") %>% 
+  dplyr::filter(GLT!="?" & GLT !="?-3" & GLT!="IN" & GLT!="FT" &
+                  GLT!="T0") %>% 
+  dplyr::arrange(DateObs) %>% 
+  dplyr::select(DateObs,Region,Group, GLT, Sexo ) %>% 
+  dplyr::distinct() %>% 
+  pivot_wider(names_from=DateObs,
+              names_prefix="Obs",
+              values_from=Region)
+
+
+dat %>%
+    dplyr::group_by(DateObs,Group, GLT) %>%
+    dplyr::summarise(n = dplyr::n(), .groups = "drop") %>%
+    dplyr::filter(n > 1L)
 
 ```
