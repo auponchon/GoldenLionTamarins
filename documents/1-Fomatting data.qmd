@@ -24,10 +24,11 @@ library(purrr)
 
 source(here("R","extract_functions.R"))
 
-#regroup all dispersing data in Grupo column
+#identify particular status in Grupo column
 dispersers<-c("OUT","Out","out","disp","Disp","DISP","OUT PT","Grace-disp
-","Alex-disp")
-solo<-c("Sozinha","Sozinho","sozinha","sozinho","SOZINHA","soz.","SOZINHO")
+","Alex-disp","28/01/13")
+solo<-c("Sozinha","Sozinho","sozinha","sozinho","SOZINHA","soz.","SOZINHO",
+        "Expulsa","Soz.")
 dead<-c("DEAD","died","Died","DIED")
 names<-c("chiquinho","Georgia","Luisa","Antônia","saiu","Luana",
          "Camilo","André")
@@ -38,7 +39,7 @@ files<-list.files(here("data","RawData","Groups"),
 
 #function to read each file separately
 
-# DAT<-data.frame()
+# DATA<-data.frame()
 # 
 # for (i in 1:length(files)){
 #   
@@ -46,19 +47,33 @@ files<-list.files(here("data","RawData","Groups"),
 #   
 #   xx<-extract_long_data(files[i])
 #   
-#   DAT<-rbind(DAT,xx)
+#   DATA<-rbind(DATA,xx)
 # }
 
-DATAT<- purrr::map_dfr(files, extract_long_data )
+DATA<- purrr::map_dfr(files, extract_long_data )
 
-reg<-data.frame(Region=sort(unique(DATAT$Region)))
-group<-data.frame(Group=sort(unique(DATAT$Group)))
+reg<-data.frame(Region=sort(unique(DATA$Region)))
+group<-data.frame(Group=sort(unique(DATA$Group)))
   
 
-#write_xlsx(DATAT, path=here("Data","NewlyCreatedData","DAT.xlsx"))
+#write_xlsx(DATA, path=here("Data","NewlyCreatedData","DAT.xlsx"))
 
-save(DATAT,file=here("Data","NewlyCreatedData","all_long.RData"))
+save(DATA,file=here("Data","NewlyCreatedData","all_long.RData"))
 
+
+subseto<-DATA %>% 
+  filter(Group=="DN"|
+         Group=="Fugitivo"|
+         Group=="Fusão"|
+         Group=="GM"|
+           Group=="FQL"|
+           Group=="Jaguar"|
+           Group=="ML2"|
+           Group=="MR"|
+           Group=="NA") %>% 
+  select(-Grupo)
+
+write_xlsx(subseto,path=here("Data","NewlyCreatedData","check_group_Valeria.xlsx"))
 ```
 
 # Selecting individuals to include in observation dataset
@@ -70,9 +85,7 @@ The dataset for capture-recapture analyses includes individuals which have been 
 load(here("Data","NewlyCreatedData","all_long.RData"))
 
 
-
-
-dat<-DATAT %>% 
+dat<-DATA %>% 
   dplyr::filter(Disp=="0" & Death=="0") %>% 
   dplyr::filter(GLT!="?" & GLT !="?-3" & GLT!="IN" & GLT!="FT" &
                   GLT!="T0") %>% 
@@ -84,9 +97,10 @@ dat<-DATAT %>%
               values_from=Region)
 
 
-dat %>%
-    dplyr::group_by(DateObs,Group, GLT) %>%
+DATAT %>%
+    dplyr::group_by(DateObs,GLT) %>%
     dplyr::summarise(n = dplyr::n(), .groups = "drop") %>%
-    dplyr::filter(n > 1L)
+    dplyr::filter(n > 1L & GLT!="?" & GLT!="T0" & GLT!="IN" & 
+                    GLT!="FT")
 
 ```

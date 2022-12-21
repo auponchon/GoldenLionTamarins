@@ -42,22 +42,21 @@ block$GLT[block$GLT=="Mico"|block$GLT=="mico"]<-"GLT"
     dplyr::filter(GLT != "GLT" ) %>% #remove headers
     mutate(Disp = ifelse(Grupo %in% dispersers |
                            Radio %in% dispersers |
-                           grepl("disp", Grupo, fixed = T) |           #identify dispersal
-                           grepl("disp", Radio, fixed = T) ,
+                           grepl("isp", Grupo, fixed = T, ignore.case = T) |           #identify dispersal
+                           grepl("isp", Radio, fixed = T, ignore.case = T) ,
                         "1",
                          "0"),
-           Death = ifelse(grepl("ied", Grupo, fixed = T) |
-                            grepl("ied", Radio, fixed = T) |       #identify dead ind
+           Death = ifelse(grepl("ied", Grupo, fixed = T, ignore.case = T) |
+                            grepl("ied", Radio, fixed = T, ignore.case = T) |       #identify dead ind
                             Grupo %in% dead,
                           "1",
                           "0"),
-           Other = ifelse(
-             Grupo %in% solo,
-             "Alone",                                               #account for other comments (lonely ind)
-             ifelse(Grupo == "não capt.",
-                    "Not capt.",
+           Other = ifelse( Grupo %in% solo,
+                          2,                                               #account for other comments (lonely ind)
+                   ifelse(Grupo == "não capt.",
+                          1,
                     ifelse(Grupo == "Expulsa", 
-                           "Expulsed",
+                           3,
                            NA))),
            DateEvent = ifelse(
              grepl("/", Grupo, fixed = T),
@@ -67,32 +66,32 @@ block$GLT[block$GLT=="Mico"|block$GLT=="mico"]<-"GLT"
                str_extract(Radio, "[0-9]{2}/[0-9]{2}/[0-9]{2}"),
                NA))) 
   
-  
-  
- clean<- block.full  %>% 
-    mutate(Grupo=ifelse(Radio!="Disp" & Disp!="0" |                  #remove names other than group names
-                          Radio!="Disp" & !is.na(DateEvent) | 
-                          Grupo %in% names |
-                          Death=="1" |
-                          grepl("/", Grupo, fixed = T) |
-                          !is.na(Other),
-                        NA, 
-                        Grupo),
-           Idade = ifelse(GLT=="IN","IN",Idade)) %>% 
-    fill(Grupo) %>%    #fill empty group column with site name
-    mutate(Year=as.numeric(gsub(".*?([0-9]+).*", "\\1", file)),
-           DateObs=as.Date(str_extract(file,
-                                       "[0-9]{2}-[0-9]{2}-[0-9]{4}"),     #extract date
-                           format="%d-%m-%Y")) %>% 
-    mutate(Group=ifelse(Disp!="1" & Death !="1",                          #identify final group name
-                        Grupo,
-                        NA))%>% 
-   dplyr::select(Year,DateObs,Region,Group,Grupo, GLT, Nyanzol,Tattoo,Sexo,  #reorder columns
-                 Idade,Birth,Radio,Disp,Death,Other,DateEvent) %>% 
-   dplyr::arrange(DateObs, Region, Grupo)
-  
 
   
+clean<- block.full  %>%
+   mutate(Group=ifelse(Grupo %in% dispersers | 
+                          grepl("isp", Grupo, fixed = T, ignore.case = T) | 
+                        grepl("ied", Grupo, fixed = T, ignore.case = T) |    #remove names other than group names
+                         Grupo %in% names |
+                          Grupo %in% dead |
+                         Grupo %in% solo,
+                       NA,
+                       Grupo),
+          Idade = ifelse(GLT=="IN","IN",Idade)) %>%
+   fill(Group) %>%    #fill empty group column with site name
+   mutate(Year=as.numeric(gsub(".*?([0-9]+).*", "\\1", file)),
+          DateObs=as.Date(str_extract(file,
+                                      "[0-9]{2}-[0-9]{2}-[0-9]{4}"),     #extract date
+                          format="%d-%m-%Y")) %>%
+   mutate(Group=ifelse(Disp!="1" & Death !="1",                          #identify final group name
+                       Group,
+                       NA))%>%
+  dplyr::select(Year,DateObs,Region,Group,Grupo, GLT, Nyanzol,Tattoo,Sexo,  #reorder columns
+                Idade,Birth,Radio,Disp,Death,Other,DateEvent) %>%
+  dplyr::arrange(DateObs, Region)
+
+
+
   return(clean)
 }
 
