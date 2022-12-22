@@ -88,7 +88,7 @@ load(here("Data","NewlyCreatedData","all_long.RData"))
 dat<-DATA %>% 
   dplyr::filter(Disp=="0" & Death=="0") %>% 
   dplyr::filter(GLT!="?" & GLT !="?-3" & GLT!="IN" & GLT!="FT" &
-                  GLT!="T0") %>% 
+                  GLT!="T0" & Group!="?") %>% 
   dplyr::arrange(DateObs) %>% 
   dplyr::select(DateObs,Region,Group, GLT, Sexo ) %>% 
   dplyr::distinct() %>% 
