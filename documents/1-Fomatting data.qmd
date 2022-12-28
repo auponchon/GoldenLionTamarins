@@ -7,9 +7,9 @@ editor: visual
 
 ## 1- Formatting data to constitute a full long dataset
 
-Data are stored in .xls or .xlsx files. They consist of blocks of data encompassing groups from the same region. A first formatting of the tables is made to ensure that each group name is the first line of a block. Region names are isolated before blocks so that they are automatically assigned to following blocks.
+Data are stored in .xls or .xlsx files. They consist of blocks of data encompassing groups from the same region. A first formatting of the tables is made directly within the excel files to ensure that each group name is the first line of a block. Region names are isolated before blocks so that they are automatically assigned to following blocks.
 
-Duplicates are checked in names and region names, as well as duplicates in Individual names (same tag but different groups for the same observation file).
+Duplicates are checked in group and region names.
 
 ```{r}
 #| echo: false
@@ -23,6 +23,7 @@ library(writexl)
 library(purrr)
 
 source(here("R","extract_functions.R"))
+source(here("R","revalue_region.R"))
 
 #identify particular status in Grupo column
 dispersers<-c("OUT","Out","out","disp","Disp","DISP","OUT PT","Grace-disp
@@ -52,6 +53,11 @@ files<-list.files(here("data","RawData","Groups"),
 
 DATA<- purrr::map_dfr(files, extract_long_data )
 
+DATA<-DATA %>% 
+  revalue_region() %>% 
+  arrange(DateObs)
+
+
 reg<-data.frame(Region=sort(unique(DATA$Region)))
 group<-data.frame(Group=sort(unique(DATA$Group)))
   
@@ -61,28 +67,40 @@ group<-data.frame(Group=sort(unique(DATA$Group)))
 save(DATA,file=here("Data","NewlyCreatedData","all_long.RData"))
 
 
-subseto<-DATA %>% 
-  filter(Group=="DN"|
-         Group=="Fugitivo"|
-         Group=="Fusão"|
-         Group=="GM"|
-           Group=="FQL"|
-           Group=="Jaguar"|
-           Group=="ML2"|
-           Group=="MR"|
-           Group=="NA") %>% 
-  select(-Grupo)
-
-write_xlsx(subseto,path=here("Data","NewlyCreatedData","check_group_Valeria.xlsx"))
+# subseto<-DATA %>% 
+#   filter(Group=="DN"|
+#          Group=="Fugitivo"|
+#          Group=="Fusão"|
+#          Group=="GM"|
+#            Group=="FQL"|
+#            Group=="Jaguar"|
+#            Group=="ML2"|
+#            Group=="MR"|
+#            Group=="NA") %>% 
+#   select(-Grupo)
+# 
+# write_xlsx(subseto,
+# path=here("Data","NewlyCreatedData","check_group_Valeria.xlsx"))
 ```
 
 # Selecting individuals to include in observation dataset
 
-The dataset for capture-recapture analyses includes individuals which have been clearly identified. So dispersed individuals and dead individuals are removed.
+The dataset for capture-recapture analyses includes individuals which have been clearly identified. Dispersed individuals and dead individuals are removed, as well as non identified infants.
+
+Duplicates are checked to make sure each GLT and tattoo correspond to only one unique individual. Duplicate individual tatoos are renamed in the code, not in the files
 
 ```{r}
 
 load(here("Data","NewlyCreatedData","all_long.RData"))
+
+#identify duplicates in individual names
+DATA %>%
+    dplyr::filter(Disp=="0") %>% 
+    dplyr::group_by(DateObs,GLT) %>%
+    dplyr::summarise(n = dplyr::n(), .groups = "drop") %>%
+    dplyr::filter(n > 1L & GLT!="?" & GLT!="T0" & GLT!="IN" & 
+                    GLT!="FT")
+
 
 
 dat<-DATA %>% 
@@ -95,12 +113,5 @@ dat<-DATA %>%
   pivot_wider(names_from=DateObs,
               names_prefix="Obs",
               values_from=Region)
-
-
-DATAT %>%
-    dplyr::group_by(DateObs,GLT) %>%
-    dplyr::summarise(n = dplyr::n(), .groups = "drop") %>%
-    dplyr::filter(n > 1L & GLT!="?" & GLT!="T0" & GLT!="IN" & 
-                    GLT!="FT")
 
 ```
