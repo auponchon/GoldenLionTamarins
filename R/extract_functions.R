@@ -26,10 +26,10 @@ extract_long_data <- function(file) {
         
 names(block1)<-names(block2)<-c("Grupo",	"GLT",	"Nyanzol"	,"Tattoo",	"Sexo",	"Birth",	"Radio")
 block <- rbind(block1, block2) %>% 
-  mutate(Idade=NA) %>% 
+  dplyr::mutate(Idade=NA) %>% 
   dplyr::select("Grupo",	"GLT",	"Nyanzol"	,"Tattoo",	"Sexo",	"Idade",	"Birth",	"Radio")
     
-block$GLT[block$GLT=="Mico"|block$GLT=="mico"]<-"GLT"
+block$GLT[block$GLT=="Mico"| block$GLT=="mico"]<-"GLT"
    
   }
   
@@ -40,7 +40,7 @@ block$GLT[block$GLT=="Mico"|block$GLT=="mico"]<-"GLT"
                                 Grupo,NA)) %>% 
     fill(Region) %>%
     dplyr::filter(GLT != "GLT" ) %>% #remove headers
-    mutate(Disp = ifelse(Grupo %in% dispersers |
+    dplyr::mutate(Disp = ifelse(Grupo %in% dispersers |
                            Radio %in% dispersers |
                            grepl("isp", Grupo, fixed = T, ignore.case = T) |           #identify dispersal
                            grepl("isp", Radio, fixed = T, ignore.case = T) ,
@@ -69,7 +69,7 @@ block$GLT[block$GLT=="Mico"|block$GLT=="mico"]<-"GLT"
 
   
 clean<- block.full  %>%
-   mutate(Group=ifelse(Grupo %in% dispersers | 
+  dplyr::mutate(Group=ifelse(Grupo %in% dispersers | 
                           grepl("isp", Grupo, fixed = T, ignore.case = T) | 
                         grepl("ied", Grupo, fixed = T, ignore.case = T) |    #remove names other than group names
                          Grupo %in% names |
@@ -78,12 +78,12 @@ clean<- block.full  %>%
                        NA,
                        Grupo),
           Idade = ifelse(GLT=="IN","IN",Idade)) %>%
-   fill(Group) %>%    #fill empty group column with site name
-   mutate(Year=as.numeric(gsub(".*?([0-9]+).*", "\\1", file)),
+  fill(Group) %>%    #fill empty group column with site name
+  dplyr::mutate(Year=as.numeric(gsub(".*?([0-9]+).*", "\\1", file)),
           DateObs=as.Date(str_extract(file,
-                                      "[0-9]{2}-[0-9]{2}-[0-9]{4}"),     #extract date
+                                      "[0-9]{2}-[0-9]{2}-[0-9]{4}"),     #extract date from file name
                           format="%d-%m-%Y")) %>%
-   mutate(Group=ifelse(Disp!="1" & Death !="1",                          #identify final group name
+  dplyr::mutate(Group=ifelse(Disp!="1" & Death !="1",                          #identify final group name
                        Group,
                        NA))%>%
   dplyr::select(Year,DateObs,Region,Group,Grupo, GLT, Nyanzol,Tattoo,Sexo,  #reorder columns

@@ -21,9 +21,12 @@ library(tidyverse)
 library(readxl)
 library(writexl)
 library(purrr)
+library(conflicted)
+conflict_prefer("mutate", "dplyr")
 
-source(here("R","extract_functions.R"))
-source(here("R","revalue_region.R"))
+
+source(here::here("R","extract_functions.R"))
+source(here::here("R","revalue_variables.R"))
 
 #identify particular status in Grupo column
 dispersers<-c("OUT","Out","out","disp","Disp","DISP","OUT PT","Grace-disp
@@ -34,7 +37,7 @@ dead<-c("DEAD","died","Died","DIED")
 names<-c("chiquinho","Georgia","Luisa","Antônia","saiu","Luana",
          "Camilo","André")
 #list all files
-files<-list.files(here("data","RawData","Groups"),
+files<-list.files(here::here("data","RawData","Groups"),
                   pattern = "xls",recursive=T,
                   full.names = T)
 
@@ -53,18 +56,20 @@ files<-list.files(here("data","RawData","Groups"),
 
 DATA<- purrr::map_dfr(files, extract_long_data )
 
-DATA<-DATA %>% 
+data.clean<-DATA %>% 
   revalue_region() %>% 
-  arrange(DateObs)
+  revalue_birth() %>%    #issue with FA20 (2 birth dates!!)
+  revalue_stage() %>% 
+   dplyr::arrange(DateObs)
 
 
-reg<-data.frame(Region=sort(unique(DATA$Region)))
-group<-data.frame(Group=sort(unique(DATA$Group)))
+sort(unique(data.clean$Region))
+sort(unique(data.clean$Group))
   
 
-#write_xlsx(DATA, path=here("Data","NewlyCreatedData","DAT.xlsx"))
+#write_xlsx(data.Clean, path=here("Data","NewlyCreatedData","DAT.xlsx"))
 
-save(DATA,file=here("Data","NewlyCreatedData","all_long.RData"))
+save(data.clean,file=here::here("Data","NewlyCreatedData","all_long.RData"))
 
 
 # subseto<-DATA %>% 
@@ -87,23 +92,32 @@ save(DATA,file=here("Data","NewlyCreatedData","all_long.RData"))
 
 The dataset for capture-recapture analyses includes individuals which have been clearly identified. Dispersed individuals and dead individuals are removed, as well as non identified infants.
 
-Duplicates are checked to make sure each GLT and tattoo correspond to only one unique individual. Duplicate individual tatoos are renamed in the code, not in the files
+Duplicates are checked to make sure each GLT and tattoo correspond to only one unique individual. Duplicate individual tatoos are renamed in the code, not in the files.
 
 ```{r}
 
 load(here("Data","NewlyCreatedData","all_long.RData"))
 
+bad<-c("?","T0","IN","AF?","?-3")
+
 #identify duplicates in individual names
-DATA %>%
-    dplyr::filter(Disp=="0") %>% 
+data.clean %>%
+    #dplyr::filter(Disp=="0" & Death=="0") %>% 
     dplyr::group_by(DateObs,GLT) %>%
     dplyr::summarise(n = dplyr::n(), .groups = "drop") %>%
     dplyr::filter(n > 1L & GLT!="?" & GLT!="T0" & GLT!="IN" & 
                     GLT!="FT")
 
 
+data.clean %>%
+    dplyr::filter(Disp=="0" & Death=="0") %>% 
+    dplyr::group_by(DateObs,GLT,Tattoo) %>%
+    dplyr::summarise(n = dplyr::n(), .groups = "drop") %>%
+    dplyr::filter(n > 1L & GLT!="?" & GLT!="T0" & GLT!="IN")
 
-dat<-DATA %>% 
+
+
+dat<-data.clean %>% 
   dplyr::filter(Disp=="0" & Death=="0") %>% 
   dplyr::filter(GLT!="?" & GLT !="?-3" & GLT!="IN" & GLT!="FT" &
                   GLT!="T0" & Group!="?") %>% 

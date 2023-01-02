@@ -1,3 +1,6 @@
+library(plyr)
+library(lubridate)
+
 revalue_region<-function(data){
 
 data$Region<-plyr::revalue(as.factor(data$Region), 
@@ -123,4 +126,70 @@ c("2 Irmãos" =	"Faz. 2 Irmaos",
                         "Unigranrio"=	"UR"))
   
   return(data)
+}
+
+revalue_birth<-function(data){
+  
+data$Birth<-plyr::revalue(as.factor(data$Birth),
+                c("'02/93" = "02/93",
+                  "'10/09" = "10/09",
+                  "10/'4" = "10/14",
+                  "?/02" = "06/02",
+                  "?/14"="06/14",
+                  "1015" = "10/15",
+                  "?/16" = "06/16",
+                  "RC1" = "07/16",
+                  "RC2" = "05/17",
+                  "RC3" = "05/17",
+                  "?/17" = "03/17",   #birth between 01 and 05/17 based on observations
+                  "43809" = "10/12",
+                  "10.20" = "10/20",
+                  "?/20" = "07/20",
+                  "?/21" = "11/21",
+                  "10/ 21" = "10/21",
+                  "'07/22" = "07/22",
+                  "'04/22" = "04/22",
+                  "?"= NA))
+  
+  
+  data$Birth[which(data$GLT=="SI10" | data$GLT=="SI11")]<-"11/07"
+  data$Birth[which(data$GLT=="SI12" | data$GLT=="SI13")]<-"12/07"
+  
+  data$Birth[which(data$GLT=="RT20" | data$GLT=="RT21")]<-"06/07"
+  
+  data$Birth[which(data$GLT=="MP44")]<-"02/10"
+  
+  data$Birth[which(data$GLT=="JP19")]<-"07/10"
+  
+  data$Birth[which(data$GLT=="JP20")]<-"09/10"
+  
+  data$Birth<-lubridate::my(data$Birth)
+
+  return(data)
+  
+  #issue with FA20 (2 birth dates!!)
+}
+
+revalue_stage<-function(data){
+
+  clean<-data %>%
+    dplyr::mutate(Stage=ifelse(DateObs <= (Birth + lubridate::years(1)),
+                          "IN",
+                   ifelse (DateObs > (Birth + lubridate::years(1)) &
+                             DateObs <= (Birth + lubridate::years(2)),
+                           "SA",
+                     ifelse(DateObs > (Birth+years(2)),
+                           "AD",
+                           NA))))
+  
+  return(clean)
+
+}
+
+revalue_name<-function(data){
+  
+  data$GLT<- str_replace(data$GLT, "i", "I")
+ 
+   return(data)
+  
 }
