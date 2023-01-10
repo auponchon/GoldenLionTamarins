@@ -1,0 +1,47 @@
+---
+title: "Group composition in golden lion tamarins"
+author: "Aurore Ponchon"
+format: html
+editor: visual
+---
+
+## Analysis of group composition
+
+The analysis
+
+```{r}
+#| echo: false
+#| include: true
+#| message: false
+#| warning: false
+
+library(here)
+library(tidyverse)
+
+load(here("data","NewlyCreatedData","all_long.RData"))
+
+summy<-data.clean %>% 
+  dplyr::filter(Disp!="1" & Death !="1") %>% 
+  group_by(Year,Region,Group,Sexo) %>% 
+  dplyr::count() %>% 
+  pivot_wider(id_col=c("Year","Region","Group"),
+              names_from = Sexo,
+              names_prefix = "Sex",
+              values_from=n,
+              values_fill=0) %>% 
+  dplyr::mutate(NbInd=sum(SexF,SexM,SexnonID, na.rm=T),
+    SexRatio=SexF/sum(SexF,SexM, na.rm=T))
+
+
+
+gg<-ggplot(summy,aes(x=Year,y=SexRatio,color=Region))+
+           geom_point(show.legend=F) +
+           scale_y_continuous(limits=c(0,1), breaks=seq(0,1,0.2)) 
+print(gg)
+
+bb<-ggplot(summy, aes(x=SexRatio)) +
+         geom_histogram()+
+         scale_x_continuous(breaks=seq(0,1,0.2))+
+         facet_wrap(.~Year)
+print(bb)
+```

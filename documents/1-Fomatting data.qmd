@@ -57,10 +57,12 @@ files<-list.files(here::here("data","RawData","Groups"),
 DATA<- purrr::map_dfr(files, extract_long_data )
 
 data.clean<-DATA %>% 
-  revalue_region() %>% 
-  revalue_birth() %>%    #issue with FA20 (2 birth dates!!)
-  revalue_stage() %>% 
-   dplyr::arrange(DateObs)
+            revalue_region() %>% 
+            revalue_birth() %>%    #issue with FA20 (2 birth dates!!)
+            revalue_stage() %>% 
+            revalue_sex() %>% 
+            revalue_name() %>% 
+            dplyr::arrange(DateObs)
 
 
 sort(unique(data.clean$Region))

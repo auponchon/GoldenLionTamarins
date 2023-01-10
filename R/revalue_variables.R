@@ -193,3 +193,30 @@ revalue_name<-function(data){
    return(data)
   
 }
+
+revalue_sex<-function(data){
+  
+  bad<-c("?","T0","-","--")
+  
+  clean<-data %>%
+    dplyr::mutate(Sexo=ifelse(is.na(Sexo) | Sexo %in% bad,
+                              "nonID",
+                       ifelse(Sexo=="RF" | Sexo=="F'",
+                              "F",
+                       ifelse(Sexo == "RM",
+                              "M",
+                              Sexo)))) %>% 
+    dplyr::mutate(Sexo=as.factor(Sexo))
+            
+  
+  return(clean)
+  
+}
+
+revalue_name<-function(data){
+  
+  data$GLT<- str_replace(data$GLT, "i", "I")
+  
+  return(data)
+  
+}
