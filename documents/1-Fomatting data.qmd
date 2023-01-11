@@ -9,7 +9,7 @@ editor: visual
 
 Data are stored in .xls or .xlsx files. They consist of blocks of data encompassing groups from the same region. A first formatting of the tables is made directly within the excel files to ensure that each group name is the first line of a block. Region names are isolated before blocks so that they are automatically assigned to following blocks.
 
-Duplicates are checked in group and region names.
+Duplicates are checked in group and region names, as well as in individuals. Individual variables are also filled, to ensure that they are consistent for each observation (notably sex and date birth)
 
 ```{r}
 #| echo: false
@@ -20,9 +20,14 @@ library(here)
 library(tidyverse)
 library(readxl)
 library(writexl)
-library(purrr)
 library(conflicted)
+library(progressr)
 conflict_prefer("mutate", "dplyr")
+
+progressr::handlers(global = TRUE)
+red_heart <- cli::col_green(cli::symbol$tick)
+handlers(handler_txtprogressbar(char = red_heart))
+
 
 
 source(here::here("R","extract_functions.R"))
@@ -30,11 +35,11 @@ source(here::here("R","revalue_variables.R"))
 
 #identify particular status in Grupo column
 dispersers<-c("OUT","Out","out","disp","Disp","DISP","OUT PT","Grace-disp
-","Alex-disp","28/01/13")
+","Alex-disp","28/01/13", "saiu","Expulsa")
 solo<-c("Sozinha","Sozinho","sozinha","sozinho","SOZINHA","soz.","SOZINHO",
-        "Expulsa","Soz.")
+        "Soz.")
 dead<-c("DEAD","died","Died","DIED")
-names<-c("chiquinho","Georgia","Luisa","Antônia","saiu","Luana",
+names<-c("chiquinho","Georgia","Luisa","Antônia","Luana",
          "Camilo","André")
 #list all files
 files<-list.files(here::here("data","RawData","Groups"),
@@ -54,7 +59,7 @@ files<-list.files(here::here("data","RawData","Groups"),
 #   DATA<-rbind(DATA,xx)
 # }
 
-DATA<- purrr::map_dfr(files, extract_long_data )
+DATA<- purrr::map_dfr(files, extract_long_data,.progress=T)
 
 data.clean<-DATA %>% 
             revalue_region() %>% 
@@ -94,11 +99,11 @@ save(data.clean,file=here::here("Data","NewlyCreatedData","all_long.RData"))
 
 The dataset for capture-recapture analyses includes individuals which have been clearly identified. Dispersed individuals and dead individuals are removed, as well as non identified infants.
 
-Duplicates are checked to make sure each GLT and tattoo correspond to only one unique individual. Duplicate individual tatoos are renamed in the code, not in the files.
+Duplicates are checked to make sure each GLT and tattoo correspond to only one unique individual. Duplicate individual tattoos are renamed in the code, not in the files.
 
 ```{r}
 
-load(here("Data","NewlyCreatedData","all_long.RData"))
+load(here::here("Data","NewlyCreatedData","all_long.RData"))
 
 bad<-c("?","T0","IN","AF?","?-3")
 
@@ -110,15 +115,49 @@ data.clean %>%
     dplyr::filter(n > 1L & GLT!="?" & GLT!="T0" & GLT!="IN" & 
                     GLT!="FT")
 
-
-data.clean %>%
+dup<-data.clean %>%
     dplyr::filter(Disp=="0" & Death=="0") %>% 
-    dplyr::group_by(DateObs,GLT,Tattoo) %>%
+    dplyr::group_by(DateObs,GLT) %>%
     dplyr::summarise(n = dplyr::n(), .groups = "drop") %>%
-    dplyr::filter(n > 1L & GLT!="?" & GLT!="T0" & GLT!="IN")
+    dplyr::filter(n > 1L) # & GLT!="?" & GLT!="T0" & GLT!="IN") %>% 
+    dplyr::select(GLT)
+
+dups<-data.clean %>% 
+  dplyr::filter(GLT %in% dup$GLT) %>% 
+  dplyr::arrange(GLT, DateObs)
+
+#1377 ok
+#FT = weird!
+
+# write_xlsx(dups,
+#  path=here::here("Data","NewlyCreatedData","duplicated_individuals.xlsx"))
 
 
+##checking duplicates in Sex
+sexo<-data.clean %>%
+    dplyr::group_by(GLT) %>%
+    dplyr::summarise(Sex = Sexo,.groups="keep") %>% 
+    distinct() %>% 
+  dplyr::filter(n()>1)
+   
+#MP475 problematic (same birth and both M & F)
 
+##checking duplicates in Birth date
+bir<-data.clean %>%
+    dplyr::group_by(GLT) %>%
+    dplyr::summarise(Birth , .groups="keep") %>% 
+    distinct() %>% 
+    dplyr::filter(n()>1 & GLT!="?" & GLT!="FT" & GLT!="IN")
+
+#1375 with 3 different dates!!
+#AF22, AF23, AF24, AF25 born after observation and dispersed?!
+#check FA40 (2018 & 2019)
+#check FT (Part of duplicate names)
+#JP23 duplicate
+#check 1311, 1312, MP104, MP108, MP109, MP176, MP292, MP313, MP99, TM20, UR4
+
+
+## Produce a table for CMR data
 dat<-data.clean %>% 
   dplyr::filter(Disp=="0" & Death=="0") %>% 
   dplyr::filter(GLT!="?" & GLT !="?-3" & GLT!="IN" & GLT!="FT" &

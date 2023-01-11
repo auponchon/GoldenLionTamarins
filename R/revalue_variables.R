@@ -132,7 +132,8 @@ revalue_birth<-function(data){
   
 data$Birth<-plyr::revalue(as.factor(data$Birth),
                 c("'02/93" = "02/93",
-                  "'10/09" = "10/09",
+                  "'10/09" = "09/09",
+                  "'10/10" = "09/10",
                   "10/'4" = "10/14",
                   "?/02" = "06/02",
                   "?/14"="06/14",
@@ -161,7 +162,13 @@ data$Birth<-plyr::revalue(as.factor(data$Birth),
   
   data$Birth[which(data$GLT=="JP19")]<-"07/10"
   
-  data$Birth[which(data$GLT=="JP20")]<-"09/10"
+  data$Birth[which(data$GLT=="JP20"| data$GLT=="JP22")]<-"09/10"
+  data$Birth[which(data$GLT=="AF20")]<-"12/11"
+  data$Birth[which(data$GLT=="FA20")]<-"11/14"
+  data$Birth[which(data$GLT=="FA7" | data$GLT=="FA8")]<-"10/11"
+  data$Birth[which(data$GLT=="MP177")]<-"10/14"
+  data$Birth[which(data$GLT=="MP272")]<-"10/21"
+  data$Birth[which(data$GLT=="MP38"| data$GLT=="MP39")]<-"10/09"
   
   data$Birth<-lubridate::my(data$Birth)
 
@@ -189,6 +196,11 @@ revalue_stage<-function(data){
 revalue_name<-function(data){
   
   data$GLT<- str_replace(data$GLT, "i", "I")
+  data$GLT[data$Tattoo=="Cibele"]<-"Cibele"
+  data$GLT[data$Tattoo=="Rodrigo"]<-"Rodrigo"
+  data$GLT[data$Tattoo=="Cris"]<-"Cris"
+  data$GLT[data$Tattoo=="1318"]<-"1318"
+  data$GLT[data$Tattoo=="UR2"]<-"FA40"
  
    return(data)
   
@@ -196,6 +208,7 @@ revalue_name<-function(data){
 
 revalue_sex<-function(data){
   
+  data$Sexo[which(data$GLT=="MP62")]<-"F"
   bad<-c("?","T0","-","--")
   
   clean<-data %>%
@@ -205,18 +218,17 @@ revalue_sex<-function(data){
                               "F",
                        ifelse(Sexo == "RM",
                               "M",
-                              Sexo)))) %>% 
-    dplyr::mutate(Sexo=as.factor(Sexo))
-            
+                              Sexo)))) 
   
-  return(clean)
+  clean2<-clean %>% 
+    dplyr::mutate(Sexo=as.factor(Sexo),
+                  Sex =  ifelse("M" %in% Sexo,
+                                "M",
+                         ifelse("F" %in% Sexo,
+                                "F",
+                                "nonID")))
+  
+  return(clean2)
   
 }
 
-revalue_name<-function(data){
-  
-  data$GLT<- str_replace(data$GLT, "i", "I")
-  
-  return(data)
-  
-}
