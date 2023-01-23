@@ -2,8 +2,10 @@ extract_long_data <- function(file) {
   
   
   ifelse("Plan1" %in% excel_sheets(file),
-    blocks<-read_excel(file,sheet="Plan1", n_max = 274),
- blocks<-read_excel(file,sheet="Sheet1", n_max = 274))
+    blocks<-read_excel(file,sheet="Plan1", n_max = 460),
+    ifelse("Table 1" %in% excel_sheets(file),
+           blocks<-read_excel(file,sheet="Table 1", n_max = 460),
+ blocks<-read_excel(file,sheet="Sheet1", n_max = 460)))
   
   mino<-min(which(blocks[ ,1]=="Grupo"))
   
@@ -75,7 +77,8 @@ clean<- block.full  %>%
                        Grupo),
           Idade = ifelse(GLT=="IN",
                          "IN",
-                         Idade)) %>%
+                         Idade)
+          ) %>%
   fill(Group) %>%    #fill empty group column with site name
   dplyr::mutate(Year=as.numeric(gsub(".*?([0-9]+).*", "\\1", file)),
           DateObs=as.Date(str_extract(file,
@@ -84,7 +87,7 @@ clean<- block.full  %>%
   dplyr::mutate(Group=ifelse(Disp!="1" & Death !="1" & Solo!="1",                          #identify final group name
                        Group,
                        NA))%>%
-  dplyr::select(Year,DateObs,Region,Group,Grupo, GLT, Nyanzol,Tattoo,Sexo,  #reorder columns
+  dplyr::select(Year,DateObs,Region,Group,Grupo, GLT, Nyanzol,Tattoo,Sexo,Radio,  #reorder columns
                 Idade,Birth,Disp,Death,Solo,DateEvent) %>%
   dplyr::arrange(DateObs, Region)
 

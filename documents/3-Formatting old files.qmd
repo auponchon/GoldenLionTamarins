@@ -1,0 +1,79 @@
+---
+title: "Formatting files before 2009"
+format: html
+editor: visual
+---
+
+## Quarto
+
+Files before 2007 were stored as scanned pdf tables. Some were successfully converted to excel files but other had to be entered manually. Thats is why the process is different and some variables can be missing
+
+```{r}
+#| echo: false
+#| message: false
+#| warning: false
+
+library(here)
+library(tidyverse)
+library(readxl)
+library(xlsx)
+library(conflicted)
+library(progressr)
+conflict_prefer("mutate", "dplyr")
+
+
+source(here::here("R","extract_functions.R"))
+source(here::here("R","revalue_variables.R"))
+
+#identify particular status in Grupo column
+dispersers<-c("OUT","Out","out","disp","Disp","DISP","OUT PT","Grace-disp
+","Alex-disp","28/01/13", "saiu","Expulsa")
+solo<-c("Sozinha","Sozinho","sozinha","sozinho","SOZINHA","soz.","SOZINHO",
+        "Soz.")
+dead<-c("DEAD","died","Died","DIED")
+names<-c("chiquinho","Georgia","Luisa","Antônia","Luana",
+         "Camilo","André")
+#list all files
+files<-list.files(here::here("data","RawData","pdfData","ok"),
+                  pattern = "xls",recursive=T,
+                  full.names = T)
+
+DATA.OLD<- purrr::map_dfr(files, extract_long_data,.progress=T)
+
+data.clean.old<-DATA %>% 
+            revalue_region() %>% 
+      #      revalue_birth() %>%    
+            revalue_stage() %>% 
+            revalue_sex() %>% 
+            revalue_name() %>% 
+            dplyr::arrange(GLT,DateObs)
+
+
+sort(unique(data.clean.old$Region))
+sort(unique(data.clean.old$Group))
+
+save(data.clean.old,file=here::here("Data","NewlyCreatedData","all_long_old.RData"))
+
+
+bad<-c("?","T0","IN","AF?","?-3","FT","?-1","?-2" ,"?-4","?-5","?-6" )
+
+data.clean.old %>%
+    dplyr::filter(Disp=="0" & Death=="0" & !GLT %in% bad) %>% 
+    dplyr::group_by(DateObs,GLT) %>%
+    dplyr::summarise(n = dplyr::n(), .groups = "drop") %>%
+    dplyr::filter(n > 1L & GLT!="?" & GLT!="T0" & GLT!="IN" & 
+                    GLT!="FT")
+
+dup<-data.clean.old %>%
+    dplyr::filter(Disp=="0" & Death=="0" & GLT!="?" & GLT!="T0" & GLT!="IN" & 
+                    GLT!="FT") %>% 
+    dplyr::group_by(DateObs,GLT) %>%
+    dplyr::summarise(n = dplyr::n(), .groups = "drop") %>%
+    dplyr::filter(n > 1L) # & GLT!="?" & GLT!="T0" & GLT!="IN") %>% 
+
+dups<-data.clean.old %>% 
+  dplyr::filter(GLT %in% dup$GLT) %>% 
+  dplyr::arrange(GLT, DateObs)
+
+
+```

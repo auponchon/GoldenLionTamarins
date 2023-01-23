@@ -64,7 +64,7 @@ DATA<- purrr::map_dfr(files, extract_long_data,.progress=T)
 data.clean<-DATA %>% 
             revalue_region() %>% 
       #      revalue_birth() %>%    #issue with FA20 (2 birth dates!!)
-      #      revalue_stage() %>% 
+            revalue_stage() %>% 
             revalue_sex() %>% 
             revalue_name() %>% 
             dplyr::arrange(GLT,DateObs)
@@ -116,7 +116,7 @@ Duplicates are checked in group and region names, as well as in individuals. Ind
 load(here::here("Data","NewlyCreatedData","all_long.RData"))
 
 
-bad<-c("?","T0","IN","AF?","?-3")
+bad<-c("?","T0","IN","AF?","?-3","FT")
 
 #identify duplicates in individual names
 data.clean %>%
@@ -127,11 +127,11 @@ data.clean %>%
                     GLT!="FT")
 
 dup<-data.clean %>%
-    dplyr::filter(Disp=="0" & Death=="0") %>% 
+    dplyr::filter(Disp=="0" & Death=="0" & GLT!="?" & GLT!="T0" & GLT!="IN" & 
+                    GLT!="FT") %>% 
     dplyr::group_by(DateObs,GLT) %>%
     dplyr::summarise(n = dplyr::n(), .groups = "drop") %>%
     dplyr::filter(n > 1L) # & GLT!="?" & GLT!="T0" & GLT!="IN") %>% 
-    dplyr::select(GLT)
 
 dups<-data.clean %>% 
   dplyr::filter(GLT %in% dup$GLT) %>% 
