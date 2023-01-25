@@ -40,13 +40,13 @@ files<-list.files(here::here("data","RawData","pdfData","ok"),
 
 DATA.OLD<- purrr::map_dfr(files, extract_long_data,.progress=T)
 
-data.clean.old<-DATA %>% 
+data.clean.old<-DATA.OLD %>% 
             revalue_region() %>% 
       #      revalue_birth() %>%    
             revalue_stage() %>% 
             revalue_sex() %>% 
             revalue_name() %>% 
-            dplyr::arrange(GLT,DateObs)
+            dplyr::arrange(Group,DateObs)
 
 
 sort(unique(data.clean.old$Region))
@@ -73,7 +73,10 @@ dup<-data.clean.old %>%
 
 dups<-data.clean.old %>% 
   dplyr::filter(GLT %in% dup$GLT) %>% 
-  dplyr::arrange(GLT, DateObs)
+  dplyr::arrange(GLT, DateObs) %>% 
+  dplyr::select(DateObs, Region,Group,GLT,Tattoo, Sexo)
 
 
+write_xlsx(dups,
+path=here::here("Data","NewlyCreatedData","duplicates_ante_2009.xlsx"))
 ```
