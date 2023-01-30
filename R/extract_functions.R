@@ -1,5 +1,6 @@
 extract_long_data <- function(file) {
   
+  library(lubridate)
   
   ifelse("Plan1" %in% excel_sheets(file),
     blocks<-read_excel(file,sheet="Plan1", n_max = 460),
@@ -44,12 +45,12 @@ block$GLT[block$GLT=="Mico"| block$GLT=="mico"]<-"GLT"
     dplyr::filter(GLT != "GLT" ) %>% #remove headers
     dplyr::mutate(Disp = ifelse(Grupo %in% dispersers |
                            Radio %in% dispersers |
-                           grepl("isp", Grupo, fixed = T, ignore.case = T) |           #identify dispersal
-                           grepl("isp", Radio, fixed = T, ignore.case = T) ,
+                           grepl("isp", Grupo, fixed = T) |           #identify dispersal
+                           grepl("isp", Radio, fixed = T) ,
                         "1",
                          "0"),
-           Death = ifelse(grepl("ied", Grupo, fixed = T, ignore.case = T) |
-                            grepl("ied", Radio, fixed = T, ignore.case = T) |       #identify dead ind
+           Death = ifelse(grepl("ied", Grupo, fixed = T) |
+                            grepl("ied", Radio, fixed = T) |       #identify dead ind
                             Grupo %in% dead,
                           "1",
                           "0"),
@@ -68,8 +69,8 @@ block$GLT[block$GLT=="Mico"| block$GLT=="mico"]<-"GLT"
   
 clean<- block.full  %>%
   dplyr::mutate(Group=ifelse(Grupo %in% dispersers | 
-                          grepl("isp", Grupo, fixed = T, ignore.case = T) | 
-                        grepl("ied", Grupo, fixed = T, ignore.case = T) |    #remove names other than group names
+                          grepl("isp", Grupo, fixed = T) | 
+                        grepl("ied", Grupo, fixed = T) |    #remove names other than group names
                          Grupo %in% names |
                           Grupo %in% dead |
                           Grupo %in% solo,
@@ -80,13 +81,13 @@ clean<- block.full  %>%
                          Idade)
           ) %>%
   fill(Group) %>%    #fill empty group column with site name
-  dplyr::mutate(Year=as.numeric(gsub(".*?([0-9]+).*", "\\1", file)),
-          DateObs=as.Date(str_extract(file,
+  dplyr::mutate(DateObs=as.Date(str_extract(file,
                                       "[0-9]{2}-[0-9]{2}-[0-9]{4}"),     #extract date from file name
                           format="%d-%m-%Y")) %>%
   dplyr::mutate(Group=ifelse(Disp!="1" & Death !="1" & Solo!="1",                          #identify final group name
                        Group,
-                       NA))%>%
+                       NA),
+                Year=year(DateObs)) %>%
   dplyr::select(Year,DateObs,Region,Group,Grupo, GLT, Nyanzol,Tattoo,Sexo,Radio,  #reorder columns
                 Idade,Birth,Disp,Death,Solo,DateEvent) %>%
   dplyr::arrange(DateObs, Region)
