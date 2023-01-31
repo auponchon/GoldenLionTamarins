@@ -24,9 +24,10 @@ conflict_prefer("mutate", "dplyr")
 
 
 ##Get fun progress bars in scripts
+options(cli.progress_handlers = "progressr")
 handlers("progress")
-red_heart <- cli::col_green(cli::symbol$tick)
-handlers(handler_txtprogressbar(char = red_heart))
+red_heart <- cli::col_red(cli::symbol$tick)
+handlers(handler_txtprogressbar(char = cli::col_red(cli::symbol$heart)))
 
 
 
@@ -41,25 +42,23 @@ solo<-c("Sozinha","Sozinho","sozinha","sozinho","SOZINHA","soz.","SOZINHO",
 dead<-c("DEAD","died","Died","DIED")
 names<-c("chiquinho","Georgia","Luisa","Antônia","Luana",
          "Camilo","André")
+
 #list all files
-files<-list.files(here::here("data","RawData","Groups"),
+files.recent<-list.files(here::here("data","RawData","Groups"),
+                  pattern = "xls",recursive=T,
+                  full.names = T)
+
+files.old<-list.files(here::here("data","RawData","pdfData"),
                   pattern = "xls",recursive=T,
                   full.names = T)
 
 #function to read each file separately
 
-# DATA<-data.frame()
-# 
-# for (i in 1:length(files)){
-#   
-#   print(i)
-#   
-#   xx<-extract_long_data(files[i])
-#   
-#   DATA<-rbind(DATA,xx)
-# }
+data.recent<- purrr::map_dfr(files.recent, extract_long_data,.progress=T)
+data.old<- purrr::map_dfr(files.old, extract_long_data,.progress=T)
 
-DATA<- purrr::map_dfr(files, extract_long_data,.progress=T)
+DATA<-rbind(data.old,data.recent)
+
 
 data.clean<-DATA %>% 
             revalue_region() %>% 
@@ -114,6 +113,7 @@ Duplicates are checked in group and region names, as well as in individuals. Ind
 #| warning: false
 
 load(here::here("Data","NewlyCreatedData","all_long.RData"))
+
 
 
 bad<-c("?","T0","IN","AF?","?-3","FT")
@@ -178,15 +178,23 @@ Duplicates are checked to make sure each GLT and tattoo correspond to only one u
 ```{r}
 
 load(here::here("Data","NewlyCreatedData","all_long.RData"))
+load(here::here("Data","NewlyCreatedData","all_long_old.RData"))
 
+
+all<-rbind(data.clean.old,data.clean)
+
+
+sum.up<-all %>% 
+  group_by(Group,GLT) %>% 
+  dplyr::arrange(DateObs)
 
 
 ## Produce a table for CMR data
-dat<-data.clean %>% 
+dat<-all %>% 
   dplyr::filter(Disp=="0" & Death=="0") %>% 
   dplyr::filter(GLT!="?" & GLT !="?-3" & GLT!="IN" & GLT!="FT" &
                   GLT!="T0" & Group!="?") %>% 
-  dplyr::arrange(DateObs) %>% 
+  dplyr::arrange(DateObs,Group) %>% 
   dplyr::select(DateObs,Region,Group, GLT, Sexo ) %>% 
   dplyr::distinct() %>% 
   pivot_wider(names_from=DateObs,

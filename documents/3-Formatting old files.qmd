@@ -27,17 +27,8 @@ source(here::here("R","extract_functions.R"))
 source(here::here("R","revalue_variables.R"))
 
 #identify particular status in Grupo column
-dispersers<-c("OUT","Out","out","disp","Disp","DISP","OUT PT","Grace-disp
-","Alex-disp","28/01/13", "saiu","Expulsa")
-solo<-c("Sozinha","Sozinho","sozinha","sozinho","SOZINHA","soz.","SOZINHO",
-        "Soz.")
-dead<-c("DEAD","died","Died","DIED")
-names<-c("chiquinho","Georgia","Luisa","Antônia","Luana",
-         "Camilo","André")
 #list all files
-files<-list.files(here::here("data","RawData","pdfData"),
-                  pattern = "xls",recursive=T,
-                  full.names = T)
+
 
 DATA.OLD<- purrr::map_dfr(files, extract_long_data,.progress=T)
 
@@ -58,14 +49,14 @@ save(data.clean.old,file=here::here("Data","NewlyCreatedData","all_long_old.RDat
 
 bad<-c("?","T0","IN","AF?","?-3","FT","?-1","?-2" ,"?-4","?-5","?-6" )
 
-xx %>%
+data.clean.old %>%
     dplyr::filter(Disp=="0" & Death=="0" & !GLT %in% bad) %>% 
     dplyr::group_by(DateObs,GLT) %>%
     dplyr::summarise(n = dplyr::n(), .groups = "drop") %>%
     dplyr::filter(n > 1L & GLT!="?" & GLT!="T0" & GLT!="IN" & 
                     GLT!="FT")
 
-dup<-xx %>%
+dup<-data.clean.old %>%
     dplyr::filter(Disp=="0" & Death=="0" & GLT!="?" & GLT!="T0" & GLT!="IN" & 
                     GLT!="FT") %>% 
     dplyr::group_by(DateObs,GLT) %>%
@@ -79,5 +70,5 @@ dups<-data.clean.old %>%
 
 
 # write_xlsx(dups,
-# path=here::here("Data","NewlyCreatedData","duplicates_ante_2009.xlsx"))
+# path=here::here("Data","NewlyCreatedData","duplicates_ante_2009_2.xlsx"))
 ```
