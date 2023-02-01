@@ -16,9 +16,8 @@ c("2 Irmãos" =	"Faz. 2 Irmaos",
 "Faz 2 Irmaos" = "Faz. 2 Irmaos",
 "Faz.2 Irmãos" = "Faz. 2 Irmaos",
 "F.Iguape"=	"Faz. Iguape",
-"F.Sta Helena"=	"Faz. St.Helena",
+"F.Sta Helena"=	"Faz. Sta Helena",
 "F.Sta Helena 1"=	"Faz. Sta Helena",
-"Faz. Sta Helena" = "Faz. Sta Helena",
 "Faz Afetiva"=	"Faz. Afetiva",
 "Faz AMLD"=	"Faz. AMLD",
 "Faz. AMLD"=	"Faz. Igarape",
@@ -37,6 +36,7 @@ c("2 Irmãos" =	"Faz. 2 Irmaos",
 "Faz.sr Bira" = "Faz. St Bira",
 "Faz. St Helena 2" = "Faz. Sta Helena 2",
 "Faz S. Helena 2"=	"Faz. Sta Helena 2",
+"Faz Sta Helena 2" = "Faz. Sta Helena 2"
 "Faz St.Helena"=	"Faz. Sta Helena",
 "Faz Sta Helena"=	"Faz. Sta Helena",
 "Faz.St.Helena" = "Faz. Sta Helena",
@@ -51,6 +51,7 @@ c("2 Irmãos" =	"Faz. 2 Irmaos",
 "Faz. Cabana nova Coquista" = "Faz. Cabana nova Conquista",
 "Faz. Nova Esperança"=	"Faz. Nova Esperanca",
 "Faz.Sta.Helena"=	"Faz. Sta Helena",
+"Faz. St.Helena" = "Faz. Sta Helena",
 "Faz. Santa Helena2" = "Faz. Sta Helena 2",
 "Faz S. Helena 2" = "Faz. Sta Helena 2",
 "Faz. Sta. Fé"=	"Faz. Sta Fe",
@@ -96,9 +97,9 @@ c("2 Irmãos" =	"Faz. 2 Irmaos",
 "Sta Helena 2"=	"Faz. Sta Helena 2"))
 
   data$Group<-plyr::revalue(as.factor(data$Group), 
-                      c("2 Irmãos"=	"DI",
-                        "Afetiva"=	"AF",
+                      c("Afetiva"=	"AF",
                         "AF2" = "AFII",
+                        "AXII"="AX2",
                         "Apenhiul"=	"AP",
                         "Areal"=	"AR",
                         "Atlanta"=	"AT",
@@ -118,7 +119,6 @@ c("2 Irmãos" =	"Faz. 2 Irmaos",
                         "Emmem2" = "EM2",
                         "Emmen2" = "EM2",
                         "Estreito"="ET",
-                        "Faz AMLD"=	"PH2",
                         "Fugitivo"=	"Foo",
                         "Fugitivo 2"=	"FG2",
                         "Funil"=	"FU",
@@ -176,7 +176,6 @@ c("2 Irmãos" =	"Faz. 2 Irmaos",
                         "RV2"=	"RVII",
                         "RSII" = "RS2",
                         "Salario" = "SL",
-                        "S.Helena" = "SH",
                         "Salario2" = "SL2",
                         "Sta. Fé" = "Sta Fe",
                         "St. Joedi" = "JD",
@@ -190,9 +189,9 @@ c("2 Irmãos" =	"Faz. 2 Irmaos",
                         "SD2" = "SI2",
                         "Skank" = "KS",
                         "Skansen" = "SK",
-                        "St B.Vista"=	"LD",
-                        "St Boa Vista"=	"LD",
-                        "Sta. Fé"	= "Sta. Fe",
+                       "St B.Vista"=	"LD",
+                       "St Boa Vista"=	"LD",
+                        "Sta. Fé"	= "Sta Fe",
                         "Super"=	"SP",
                         "Tabebuia"=	"TB",
                         "Tamarins"=	"TM",
@@ -206,7 +205,10 @@ c("2 Irmãos" =	"Faz. 2 Irmaos",
                       data$Group=="SI" | 
                       data$Group=="SI2")] <- "Faz. Sta Helena 2"
   
-  data$Region[which(data$Group=="JR")] <- "Faz. Sta Helena"
+  data$Region[which(data$Group=="JD"|
+                    data$group=="JD2")] <- "Sitio Joedi"
+  
+#  data$Region[which(data$Group=="JR")] <- "Faz. Sta Helena"
   
   return(data)
 }
@@ -282,18 +284,26 @@ revalue_name<-function(data){
   data$GLT[data$Tattoo=="Cibele"]<-"Cibele"
   data$GLT[data$Tattoo=="Rodrigo"]<-"Rodrigo"
   data$GLT[data$Tattoo=="Cris"]<-"Cris"
+  data$GLT[data$Tattoo=="Angela"]<-"Angela"
+  data$GLT[data$Tattoo=="Nelson"]<-"Nelson"
   data$GLT[data$Tattoo=="1318"]<-"1318"
-  data$GLT[data$Tattoo=="UR2"]<-"FA40"
   data$GLT[data$Tattoo=="AM1"]<-"AM1"
+  data$GLT[data$GLT=="FA40" & data$Tattoo=="UR2"]<-"FA40.1"
   
   data$GLT[data$GLT=="FT"]<-"?"
-  data$GLT[data$Group=="TM3" & data$GLT=="MP213"]<-"MP213-1"
+  data$GLT[data$Group=="TM3" & data$GLT=="MP213"]<-"MP213.1"
   data$GLT[data$GLT=="JU"]<-"FT"
-  data$GLT[data$GLT=="RT1" & data$Sexo=="F"]<-"RT1-"
-  data$GLT[data$GLT=="RT2" & data$Sexo=="F"]<-"RT2-"
-  data$GLT[data$GLT=="SK19" & data$Sexo=="F"]<-"SK19-"
-  data$GLT[data$GLT=="PI3" & data$Sexo=="F"]<-"PI3-"
+  data$GLT[data$GLT=="RT1" & data$Sexo=="F"]<-"RT1.1"
+  data$GLT[data$GLT=="RT2" & data$Sexo=="F"]<-"RT2.1"
+  data$GLT[data$GLT=="SK19" & data$Sexo=="F"]<-"SK19.1"
+  data$GLT[data$GLT=="PI3" & data$Sexo=="F"]<-"PI3.1"
   data$GLT[data$GLT=="AFII"]<-"AF11"
+  data$GLT[data$GLT=="AF?"]<-"AF17"
+  data$GLT[data$GLT=="1318" & data$Sexo=="F"]<-"1318.1"
+  data$GLT[data$GLT=="ST40" & data$Sexo=="F"]<-"ST40.1"
+  data$GLT[data$GLT=="EM11" & data$Sexo=="M"]<-"EM11.1"
+  data$Group[data$GLT=="979"] <-"LB"
+  
   
    return(data)
   

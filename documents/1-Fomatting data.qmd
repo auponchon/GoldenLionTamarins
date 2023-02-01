@@ -25,7 +25,7 @@ conflict_prefer("mutate", "dplyr")
 
 ##Get fun progress bars in scripts
 options(cli.progress_handlers = "progressr")
-handlers("progress")
+#handlers("progress")
 red_heart <- cli::col_red(cli::symbol$tick)
 handlers(handler_txtprogressbar(char = cli::col_red(cli::symbol$heart)))
 
@@ -72,17 +72,16 @@ data.clean<-DATA %>%
 sort(unique(data.clean$Region))
 sort(unique(data.clean$Group))
   
-data.clean %>% 
-  
-    # dplyr::filter(GLT!="?" & 
-    #                 GLT !="?-3" & 
-    #                 GLT!="IN" & 
-    #                 GLT!="FT" &
-    #                 GLT!="T0" & 
-    #                 Group!="?") %>% 
-   # dplyr::select(DateObs,Region, Group, GLT, Sexo,Idade,Disp,Death,Solo) %>% 
-    write.table(., file=here::here("Data","NewlyCreatedData","DATA.csv"),
-               quote=F,row.names=F ,sep=";")
+ # data.clean %>%
+ #   dplyr::filter(GLT!="?" &
+ #                   GLT !="?-3" &
+ #                   GLT!="IN" &
+ #                   GLT!="FT" &
+ #                   GLT!="T0" &
+ #                   Group!="?") %>%
+ #   dplyr::select(DateObs,Region, Group, GLT, Sexo,Idade,Disp,Death,Solo) %>%
+   # write.table(., file=here::here("Data","NewlyCreatedData","data_long.xslx"),
+   #            quote=F,row.names=F ,sep=";")
 
 save(data.clean,file=here::here("Data","NewlyCreatedData","all_long.RData"))
 
@@ -116,7 +115,7 @@ load(here::here("Data","NewlyCreatedData","all_long.RData"))
 
 
 
-bad<-c("?","T0","IN","AF?","?-3","FT")
+bad<-c("?","T0","IN","?-3","FT","?-4","?-5","?-6")
 
 #identify duplicates in individual names
 data.clean %>%
@@ -141,7 +140,7 @@ dups<-data.clean %>%
 #FT = weird!
 
 # write_xlsx(dups,
-#  path=here::here("Data","NewlyCreatedData","duplicated_individuals.xlsx"))
+#  path=here::here("Data","NewlyCreatedData","duplicated_individuals_all.xlsx"))
 
 
 ##checking duplicates in Sex
@@ -167,6 +166,12 @@ ind<-data.clean %>%
   dplyr::arrange(GLT,DateObs)
 
 
+group<-data.clean %>% 
+  dplyr::filter(Disp==0 & Death==0 & Solo ==0) %>% 
+  group_by(Group) %>% 
+  dplyr::select(DateObs,Group,Region) %>% 
+  distinct() %>% 
+  dplyr::arrange(Group,DateObs)
 ```
 
 # Selecting individuals to include in observation dataset
@@ -178,19 +183,16 @@ Duplicates are checked to make sure each GLT and tattoo correspond to only one u
 ```{r}
 
 load(here::here("Data","NewlyCreatedData","all_long.RData"))
-load(here::here("Data","NewlyCreatedData","all_long_old.RData"))
 
 
-all<-rbind(data.clean.old,data.clean)
 
-
-sum.up<-all %>% 
+sum.up<-data.clean %>% 
   group_by(Group,GLT) %>% 
   dplyr::arrange(DateObs)
 
 
 ## Produce a table for CMR data
-dat<-all %>% 
+dat<-data.clean %>% 
   dplyr::filter(Disp=="0" & Death=="0") %>% 
   dplyr::filter(GLT!="?" & GLT !="?-3" & GLT!="IN" & GLT!="FT" &
                   GLT!="T0" & Group!="?") %>% 
@@ -199,6 +201,10 @@ dat<-all %>%
   dplyr::distinct() %>% 
   pivot_wider(names_from=DateObs,
               names_prefix="Obs",
-              values_from=Region)
+              values_from=Region) %>% 
+  write.table(., file=here::here("Data","NewlyCreatedData","data_wide.xslx"),
+              quote=F,row.names=F ,sep=";")
+
+
 
 ```
