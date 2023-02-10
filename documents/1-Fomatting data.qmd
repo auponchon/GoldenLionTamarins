@@ -260,9 +260,12 @@ for (i in 1:length(ids)) {
 }
 }  
 
-spatdisp<-subset(spatdisp,spatdisp$disp==1)
+spatdisp1<-spatdisp %>% 
+          dplyr::filter(disp==1) %>% 
+        distinct(GLT,DateObs, .keep_all = TRUE) %>% 
+  dplyr::arrange(Year,GLT,DateObs) 
 
-spdisp<-spatdisp %>% 
+spdisp<-spatdisp1 %>% 
      sf::st_as_sf(., coords = c("Long","Lat")) %>% 
     sf::st_set_crs(31983) %>% 
   dplyr::mutate(Year=as.factor(Year))
@@ -276,7 +279,7 @@ lines_disp <- spdisp %>%
 land<-read_sf(here::here("data","RawData","Landscape","Shapefiles Landscape AMLD",
               "SIG-EDUC Redescobrindo 2021 - Fragmentos de Vegetação.shp"))
 
-fieldgg<-ggplot(spdisp,aes(group=Year))+
+fieldgg<-ggplot()+
      geom_sf(data = land,
              colour="grey90",
              alpha=0.7) +
@@ -286,7 +289,7 @@ fieldgg<-ggplot(spdisp,aes(group=Year))+
      geom_sf(data=spdisp,
              aes(colour=GLT),
              size=0.5) +   
-  facet_grid(Year~.)+
+  #facet_wrap(.~Year,nrow=4)+
    # st_jitter(spdisp,factor=0.1,
    #           aes(colour=GLT))+
      # coord_sf(xlim = c(longmnr,longmxr), 
@@ -301,7 +304,7 @@ fieldgg<-ggplot(spdisp,aes(group=Year))+
                            which_north = "true",
     style = ggspatial::north_arrow_nautical(), 
     pad_y = unit(0.2, "cm")) +
-    theme_bw() +
+    theme_void() +
      theme(legend.position = "none")
 
 
