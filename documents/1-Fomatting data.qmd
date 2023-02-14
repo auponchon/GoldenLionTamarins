@@ -1,15 +1,16 @@
 ---
-title: "Extracting dispersing events"
+title: "Formatting GLT data"
 author: "Aurore Ponchon"
 format: html
 editor: visual
 ---
 
-## 1- Formatting data to constitute a full long dataset
+# 1- Formatting data to constitute a full long dataset
 
 Data are stored in .xls or .xlsx files. They consist of blocks of data encompassing groups from the same region. A first formatting of the tables is made directly within the excel files to ensure that each group name is the first line of a block. Region names are isolated before blocks so that they are automatically assigned to following blocks.
 
 ```{r}
+
 #| echo: false
 #| message: false
 #| warning: false
@@ -20,70 +21,77 @@ library(readxl)
 library(xlsx)
 library(conflicted)
 library(progressr)
+
 conflict_prefer("mutate", "dplyr")
 
-
 ##Get fun progress bars in scripts
-options(cli.progress_handlers = "progressr")
-#handlers("progress")
-red_heart <- cli::col_red(cli::symbol$tick)
-handlers(handler_txtprogressbar(char = cli::col_red(cli::symbol$heart)))
+# options(cli.progress_handlers = "progressr")
+# #handlers("progress")
+# red_heart <- cli::col_red(cli::symbol$tick)
+# handlers(handler_txtprogressbar(char = cli::col_red(cli::symbol$heart)))
 
-
-
+#Source files with specific functions
 source(here::here("R","extract_functions.R"))
 source(here::here("R","revalue_variables.R"))
 
 #identify particular status in Grupo column
-dispersers<-c("OUT","Out","out","disp","Disp","DISP","OUT PT","Grace-disp
-","Alex-disp","28/01/13", "saiu","Expulsa")
-solo<-c("Sozinha","Sozinho","sozinha","sozinho","SOZINHA","soz.","SOZINHO",
-        "Soz.")
+
+dispersers<-c("OUT","Out","out","OUT PT",
+              "disp","Disp","DISP",
+              "Grace-disp","Alex-disp","28/01/13", 
+              "saiu","Expulsa")
+solo<-c("Sozinha","Sozinho","sozinha","sozinho",
+        "SOZINHA","soz.","SOZINHO","Soz.")
 dead<-c("DEAD","died","Died","DIED")
 names<-c("chiquinho","Georgia","Luisa","Antônia","Luana",
          "Camilo","André")
 
 #list all files
+
 files.recent<-list.files(here::here("data","RawData","Groups"),
-                  pattern = "xls",recursive=T,
-                  full.names = T)
+                         pattern = "xls",recursive=T,
+                         full.names = T)
 
 files.old<-list.files(here::here("data","RawData","pdfData"),
-                  pattern = "xls",recursive=T,
-                  full.names = T)
+                      pattern = "xls",recursive=T,
+                      full.names = T)
 
 #function to read each file separately
-
 data.recent<- purrr::map_dfr(files.recent, extract_long_data,.progress=T)
 data.old<- purrr::map_dfr(files.old, extract_long_data,.progress=T)
 
+#bind everything
 DATA<-rbind(data.old,data.recent)
 
-
+#clean data with specific functions
 data.clean<-DATA %>% 
-            revalue_region() %>% 
-      #      revalue_birth() %>%    #issue with FA20 (2 birth dates!!)
-            revalue_stage() %>% 
-            revalue_sex() %>% 
-            revalue_name() %>% 
-            dplyr::arrange(GLT,DateObs)
+  revalue_region() %>% 
+#      revalue_birth() %>%    #issue with FA20 (2 birth dates!!)
+  revalue_stage() %>% 
+  revalue_sex() %>% 
+  revalue_name() %>% 
+  dplyr::arrange(GLT,DateObs)
 
-
+#check unique group names and Regions
 sort(unique(data.clean$Region))
 sort(unique(data.clean$Group))
-  
- # data.clean %>%
- #   dplyr::filter(GLT!="?" &
- #                   GLT !="?-3" &
- #                   GLT!="IN" &
- #                   GLT!="FT" &
- #                   GLT!="T0" &
- #                   Group!="?") %>%
- #   dplyr::select(DateObs,Region, Group, GLT, Sexo,Idade,Disp,Death,Solo) %>%
-   # write.table(., file=here::here("Data","NewlyCreatedData","data_long.xslx"),
-   #            quote=F,row.names=F ,sep=";")
 
-bad<-c("?","T0","IN","?-3","FT","?-4","?-5","?-6")
+#write a file with group and region names
+# data.clean %>%
+#   dplyr::filter(GLT!="?" &
+#                   GLT !="?-3" &
+#                   GLT!="IN" &
+#                   GLT!="FT" &
+#                   GLT!="T0" &
+#                   Group!="?") %>%
+#   dplyr::select(DateObs,Region, Group, 
+#                 GLT, Sexo,Idade,Disp,Death,Solo) %>%
+
+# write.table(., file=here::here("Data","NewlyCreatedData","data_long.xslx"),
+#            quote=F,row.names=F ,sep=";")
+
+#filter individuals and produce final files
+bad<-c("?","T0","IN","?-1","?-2","?-3","FT","?-4","?-5","?-6")
 
 data.clean<-data.clean %>% 
   dplyr::filter(!GLT %in% bad,
@@ -91,11 +99,10 @@ data.clean<-data.clean %>%
                 Death==0,
                 Solo==0) %>% 
   dplyr::select(Year,DateObs,Region,Group,GLT,Tattoo,Sex,Idade)
-  
 
 save(data.clean,file=here::here("Data","NewlyCreatedData","all_long.RData"))
 
-
+#check group names 
 # subseto<-DATA %>% 
 #   filter(Group=="DN"|
 #          Group=="Fugitivo"|
@@ -108,11 +115,12 @@ save(data.clean,file=here::here("Data","NewlyCreatedData","all_long.RData"))
 #            Group=="NA") %>% 
 #   select(-Grupo)
 # 
+
 # write_xlsx(subseto,
 # path=here("Data","NewlyCreatedData","check_group_Valeria.xlsx"))
 ```
 
-# Checking duplicates and errors
+# 2- Checking duplicates and errors
 
 Duplicates are checked in group and region names, as well as in individuals. Individual variables are also filled, to ensure that they are consistent among observations of the same individual (notably sex and date birth). After data corection, all objects should be empty!
 
@@ -123,44 +131,45 @@ Duplicates are checked in group and region names, as well as in individuals. Ind
 
 load(here::here("Data","NewlyCreatedData","all_long.RData"))
 
-
-
 bad<-c("?","T0","IN","?-3","FT","?-4","?-5","?-6")
 
 #identify duplicates in individual names
 data.clean %>%
-    #dplyr::filter(Disp=="0" & Death=="0") %>% 
-    dplyr::group_by(DateObs,GLT) %>%
-    dplyr::summarise(n = dplyr::n(), .groups = "drop") %>%
-    dplyr::filter(n > 1L & GLT!="?" & GLT!="T0" & GLT!="IN" & 
-                    GLT!="FT")
+  #dplyr::filter(Disp=="0" & Death=="0") %>% 
+  dplyr::group_by(DateObs,GLT) %>%
+  dplyr::summarise(n = dplyr::n(), .groups = "drop") %>%
+  dplyr::filter(n > 1L & GLT!="?" & GLT!="T0" & GLT!="IN" & 
+                  GLT!="FT")
 
+#create an object with GLT duplicates
 dup<-data.clean %>%
-    dplyr::filter(Disp=="0" & Death=="0" & GLT!="?" & GLT!="T0" & GLT!="IN" & 
-                    GLT!="FT") %>% 
-    dplyr::group_by(DateObs,GLT) %>%
-    dplyr::summarise(n = dplyr::n(), .groups = "drop") %>%
-    dplyr::filter(n > 1L) # & GLT!="?" & GLT!="T0" & GLT!="IN") %>% 
+  dplyr::filter(Disp=="0" & Death=="0" & GLT!="?" & GLT!="T0" & GLT!="IN" & 
+                  GLT!="FT") %>% 
+  dplyr::group_by(DateObs,GLT) %>%
+  dplyr::summarise(n = dplyr::n(), .groups = "drop") %>%
+  dplyr::filter(n > 1L) # & GLT!="?" & GLT!="T0" & GLT!="IN") %>% 
+
+#get all observations of duplicates to reconstitute their individual histories
 
 dups<-data.clean %>% 
   dplyr::filter(GLT %in% dup$GLT) %>% 
   dplyr::arrange(GLT, DateObs)
 
 #1377 ok
-#FT = weird!
 
+#FT = weird!
 # write_xlsx(dups,
 #  path=here::here("Data","NewlyCreatedData","duplicated_individuals_all.xlsx"))
 
-
 ##checking duplicates in Sex
 sexo<-data.clean %>%
-    dplyr::group_by(GLT) %>%
-    dplyr::summarise(Sexy = Sex,.groups="keep") %>% 
-    distinct() %>% 
+  dplyr::group_by(GLT) %>%
+  dplyr::summarise(Sexy = Sex,.groups="keep") %>% 
+  distinct() %>% 
   dplyr::filter(n()>1)
-   
+
 #MP475 problematic (same birth and both M & F)
+
 #1375 with 3 different dates!!
 #AF22, AF23, AF24, AF25 born after observation and dispersed?!
 #check FA40 (2018 & 2019)
@@ -168,40 +177,37 @@ sexo<-data.clean %>%
 #JP23 duplicate
 #check 1311, 1312, MP104, MP108, MP109, MP176, MP292, MP313, MP99, TM20, UR4
 
-
 #check differences between GLT and tattoo
 ind<-data.clean %>% 
   dplyr::filter(!is.na(Tattoo)) %>% 
   dplyr::filter(GLT!=Tattoo) %>% 
   dplyr::arrange(GLT,DateObs)
 
-
+#check duplicates with groups and regions
 group<-data.clean %>% 
   dplyr::filter(Disp==0 & Death==0 & Solo ==0) %>% 
   group_by(Group) %>% 
   dplyr::select(DateObs,Group,Region) %>% 
   distinct() %>% 
   dplyr::arrange(Group,DateObs)
+
 ```
 
-# Selecting individuals to include in observation dataset
+# 3- Formatting dataset to a wide format
 
 The dataset for capture-recapture analyses includes individuals which have been clearly identified. Dispersed individuals and dead individuals are removed, as well as non identified infants.
 
-Duplicates are checked to make sure each GLT and tattoo correspond to only one unique individual. Duplicate individual tattoos are renamed in the code, not in the files.
+Duplicate individual GLT and tattoos are renamed in the code, not in the files (see revalue_variables R file).
 
 ```{r}
-
 load(here::here("Data","NewlyCreatedData","all_long.RData"))
-
-
 
 sum.up<-data.clean %>% 
   group_by(Group,GLT) %>% 
   dplyr::arrange(DateObs)
 
+## Produce a table with a wide format
 
-## Produce a table for CMR data
 dat<-data.clean %>% 
   dplyr::filter(Disp=="0" & Death=="0") %>% 
   dplyr::filter(GLT!="?" & GLT !="?-3" & GLT!="IN" & GLT!="FT" &
@@ -214,101 +220,5 @@ dat<-data.clean %>%
               values_from=Region) %>% 
   write.table(., file=here::here("Data","NewlyCreatedData","data_wide.xslx"),
               quote=F,row.names=F ,sep=";")
-
-
-
-```
-
-# Joining groups with spatial locations
-
-```{r}
-library(sf)
-library(ggspatial)
-
-#Import file with locations associated with groups
-loc<-read.table(here::here("data","rawData","Landscape","RegionsName.csv"),
-                header=T,sep=";") %>% 
-      dplyr::rename(Long=CENTROIDE.X.UTM.SAD69.23S,
-                    Lat=CENTROIDE.Y.UTM.SAD69.23S,
-                    Group=Abreviation) %>% 
-      dplyr::select(-Platform,-City)
-
-#Join groups and locations for individual observations
-spatdata<-data.clean %>% 
-  left_join(loc, by="Group",
-            multiple="first") %>% 
-  dplyr::filter(!is.na(Long)) %>% 
-  droplevels() %>% 
-  dplyr::arrange(Year,DateObs,GLT,Group)
-
-#Idenity changes in groups
-ids<-unique(spatdata$GLT)
-spatdisp<-NULL
-
-for (i in 1:length(ids)) {
-  print(i)
-  temp<-subset(spatdata,spatdata$GLT==ids[i])
-  temp$disp<-0
-  if(nrow(temp)>1){
-  for (j in 2:nrow(temp)){
-  if(temp$Group[j-1]!=temp$Group[j]){
-    temp$disp[c(j-1,j)]<-1
- }
-  }
- spatdisp<-rbind(spatdisp,temp)   
-
-}
-}  
-
-spatdisp1<-spatdisp %>% 
-          dplyr::filter(disp==1) %>% 
-        distinct(GLT,DateObs, .keep_all = TRUE) %>% 
-  dplyr::arrange(Year,GLT,DateObs) 
-
-spdisp<-spatdisp1 %>% 
-     sf::st_as_sf(., coords = c("Long","Lat")) %>% 
-    sf::st_set_crs(31983) %>% 
-  dplyr::mutate(Year=as.factor(Year))
-
-lines_disp <- spdisp %>% 
-  group_by(GLT) %>%
-  dplyr::summarise(do_union = FALSE) %>%
-  st_cast("LINESTRING")
-
-
-land<-read_sf(here::here("data","RawData","Landscape","Shapefiles Landscape AMLD",
-              "SIG-EDUC Redescobrindo 2021 - Fragmentos de Vegetação.shp"))
-
-fieldgg<-ggplot()+
-     geom_sf(data = land,
-             colour="grey90",
-             alpha=0.7) +
-     geom_sf(data=lines_disp,
-             aes(colour=GLT),
-             size=0.2) +  
-     geom_sf(data=spdisp,
-             aes(colour=GLT),
-             size=0.5) +   
-  #facet_wrap(.~Year,nrow=4)+
-   # st_jitter(spdisp,factor=0.1,
-   #           aes(colour=GLT))+
-     # coord_sf(xlim = c(longmnr,longmxr), 
-     #          ylim=c(latmnr, latmxr),  
-     #          expand = FALSE) +
- #    scale_colour_manual() +
-      annotation_scale(location = "br", 
-                       width_hint = 0.3,
-                     pad_x = unit(0.3, "cm"), 
-                     bar_cols = "black") +
-    annotation_north_arrow(location = "bl", 
-                           which_north = "true",
-    style = ggspatial::north_arrow_nautical(), 
-    pad_y = unit(0.2, "cm")) +
-    theme_void() +
-     theme(legend.position = "none")
-
-
-print(fieldgg)
-
 
 ```

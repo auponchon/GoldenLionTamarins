@@ -1,0 +1,136 @@
+---
+title: "Joining groups with spatial locations"
+author: "Aurore Ponchon"
+format: html
+editor: visual
+---
+
+# Joining groups with spatial locations
+
+Groups are assigned to a region which is itself located with projected coordinates in the local \*\*\* projection system
+
+```{r}
+library(here)
+library(tidyverse)
+library(sf)
+library(ggspatial)
+
+load(here::here("Data","NewlyCreatedData","all_long.RData"))
+
+
+#Import file with locations associated with groups
+loc<-read.table(here::here("data","rawData","Landscape","RegionsName.csv"),
+                header=T,sep=";") %>% 
+  dplyr::rename(Long=CENTROIDE.X.UTM.SAD69.23S,
+                Lat=CENTROIDE.Y.UTM.SAD69.23S,
+                Group=Abreviation) %>% 
+  dplyr::select(-Platform,-City)
+
+#Join groups and locations for individual observations
+
+spatdata<-data.clean %>% 
+  left_join(loc, by="Group",
+            multiple="first") %>% 
+  dplyr::filter(!is.na(Long)) %>% 
+  droplevels() %>% 
+  dplyr::arrange(Year,DateObs,GLT,Group)
+
+#Idenity changes in groups
+ids<-unique(spatdata$GLT)
+spatdisp<-NULL
+
+for (i in 1:length(ids)) {
+  print(i)
+  temp<-subset(spatdata,spatdata$GLT==ids[i])
+  temp$disp<-0
+  if(nrow(temp)>1){
+    for (j in 2:nrow(temp)){
+      if(temp$Group[j-1]!=temp$Group[j]){
+        temp$disp[c(j-1,j)]<-1
+      }
+    }
+    spatdisp<-rbind(spatdisp,temp)   
+  }
+}  
+
+spatdisp1<-spatdisp %>% 
+  dplyr::filter(disp==1) %>% 
+  distinct(GLT,DateObs, .keep_all = TRUE) %>% 
+  dplyr::arrange(Year,GLT,DateObs) 
+
+spdisp<-spatdisp1 %>% 
+  sf::st_as_sf(., coords = c("Long","Lat")) %>% 
+  sf::st_set_crs(31983) %>% 
+  dplyr::mutate(Year=as.factor(Year))
+
+lines_disp <- spdisp %>% 
+  group_by(GLT) %>%
+  dplyr::summarise(do_union = FALSE) %>%
+  st_cast("LINESTRING")
+
+land<-read_sf(here::here("data","RawData","Landscape","Shapefiles Landscape AMLD", "SIG-EDUC Redescobrindo 2021 - Fragmentos de Vegetação.shp"))
+
+fieldgg<-ggplot()+
+  geom_sf(data = land,
+          colour="grey90",
+          alpha=0.7) +
+  geom_sf(data=lines_disp,
+          aes(colour=GLT),
+          size=0.2) +  
+  geom_sf(data=spdisp,
+          aes(colour=GLT),
+          size=0.5) +   
+
+  #facet_wrap(.~Year,nrow=4)+
+
+  # st_jitter(spdisp,factor=0.1,
+
+  #           aes(colour=GLT))+
+
+  # coord_sf(xlim = c(longmnr,longmxr), 
+
+  #          ylim=c(latmnr, latmxr),  
+
+  #          expand = FALSE) +
+
+  #    scale_colour_manual() +
+
+  annotation_scale(location = "br", 
+                   width_hint = 0.3,
+                   pad_x = unit(0.3, "cm"), 
+                   bar_cols = "black") +
+  annotation_north_arrow(location = "bl", 
+                         which_north = "true",
+                         style = ggspatial::north_arrow_nautical(), 
+                         pad_y = unit(0.2, "cm")) +
+  theme_void() +
+  theme(legend.position = "none")
+
+print(fieldgg)
+
+
+```
+
+# Importing older migration events
+
+Another file is available with explicit dispersal events by individuals, with emigration and immigration group names
+
+```{r}
+
+local<-read_excel(here::here("data","rawData","GLT_movement.xls"),
+                  col_names = T) %>% 
+  dplyr::rename(GLT=Individual,
+                Tattoo=Tatoo,
+                DispType=Type.of.dispersal,
+                FragEmigr=Fragment.of.emigration,
+                DispDate=Estimated.date.of.emigration,
+                EmigrDate=Estimated.date.of.emigration,
+                ImmigrDate=Estimated.date.of.Immigration) %>% 
+  dplyr::select(GLT,Sex,Birth,DispType,GroupEmigr,EmigrDate,
+                GroupImmigr,ImmigrDate) %>% 
+  pivot_longer(cols=c(GroupImmigr,ImmigrDate),
+               names_to=c("Phase","Date"),
+               cols_vary="fastest",
+               )
+
+```
