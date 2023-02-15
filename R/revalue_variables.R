@@ -281,7 +281,7 @@ revalue_name<-function(data){
   
   data$GLT<- str_replace(data$GLT, "i", "I")
   
-  data$GLT[data$Tattoo=="Cibele"]<-"Cibele"
+  data$GLT[data$Tattoo=="Cibele" & data$GLT=="MP121"]<-"Cibele"
   data$GLT[data$Tattoo=="Rodrigo"]<-"Rodrigo"
   data$GLT[data$Tattoo=="Cris"]<-"Cris"
   data$GLT[data$Tattoo=="Angela"]<-"Angela"
@@ -290,7 +290,6 @@ revalue_name<-function(data){
   data$GLT[data$Tattoo=="AM1"]<-"AM1"
   data$GLT[data$GLT=="FA40" & data$Tattoo=="UR2"]<-"FA40.1"
   
-  data$GLT[data$GLT=="FT"]<-"?"
   data$GLT[data$Group=="TM3" & data$GLT=="MP213"]<-"MP213.1"
   data$GLT[data$GLT=="JU"]<-"FT"
   data$GLT[data$GLT=="RT1" & data$Sexo=="F"]<-"RT1.1"
@@ -302,7 +301,8 @@ revalue_name<-function(data){
   data$GLT[data$GLT=="1318" & data$Sexo=="F"]<-"1318.1"
   data$GLT[data$GLT=="ST40" & data$Sexo=="F"]<-"ST40.1"
   data$GLT[data$GLT=="EM11" & data$Sexo=="M"]<-"EM11.1"
-  data$Group[data$GLT=="979"] <-"LB"
+ 
+   data$Group[data$GLT=="979"] <-"LB"
   
   
    return(data)

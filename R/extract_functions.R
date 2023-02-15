@@ -46,7 +46,8 @@ block$GLT[block$GLT=="Mico"| block$GLT=="mico"]<-"GLT"
     dplyr::mutate(Disp = ifelse(Grupo %in% dispersers |
                            Radio %in% dispersers |
                            grepl("isp", Grupo, fixed = T) |           #identify dispersal
-                           grepl("isp", Radio, fixed = T) ,
+                           grepl("isp", Radio, fixed = T) | 
+                             Grupo %in% solo ,
                         "1",
                          "0"),
            Death = ifelse(grepl("ied", Grupo, fixed = T) |

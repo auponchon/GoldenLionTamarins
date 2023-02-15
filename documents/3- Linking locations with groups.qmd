@@ -24,7 +24,7 @@ loc<-read.table(here::here("data","rawData","Landscape","RegionsName.csv"),
   dplyr::rename(Long=CENTROIDE.X.UTM.SAD69.23S,
                 Lat=CENTROIDE.Y.UTM.SAD69.23S,
                 Group=Abreviation) %>% 
-  dplyr::select(-Platform,-City)
+  dplyr::select(-Platform,-City) 
 
 #Join groups and locations for individual observations
 
@@ -33,14 +33,15 @@ spatdata<-data.clean %>%
             multiple="first") %>% 
   dplyr::filter(!is.na(Long)) %>% 
   droplevels() %>% 
-  dplyr::arrange(Year,DateObs,GLT,Group)
+  dplyr::arrange(GLT,Group,DateObs) %>% 
+  group_by(GLT)%>% 
+  dplyr::filter(GLT!="?")
 
 #Idenity changes in groups
 ids<-unique(spatdata$GLT)
 spatdisp<-NULL
 
 for (i in 1:length(ids)) {
-  print(i)
   temp<-subset(spatdata,spatdata$GLT==ids[i])
   temp$disp<-0
   if(nrow(temp)>1){
@@ -116,7 +117,7 @@ print(fieldgg)
 Another file is available with explicit dispersal events by individuals, with emigration and immigration group names
 
 ```{r}
-
+library(readxl)
 local<-read_excel(here::here("data","rawData","GLT_movement.xls"),
                   col_names = T) %>% 
   dplyr::rename(GLT=Individual,
@@ -129,8 +130,9 @@ local<-read_excel(here::here("data","rawData","GLT_movement.xls"),
   dplyr::select(GLT,Sex,Birth,DispType,GroupEmigr,EmigrDate,
                 GroupImmigr,ImmigrDate) %>% 
   pivot_longer(cols=c(GroupImmigr,ImmigrDate),
-               names_to=c("Phase","Date"),
+               names_to=c("ImmigrGroup","ImmigrDate"),
                cols_vary="fastest",
-               )
+               names_sep="Mouet",
+               values_to="Immigr")
 
 ```

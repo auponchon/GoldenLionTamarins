@@ -24,12 +24,6 @@ library(progressr)
 
 conflict_prefer("mutate", "dplyr")
 
-##Get fun progress bars in scripts
-# options(cli.progress_handlers = "progressr")
-# #handlers("progress")
-# red_heart <- cli::col_red(cli::symbol$tick)
-# handlers(handler_txtprogressbar(char = cli::col_red(cli::symbol$heart)))
-
 #Source files with specific functions
 source(here::here("R","extract_functions.R"))
 source(here::here("R","revalue_variables.R"))
@@ -94,13 +88,12 @@ sort(unique(data.clean$Group))
 bad<-c("?","T0","IN","?-1","?-2","?-3","FT","?-4","?-5","?-6")
 
 data.clean<-data.clean %>% 
-  dplyr::filter(!GLT %in% bad,
-                Disp==0,
-                Death==0,
-                Solo==0) %>% 
-  dplyr::select(Year,DateObs,Region,Group,GLT,Tattoo,Sex,Idade)
+  dplyr::filter(!GLT %in% bad) %>% 
+  dplyr::select(Year,DateObs,Region,Group,GLT,Tattoo,Sex,Idade, Disp, Death, Solo)
 
-save(data.clean,file=here::here("Data","NewlyCreatedData","all_long.RData"))
+save(data.clean,file=here::here("Data",
+                                "NewlyCreatedData",
+                                "all_long.RData"))
 
 #check group names 
 # subseto<-DATA %>% 
@@ -131,20 +124,10 @@ Duplicates are checked in group and region names, as well as in individuals. Ind
 
 load(here::here("Data","NewlyCreatedData","all_long.RData"))
 
-bad<-c("?","T0","IN","?-3","FT","?-4","?-5","?-6")
 
 #identify duplicates in individual names
-data.clean %>%
-  #dplyr::filter(Disp=="0" & Death=="0") %>% 
-  dplyr::group_by(DateObs,GLT) %>%
-  dplyr::summarise(n = dplyr::n(), .groups = "drop") %>%
-  dplyr::filter(n > 1L & GLT!="?" & GLT!="T0" & GLT!="IN" & 
-                  GLT!="FT")
-
 #create an object with GLT duplicates
 dup<-data.clean %>%
-  dplyr::filter(Disp=="0" & Death=="0" & GLT!="?" & GLT!="T0" & GLT!="IN" & 
-                  GLT!="FT") %>% 
   dplyr::group_by(DateObs,GLT) %>%
   dplyr::summarise(n = dplyr::n(), .groups = "drop") %>%
   dplyr::filter(n > 1L) # & GLT!="?" & GLT!="T0" & GLT!="IN") %>% 
@@ -209,9 +192,8 @@ sum.up<-data.clean %>%
 ## Produce a table with a wide format
 
 dat<-data.clean %>% 
-  dplyr::filter(Disp=="0" & Death=="0") %>% 
-  dplyr::filter(GLT!="?" & GLT !="?-3" & GLT!="IN" & GLT!="FT" &
-                  GLT!="T0" & Group!="?") %>% 
+  dplyr::filter(Disp=="0" & Death=="0" & Solo=="0") %>% 
+  dplyr::filter(GLT ) %>% 
   dplyr::arrange(DateObs,Group) %>% 
   dplyr::select(DateObs,Region,Group, GLT, Sexo ) %>% 
   dplyr::distinct() %>% 
@@ -221,4 +203,15 @@ dat<-data.clean %>%
   write.table(., file=here::here("Data","NewlyCreatedData","data_wide.xslx"),
               quote=F,row.names=F ,sep=";")
 
+```
+
+# Checking continuity in observations
+
+```{r}
+
+check<-data.clean %>% 
+  dplyr::filter(!GLT %in% bad, Disp==0,Death==0,Solo==0) %>% 
+  mutate(Group=as.factor(Group)) %>% 
+  ggplot(.,aes(x=DateObs,y=Group)) +
+  geom_point()
 ```
