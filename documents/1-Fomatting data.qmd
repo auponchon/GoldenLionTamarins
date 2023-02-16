@@ -85,10 +85,8 @@ sort(unique(data.clean$Group))
 #            quote=F,row.names=F ,sep=";")
 
 #filter individuals and produce final files
-bad<-c("?","T0","IN","?-1","?-2","?-3","FT","?-4","?-5","?-6")
 
-data.clean<-data.clean %>% 
-  dplyr::filter(!GLT %in% bad) %>% 
+data.clean<-data.clean %>%
   dplyr::select(Year,DateObs,Region,Group,GLT,Tattoo,Sex,Idade, Disp, Death, Solo)
 
 save(data.clean,file=here::here("Data",
@@ -108,7 +106,6 @@ save(data.clean,file=here::here("Data",
 #            Group=="NA") %>% 
 #   select(-Grupo)
 # 
-
 # write_xlsx(subseto,
 # path=here("Data","NewlyCreatedData","check_group_Valeria.xlsx"))
 ```
@@ -124,10 +121,14 @@ Duplicates are checked in group and region names, as well as in individuals. Ind
 
 load(here::here("Data","NewlyCreatedData","all_long.RData"))
 
+#filter individuals with non-identified names
+bad<-c("?","T0","IN","?-1","?-2","?-3","FT","?-4","?-5","?-6", "FT")
+
 
 #identify duplicates in individual names
 #create an object with GLT duplicates
 dup<-data.clean %>%
+  dplyr::filter(!GLT %in% bad) %>% 
   dplyr::group_by(DateObs,GLT) %>%
   dplyr::summarise(n = dplyr::n(), .groups = "drop") %>%
   dplyr::filter(n > 1L) # & GLT!="?" & GLT!="T0" & GLT!="IN") %>% 
@@ -170,9 +171,12 @@ ind<-data.clean %>%
 group<-data.clean %>% 
   dplyr::filter(Disp==0 & Death==0 & Solo ==0) %>% 
   group_by(Group) %>% 
-  dplyr::select(DateObs,Group,Region) %>% 
+  dplyr::select(Group,Region) %>% 
   distinct() %>% 
-  dplyr::arrange(Group,DateObs)
+  write.csv(., file=here::here("data","NewlyCreatedData","unique-group-region.csv",
+                               sep=";",
+                               quote=F,
+                               row.names=F))
 
 ```
 
@@ -184,6 +188,7 @@ Duplicate individual GLT and tattoos are renamed in the code, not in the files (
 
 ```{r}
 load(here::here("Data","NewlyCreatedData","all_long.RData"))
+bad<-c("?","T0","IN","?-1","?-2","?-3","FT","?-4","?-5","?-6")
 
 sum.up<-data.clean %>% 
   group_by(Group,GLT) %>% 
@@ -193,7 +198,7 @@ sum.up<-data.clean %>%
 
 dat<-data.clean %>% 
   dplyr::filter(Disp=="0" & Death=="0" & Solo=="0") %>% 
-  dplyr::filter(GLT ) %>% 
+  dplyr::filter(!GLT %in% bad) %>% 
   dplyr::arrange(DateObs,Group) %>% 
   dplyr::select(DateObs,Region,Group, GLT, Sexo ) %>% 
   dplyr::distinct() %>% 
@@ -205,13 +210,49 @@ dat<-data.clean %>%
 
 ```
 
-# Checking continuity in observations
+# 4- Checking continuity in observations
 
 ```{r}
+library(viridis)
+library(ggrepel)
+
+
+fq<-data.clean %>%  
+  dplyr::filter(!GLT %in% bad & Disp==0 & Death==0 & Solo==0) %>% 
+  group_by(Group,DateObs) %>% 
+  dplyr::count() %>% 
+  group_by(Group) %>% 
+  dplyr::count() %>% 
+  dplyr::arrange(n) %>% 
+  drop_na()
+
+colorme<-rep(viridis(n=20,option="H"),time=11)
 
 check<-data.clean %>% 
-  dplyr::filter(!GLT %in% bad, Disp==0,Death==0,Solo==0) %>% 
-  mutate(Group=as.factor(Group)) %>% 
+   dplyr::filter(!GLT %in% bad & Disp==0 & Death==0 & Solo==0) %>% 
+  mutate(Group=as.factor(Group)) %>%
+  mutate(Group=factor(Group,
+                      levels=fq$Group)) %>% 
   ggplot(.,aes(x=DateObs,y=Group)) +
-  geom_point()
+  geom_point(aes(colour=Group),shape=15,size=1.2,show.legend=F) +
+  scale_colour_manual(values=colorme) +
+    scale_y_discrete(guide = guide_axis(n.dodge = 2)) +
+  # scale_x_date(limits=c(as.Date("2001-08-01",format="%F"),
+  #                     as.Date("2022-11-01",format="%F")),
+  #              date_breaks="2 year")+
+  theme_bw() +
+  labs(x="Date",y="Groups") +
+ # coord_cartesian(clip = "off") +
+  theme(legend.position = "none",
+         axis.text.y = element_text(size=rel(1)))
+ 
+tiff(here::here("outputs","Continuity_field_effort.tif"),
+                width=6000,
+                height=7000,
+                res=600,
+                compression="lzw")
+print(check)
+   dev.off()
 ```
+
+<!--#  -->
