@@ -28,6 +28,9 @@ conflict_prefer("mutate", "dplyr")
 source(here::here("R","extract_functions.R"))
 source(here::here("R","revalue_variables.R"))
 
+bad<-c("?","T0","IN","?-1","?-2","?-3","FT","?-4","?-5","?-6", "FT")
+
+
 #identify particular status in Grupo column
 
 dispersers<-c("OUT","Out","out","OUT PT",
@@ -248,7 +251,7 @@ check<-data.clean %>%
  
 tiff(here::here("outputs","Continuity_field_effort.tif"),
                 width=6000,
-                height=7000,
+                height=6500,
                 res=600,
                 compression="lzw")
 print(check)
