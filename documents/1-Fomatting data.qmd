@@ -20,19 +20,18 @@ library(tidyverse)
 library(readxl)
 library(xlsx)
 library(conflicted)
-library(progressr)
 
 conflict_prefer("mutate", "dplyr")
 
 #Source files with specific functions
 source(here::here("R","extract_functions.R"))
 source(here::here("R","revalue_variables.R"))
+source(here::here("R","progress_bar.R"))
 
 bad<-c("?","T0","IN","?-1","?-2","?-3","FT","?-4","?-5","?-6", "FT")
 
 
 #identify particular status in Grupo column
-
 dispersers<-c("OUT","Out","out","OUT PT",
               "disp","Disp","DISP",
               "Grace-disp","Alex-disp","28/01/13", 
@@ -45,6 +44,7 @@ names<-c("chiquinho","Georgia","Luisa","Antônia","Luana",
 
 #list all files
 
+
 files.recent<-list.files(here::here("data","RawData","Groups"),
                          pattern = "xls",recursive=T,
                          full.names = T)
@@ -52,6 +52,8 @@ files.recent<-list.files(here::here("data","RawData","Groups"),
 files.old<-list.files(here::here("data","RawData","pdfData"),
                       pattern = "xls",recursive=T,
                       full.names = T)
+
+
 
 #function to read each file separately
 data.recent<- purrr::map_dfr(files.recent, extract_long_data,.progress=T)
@@ -123,10 +125,6 @@ Duplicates are checked in group and region names, as well as in individuals. Ind
 #| warning: false
 
 load(here::here("Data","NewlyCreatedData","all_long.RData"))
-
-#filter individuals with non-identified names
-bad<-c("?","T0","IN","?-1","?-2","?-3","FT","?-4","?-5","?-6", "FT")
-
 
 #identify duplicates in individual names
 #create an object with GLT duplicates
@@ -203,7 +201,7 @@ dat<-data.clean %>%
   dplyr::filter(Disp=="0" & Death=="0" & Solo=="0") %>% 
   dplyr::filter(!GLT %in% bad) %>% 
   dplyr::arrange(DateObs,Group) %>% 
-  dplyr::select(DateObs,Region,Group, GLT, Sexo ) %>% 
+  dplyr::select(DateObs,Region,Group, GLT, Sex ) %>% 
   dplyr::distinct() %>% 
   pivot_wider(names_from=DateObs,
               names_prefix="Obs",
@@ -217,8 +215,9 @@ dat<-data.clean %>%
 
 ```{r}
 library(viridis)
-library(ggrepel)
+library(gridExtra)
 
+load(here::here("Data","NewlyCreatedData","all_long.RData"))
 
 fq<-data.clean %>%  
   dplyr::filter(!GLT %in% bad & Disp==0 & Death==0 & Solo==0) %>% 
@@ -230,32 +229,41 @@ fq<-data.clean %>%
   drop_na()
 
 colorme<-rep(viridis(n=20,option="H"),time=11)
+title_plot<-"Monitoring continuity in all regions"
+title_file<-"Continuity_field_effort_all_regions.tif"
 
-check<-data.clean %>% 
-   dplyr::filter(!GLT %in% bad & Disp==0 & Death==0 & Solo==0) %>% 
-  mutate(Group=as.factor(Group)) %>%
-  mutate(Group=factor(Group,
-                      levels=fq$Group)) %>% 
-  ggplot(.,aes(x=DateObs,y=Group)) +
-  geom_point(aes(colour=Group),shape=15,size=1.2,show.legend=F) +
-  scale_colour_manual(values=colorme) +
-    scale_y_discrete(guide = guide_axis(n.dodge = 2)) +
-  # scale_x_date(limits=c(as.Date("2001-08-01",format="%F"),
-  #                     as.Date("2022-11-01",format="%F")),
-  #              date_breaks="2 year")+
-  theme_bw() +
-  labs(x="Date",y="Groups") +
- # coord_cartesian(clip = "off") +
-  theme(legend.position = "none",
-         axis.text.y = element_text(size=rel(1)))
  
-tiff(here::here("outputs","Continuity_field_effort.tif"),
-                width=6000,
-                height=6500,
-                res=600,
-                compression="lzw")
-print(check)
-   dev.off()
+plot_continuity(data.clean,fq,title_plot,title_file,W=6000,H=6500)
+  
+  
+   regio<-unique(data.clean$Region)
+   
+   for (k in 1:length(regio)){
+     sub<-data.clean %>% 
+       dplyr::filter(Region==regio[k]) 
+       
+      fq<-sub %>%  
+  group_by(Group,DateObs) %>% 
+  dplyr::count() %>% 
+  group_by(Group) %>% 
+  dplyr::count() %>% 
+  dplyr::arrange(n) %>% 
+  drop_na()
+      
+
+title_plot<-paste("Monitoring continuity in ",
+                  regio[k],
+                  sep="")
+title_file<-paste("Continuity_field_effort_",
+                  regio[k],
+                  ".tif",
+                  sep="") 
+    
+ plot_continuity(sub,fq,title_plot,title_file,W=6000,H=6500)   
+ setTxtProgressBar(progress_bar(length(regio)),k)  
+ 
+   }
+  
 ```
 
 <!--#  -->

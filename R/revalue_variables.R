@@ -208,6 +208,8 @@ c("2 Irmãos" =	"Faz. 2 Irmaos",
   data$Region[which(data$Group=="JD"|
                     data$Group=="JD2")] <- "Sitio Joedi"
   
+  data$Group[which(data$Group=="AL" & data$Region=="Vendaval")]<-"ALI"
+  
 #  data$Region[which(data$Group=="JR")] <- "Faz. Sta Helena"
   
   return(data)
