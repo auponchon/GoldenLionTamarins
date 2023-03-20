@@ -65,10 +65,11 @@ DATA<-rbind(data.old,data.recent)
 #clean data with specific functions
 data.clean<-DATA %>% 
   revalue_region() %>% 
+  revalue_name() %>% 
 #      revalue_birth() %>%    #issue with FA20 (2 birth dates!!)
   revalue_stage() %>% 
   revalue_sex() %>% 
-  revalue_name() %>% 
+  
   dplyr::arrange(GLT,DateObs)
 
 #check unique group names and Regions
@@ -129,7 +130,8 @@ load(here::here("Data","NewlyCreatedData","all_long.RData"))
 #identify duplicates in individual names
 #create an object with GLT duplicates
 dup<-data.clean %>%
-  dplyr::filter(!GLT %in% bad) %>% 
+  dplyr::filter(!GLT %in% bad) %>%
+  dplyr::filter(Disp==0) %>% 
   dplyr::group_by(DateObs,GLT) %>%
   dplyr::summarise(n = dplyr::n(), .groups = "drop") %>%
   dplyr::filter(n > 1L) # & GLT!="?" & GLT!="T0" & GLT!="IN") %>% 
@@ -140,14 +142,15 @@ dups<-data.clean %>%
   dplyr::filter(GLT %in% dup$GLT) %>% 
   dplyr::arrange(GLT, DateObs)
 
-#1377 ok
+###
+## !! "AF17"  "MP172" "RL15"  "RP3" !!
+##those individuals are still duplicated
+##Individual Cibele wuth different sex
 
-#FT = weird!
-# write_xlsx(dups,
-#  path=here::here("Data","NewlyCreatedData","duplicated_individuals_all.xlsx"))
 
 ##checking duplicates in Sex
 sexo<-data.clean %>%
+  dplyr::filter(Sex!="nonID") %>% 
   dplyr::group_by(GLT) %>%
   dplyr::summarise(Sexy = Sex,.groups="keep") %>% 
   distinct() %>% 
@@ -171,13 +174,14 @@ ind<-data.clean %>%
 #check duplicates with groups and regions
 group<-data.clean %>% 
   dplyr::filter(Disp==0 & Death==0 & Solo ==0) %>% 
-  group_by(Group) %>% 
+  dplyr::group_by(Group) %>% 
   dplyr::select(Group,Region) %>% 
-  distinct() %>% 
-  write.csv(., file=here::here("data","NewlyCreatedData","unique-group-region.csv",
-                               sep=";",
-                               quote=F,
-                               row.names=F))
+  dplyr::distinct() %>% 
+  dplyr::arrange(Group) %>% 
+  as.data.frame(.) %>% 
+  write.xlsx(., file=here::here("data","NewlyCreatedData","GroupRegionCheck.xlsx"),
+                          col.names=T,
+             row.names=F)
 
 ```
 
@@ -266,4 +270,73 @@ title_file<-paste("Continuity_field_effort_",
   
 ```
 
-<!--#  -->
+# 5- Identifying all dispersal events
+
+```{r}
+
+#filter data and add id count over time
+data.filter<-data.clean %>% 
+  dplyr::filter(!GLT %in% bad & Disp==0 & Death==0) %>% 
+  dplyr::arrange(DateObs, GLT) %>% 
+  group_by(GLT) %>% 
+  mutate(id=row_number())
+
+gp<-sort(unique(data.filter$Group))
+
+
+#loop through group
+
+newall<-NULL
+newind<-NULL
+disp<-NULL
+
+ for (j in 1:length(gp)){
+
+sub<-data.filter %>% 
+  dplyr::filter(Group==gp[j])
+
+ymdate<-sort(unique(sub$DateObs))
+
+#loop through dates within group
+if (length(ymdate) >1){
+   for (k in 1:(length(ymdate)-1)){
+ 
+  print(c(j,k))
+        #group obs t   
+sub1<-sub %>% 
+  dplyr::filter(DateObs==ymdate[k])
+short1<-sub1 %>% 
+  select(Region,Group,GLT)
+
+#group t+1
+sub2<-sub %>% 
+  dplyr::filter(DateObs==ymdate[k+1])
+short2<-sub2 %>% 
+  select(Region,Group,GLT)
+
+#generate individuals 
+if (!identical(short1,short2)){
+  
+  outsect<-setdiff(short2,short1)
+  new1<-sub2 %>% 
+    dplyr::filter(GLT %in% outsect$GLT) 
+  
+  newall<-rbind(newall,new1)
+  
+}
+   }
+
+new<-newall %>% 
+  group_by(GLT) %>% 
+  slice_min(order_by = DateObs, n = 1) %>% 
+  ungroup() %>% 
+  dplyr::arrange(Group, DateObs)
+
+ setTxtProgressBar(progress_bar(length(gp)),j)  
+
+}
+ }
+
+newdispsucc<-new %>% 
+  dplyr::filter(id>1)
+```

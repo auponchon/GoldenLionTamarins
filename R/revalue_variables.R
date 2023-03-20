@@ -208,61 +208,15 @@ c("2 Irmãos" =	"Faz. 2 Irmaos",
   data$Region[which(data$Group=="JD"|
                     data$Group=="JD2")] <- "Sitio Joedi"
   
-  data$Group[which(data$Group=="AL" & data$Region=="Vendaval")]<-"ALI"
+  data$Group[which(data$Group=="AL" & data$Region=="Faz. Vendaval")]<-"ALI"
+  data$Disp[which(data$GLT=="MK10" & data$Year > 2003 & data$Group=="ML")]<-1
+  data$Disp[which(data$GLT=="PA1" & data$Year > 2005 & data$Group=="PA")]<-1
   
 #  data$Region[which(data$Group=="JR")] <- "Faz. Sta Helena"
   
   return(data)
 }
 
-# revalue_birth<-function(data){
-#   
-# data$Birth<-plyr::revalue(as.factor(data$Birth),
-#                 c("'02/93" = "02/93",
-#                   "'10/09" = "09/09",
-#                   "'10/10" = "09/10",
-#                   "10/'4" = "10/14",
-#                   "?/02" = "06/02",
-#                   "?/14"="06/14",
-#                   "1015" = "10/15",
-#                   "?/16" = "06/16",
-#                   "RC1" = "07/16",
-#                   "RC2" = "05/17",
-#                   "RC3" = "05/17",
-#                   "?/17" = "03/17",   #birth between 01 and 05/17 based on observations
-#                   "43809" = "10/12",
-#                   "10.20" = "10/20",
-#                   "?/20" = "07/20",
-#                   "?/21" = "11/21",
-#                   "10/ 21" = "10/21",
-#                   "'07/22" = "07/22",
-#                   "'04/22" = "04/22",
-#                   "?"= NA))
-#   
-#   
-#   data$Birth[which(data$GLT=="SI10" | data$GLT=="SI11")]<-"11/07"
-#   data$Birth[which(data$GLT=="SI12" | data$GLT=="SI13")]<-"12/07"
-#   
-#   data$Birth[which(data$GLT=="RT20" | data$GLT=="RT21")]<-"06/07"
-#   
-#   data$Birth[which(data$GLT=="MP44")]<-"02/10"
-#   
-#   data$Birth[which(data$GLT=="JP19")]<-"07/10"
-#   
-#   data$Birth[which(data$GLT=="JP20"| data$GLT=="JP22")]<-"09/10"
-#   data$Birth[which(data$GLT=="AF20")]<-"12/11"
-#   data$Birth[which(data$GLT=="FA20")]<-"11/14"
-#   data$Birth[which(data$GLT=="FA7" | data$GLT=="FA8")]<-"10/11"
-#   data$Birth[which(data$GLT=="MP177")]<-"10/14"
-#   data$Birth[which(data$GLT=="MP272")]<-"10/21"
-#   data$Birth[which(data$GLT=="MP38"| data$GLT=="MP39")]<-"10/09"
-#   
-#   data$Birth<-lubridate::my(data$Birth)
-# 
-#   return(data)
-#   
-#   #issue with FA20 (2 birth dates!!)
-# }
 
 revalue_stage<-function(data){
 
@@ -283,15 +237,17 @@ revalue_name<-function(data){
   
   data$GLT<- str_replace(data$GLT, "i", "I")
   
-  data$GLT[data$Tattoo=="Cibele" & data$GLT=="MP121"]<-"Cibele"
+  data$Tattoo[data$GLT=="TR14"]<-"TR14"
+  data$Tattoo[data$Tattoo=="KES"]<-"KE5"
+  data$GLT[data$Tattoo=="Cibele" ]<-"Cibele"  #MP21 & MP121
   data$GLT[data$Tattoo=="Rodrigo"]<-"Rodrigo"
-  data$GLT[data$Tattoo=="Cris" & data$GLT=="MP123"]<-"Cris"
+  data$GLT[data$Tattoo=="Cris"]<-"Cris"  #MP23 & MP123
   data$GLT[data$Tattoo=="Angela"]<-"Angela"
   data$GLT[data$Tattoo=="Nelson"]<-"Nelson"
   data$GLT[data$Tattoo=="1318"]<-"1318"
   data$GLT[data$Tattoo=="AM1"]<-"AM1"
-  data$GLT[data$GLT=="FA40" & data$Tattoo=="UR2"]<-"FA40.1"
   
+  data$GLT[data$GLT=="FA40" & data$Tattoo=="UR2"]<-"FA40.1"
   data$GLT[data$Group=="TM3" & data$GLT=="MP213"]<-"MP213.1"
   data$GLT[data$GLT=="JU"]<-"FT"
   data$GLT[data$GLT=="RT1" & data$Sexo=="F"]<-"RT1.1"
@@ -303,7 +259,11 @@ revalue_name<-function(data){
   data$GLT[data$GLT=="1318" & data$Sexo=="F"]<-"1318.1"
   data$GLT[data$GLT=="ST40" & data$Sexo=="F"]<-"ST40.1"
   data$GLT[data$GLT=="EM11" & data$Sexo=="M"]<-"EM11.1"
- 
+  data$GLT[data$GLT=="SF1" & data$Sex=="F"]<-"SF1.1"
+  data$GLT[data$GLT=="SF4" & data$Sex=="F"]<-"SF4.1"
+  data$GLT[data$GLT=="SF3" & data$Sex=="F"]<-"SF3.1"
+  
+  
    data$Group[data$GLT=="979"] <-"LB"
   
   
@@ -313,9 +273,25 @@ revalue_name<-function(data){
 
 revalue_sex<-function(data){
   
+  data$Sexo[which(data$Sexo=="f")]<-"F"
   data$Sexo[which(data$GLT=="MP62")]<-"F"
   data$Sexo[which(data$GLT=="SI18")]<-"F"
   data$Sexo[which(data$GLT=="SI19")]<-"M"
+  data$Sexo[which(data$GLT=="FX1")]<-"F"
+  data$Sexo[which(data$GLT=="KE4")]<-"M"
+  data$Sexo[which(data$GLT=="O27")]<-"M"
+  data$Sexo[which(data$GLT=="O39")]<-"M"
+  data$Sexo[which(data$GLT=="PT8")]<-"M"
+  data$Sexo[which(data$GLT=="ST24")]<-"M"
+  data$Sexo[which(data$GLT=="ST34")]<-"M"
+  data$Sexo[which(data$GLT=="TR1")]<-"M"
+  data$Sexo[which(data$GLT=="E25")]<-"M"
+  data$Sexo[which(data$GLT=="OL27")]<-"M"
+  data$Sexo[which(data$GLT=="TR23")]<-"F"
+  data$Sexo[which(data$GLT=="TR26")]<-"F"
+  data$Sexo[data$GLT=="TR14"]<-"F"
+  data$Sexo[data$GLT=="TR22"]<-"F"
+ 
   bad<-c("?","T0","-","--")
   
   clean<-data %>%
@@ -330,11 +306,13 @@ revalue_sex<-function(data){
   clean2<-clean %>% 
     group_by(GLT) %>% 
     dplyr::mutate(Sexo=as.factor(Sexo),
-                  Sex =  ifelse("M" %in% Sexo,
-                                "M",
-                         ifelse("F" %in% Sexo,
-                                "F",
-                                "nonID")))
+                  Sex = Sexo)
+                    # 
+                    # ifelse("M" %in% Sexo,
+                    #             "M",
+                    #      ifelse("F" %in% Sexo,
+                    #             "F",
+                    #             "nonID")))
   
   return(clean2)
   
