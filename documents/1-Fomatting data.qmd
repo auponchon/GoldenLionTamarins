@@ -92,6 +92,9 @@ sort(unique(data.clean$Group))
 
 #filter individuals and produce final files
 
+
+transloc<-
+
 data.clean<-data.clean %>%
   dplyr::select(Year,DateObs,Region,Group,GLT,Tattoo,Sex,Idade, Disp, Death, Solo)
 
@@ -281,62 +284,16 @@ data.filter<-data.clean %>%
   group_by(GLT) %>% 
   mutate(id=row_number())
 
-gp<-sort(unique(data.filter$Group))
+#get the name of all individuals observed in more than one group
+dispind<-data.filter %>%
+  dplyr::group_by(GLT) %>%
+  dplyr::summarise(N = n_distinct(Group)) %>% 
+  dplyr::filter(N >1)
+
+data.disp<-data.filter %>% 
+  dplyr::filter(GLT %in% dispind$GLT) %>% 
+  dplyr::arrange(GLT,DateObs)
 
 
-#loop through group
 
-newall<-NULL
-newind<-NULL
-disp<-NULL
-
- for (j in 1:length(gp)){
-
-sub<-data.filter %>% 
-  dplyr::filter(Group==gp[j])
-
-ymdate<-sort(unique(sub$DateObs))
-
-#loop through dates within group
-if (length(ymdate) >1){
-   for (k in 1:(length(ymdate)-1)){
- 
-  print(c(j,k))
-        #group obs t   
-sub1<-sub %>% 
-  dplyr::filter(DateObs==ymdate[k])
-short1<-sub1 %>% 
-  select(Region,Group,GLT)
-
-#group t+1
-sub2<-sub %>% 
-  dplyr::filter(DateObs==ymdate[k+1])
-short2<-sub2 %>% 
-  select(Region,Group,GLT)
-
-#generate individuals 
-if (!identical(short1,short2)){
-  
-  outsect<-setdiff(short2,short1)
-  new1<-sub2 %>% 
-    dplyr::filter(GLT %in% outsect$GLT) 
-  
-  newall<-rbind(newall,new1)
-  
-}
-   }
-
-new<-newall %>% 
-  group_by(GLT) %>% 
-  slice_min(order_by = DateObs, n = 1) %>% 
-  ungroup() %>% 
-  dplyr::arrange(Group, DateObs)
-
- setTxtProgressBar(progress_bar(length(gp)),j)  
-
-}
- }
-
-newdispsucc<-new %>% 
-  dplyr::filter(id>1)
 ```
