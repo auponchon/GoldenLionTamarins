@@ -1,7 +1,7 @@
-library(plyr)
-library(lubridate)
 
 revalue_region<-function(data){
+  
+  data$Group[which(data$Region=="Faz. Vendaval")]<-"AL1"
 
 data$Region<-plyr::revalue(as.factor(data$Region), 
 c("2 Irmãos" =	"Faz. 2 Irmaos",
@@ -99,7 +99,7 @@ c("2 Irmãos" =	"Faz. 2 Irmaos",
   data$Group<-plyr::revalue(as.factor(data$Group), 
                       c("Afetiva"=	"AF",
                         "AF2" = "AFII",
-                        "AXII"="AX2",
+              #          "AXII"="AX2",
                         "Apenhiul"=	"AP",
                         "Areal"=	"AR",
                         "Atlanta"=	"AT",
@@ -207,16 +207,51 @@ c("2 Irmãos" =	"Faz. 2 Irmaos",
   
   data$Region[which(data$Group=="JD"|
                     data$Group=="JD2")] <- "Sitio Joedi"
-  
-  data$Group[which(data$Group=="AL" & data$Region=="Faz. Vendaval")]<-"ALI"
+
+  data$Region[which(data$Group=="JQ")] <- "Poco das Antas"  
+ 
   data$Disp[which(data$GLT=="MK10" & data$Year > 2003 & data$Group=="ML")]<-1
   data$Disp[which(data$GLT=="PA1" & data$Year > 2005 & data$Group=="PA")]<-1
-  
+
 #  data$Region[which(data$Group=="JR")] <- "Faz. Sta Helena"
   
   return(data)
 }
 
+account_translocations<-function(data){
+  
+  data$Disp[which(data$GLT=="JG5" & data$Year < 2002)]<-2
+  data$Disp[which(data$GLT=="PT5" & data$Year < 2003)]<-2
+  data$Disp[which(data$GLT=="JG2" & data$Year < 2003)]<-2
+  data$Disp[which(data$GLT=="OL11" & data$Year < 2002)]<-2
+  data$Disp[which(data$GLT=="JG6" & data$Year < 2002)]<-2
+  data$Disp[which(data$GLT=="JG7" & data$Year < 2002)]<-2
+  data$Disp[which(data$GLT=="JG4" & data$Year < 2003)]<-2
+  data$Disp[which(data$GLT=="FA3" & data$DateObs < ym("2012-07"))]<-2
+  data$Disp[which(data$GLT=="AF5" & data$DateObs < ym("2012-07"))]<-2
+  data$Disp[which(data$GLT=="AF13" & data$DateObs < ym("2012-07"))]<-2
+  data$Disp[which(data$GLT=="AF15" & data$DateObs < ym("2012-07"))]<-2
+  data$Disp[which(data$GLT=="AF16" & data$DateObs < ym("2012-07"))]<-2
+  data$Disp[which(data$GLT=="AF17" & data$DateObs < ym("2012-07"))]<-2
+  data$Disp[which(data$GLT=="AF18" & data$DateObs < ym("2012-07"))]<-2
+  data$Disp[which(data$GLT=="AF19" & data$DateObs < ym("2012-07"))]<-2
+  data$Disp[which(data$GLT=="AF20" & data$DateObs < ym("2012-07"))]<-2
+  data$Disp[which(data$GLT=="AF21" & data$DateObs < ym("2012-07"))]<-2
+  data$Disp[which(data$GLT=="MP133" & data$DateObs < ym("2015-07"))]<-2
+  data$Disp[which(data$GLT=="MP134" & data$DateObs < ym("2015-07"))]<-2
+  data$Disp[which(data$GLT=="MP150" & data$DateObs < ym("2015-07"))]<-2
+  data$Disp[which(data$GLT=="FA20" & data$DateObs < ym("2016-07"))]<-2
+  data$Disp[which(data$GLT=="FA10" & data$DateObs < ym("2015-07"))]<-2
+  data$Disp[which(data$GLT=="FP10" & data$DateObs < ym("2021-01"))]<-2
+  data$Disp[which(data$GLT=="FA39" & data$DateObs < ym("2021-07"))]<-2
+  data$Disp[which(data$GLT=="UR2" & data$DateObs < ym("2021-07"))]<-2
+  data$Disp[which(data$GLT=="FA41" & data$DateObs < ym("2021-07"))]<-2
+  data$Disp[which(data$GLT=="MP192" & data$DateObs < ym("2022-01"))]<-2  #to check
+  
+  
+  
+  return(data)
+}
 
 revalue_stage<-function(data){
 
@@ -246,6 +281,7 @@ revalue_name<-function(data){
   data$GLT[data$Tattoo=="Nelson"]<-"Nelson"
   data$GLT[data$Tattoo=="1318"]<-"1318"
   data$GLT[data$Tattoo=="AM1"]<-"AM1"
+
   
   data$GLT[data$GLT=="FA40" & data$Tattoo=="UR2"]<-"FA40.1"
   data$GLT[data$Group=="TM3" & data$GLT=="MP213"]<-"MP213.1"
@@ -259,13 +295,12 @@ revalue_name<-function(data){
   data$GLT[data$GLT=="1318" & data$Sexo=="F"]<-"1318.1"
   data$GLT[data$GLT=="ST40" & data$Sexo=="F"]<-"ST40.1"
   data$GLT[data$GLT=="EM11" & data$Sexo=="M"]<-"EM11.1"
-  data$GLT[data$GLT=="SF1" & data$Sex=="F"]<-"SF1.1"
-  data$GLT[data$GLT=="SF4" & data$Sex=="F"]<-"SF4.1"
-  data$GLT[data$GLT=="SF3" & data$Sex=="F"]<-"SF3.1"
-  
+  data$GLT[data$GLT=="SF1" & data$Sexo=="F"]<-"SF1.1"
+  data$GLT[data$GLT=="SF4" & data$Sexo=="F"]<-"SF4.1"
+  data$GLT[data$GLT=="SF3" & data$Sexo=="F"]<-"SF3.1"
   
    data$Group[data$GLT=="979"] <-"LB"
-  
+
   
    return(data)
   
@@ -292,10 +327,10 @@ revalue_sex<-function(data){
   data$Sexo[data$GLT=="TR14"]<-"F"
   data$Sexo[data$GLT=="TR22"]<-"F"
  
-  bad<-c("?","T0","-","--")
+  badly<-c("?","T0","-","--")
   
   clean<-data %>%
-    dplyr::mutate(Sexo=ifelse(is.na(Sexo) | Sexo %in% bad,
+    dplyr::mutate(Sexo=ifelse(is.na(Sexo) | Sexo %in% badly,
                               "nonID",
                        ifelse(Sexo=="RF" | Sexo=="F'",
                               "F",
@@ -306,13 +341,11 @@ revalue_sex<-function(data){
   clean2<-clean %>% 
     group_by(GLT) %>% 
     dplyr::mutate(Sexo=as.factor(Sexo),
-                  Sex = Sexo)
-                    # 
-                    # ifelse("M" %in% Sexo,
-                    #             "M",
-                    #      ifelse("F" %in% Sexo,
-                    #             "F",
-                    #             "nonID")))
+                  Sex = ifelse("M" %in% Sexo,
+                                "M",
+                         ifelse("F" %in% Sexo,
+                                "F",
+                                "nonID")))
   
   return(clean2)
   

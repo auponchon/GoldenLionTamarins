@@ -88,12 +88,12 @@ clean<- block.full  %>%
   dplyr::mutate(Group=ifelse(Disp!="1" & Death !="1" & Solo!="1",                          #identify final group name
                        Group,
                        NA),
-                Year=year(DateObs)) %>%
+                Year=year(DateObs),
+                DateObs=as.Date(DateObs,format="%Y-%m")) %>%
   dplyr::select(Year,DateObs,Region,Group,Grupo, GLT, Nyanzol,Tattoo,Sexo,Radio,  #reorder columns
                 Idade,Birth,Disp,Death,Solo,DateEvent) %>%
-  dplyr::arrange(DateObs, Region)
-
-
+   dplyr::arrange(DateObs,Group,GLT) %>% 
+  dplyr::distinct(.,DateObs,Region,Group,GLT, .keep_all=T)
 
   return(clean)
 }

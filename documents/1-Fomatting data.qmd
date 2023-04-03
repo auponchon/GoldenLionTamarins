@@ -16,7 +16,9 @@ Data are stored in .xls or .xlsx files. They consist of blocks of data encompass
 #| warning: false
 
 library(here)
+library(plyr)
 library(tidyverse)
+library(lubridate)
 library(readxl)
 library(xlsx)
 library(conflicted)
@@ -27,6 +29,7 @@ conflict_prefer("mutate", "dplyr")
 source(here::here("R","extract_functions.R"))
 source(here::here("R","revalue_variables.R"))
 source(here::here("R","progress_bar.R"))
+source(here::here("R","extract_pre_2001.R"))
 
 bad<-c("?","T0","IN","?-1","?-2","?-3","FT","?-4","?-5","?-6", "FT")
 
@@ -53,28 +56,36 @@ files.old<-list.files(here::here("data","RawData","pdfData"),
                       pattern = "xls",recursive=T,
                       full.names = T)
 
-
+fileadd<-here::here("data","RawData","ProcessamentoMLD.xlsx")
 
 #function to read each file separately
 data.recent<- purrr::map_dfr(files.recent, extract_long_data,.progress=T)
-data.old<- purrr::map_dfr(files.old, extract_long_data,.progress=T)
+data.pdf<- purrr::map_dfr(files.old, extract_long_data,.progress=T)
+data90<-extract_additional_data(fileadd) %>% 
+  revalue_old_regions(.)
 
 #bind everything
-DATA<-rbind(data.old,data.recent)
+DATA<-rbind(data.pdf,data.recent)
 
 #clean data with specific functions
-data.clean<-DATA %>% 
+data2000<-DATA %>% 
   revalue_region() %>% 
   revalue_name() %>% 
 #      revalue_birth() %>%    #issue with FA20 (2 birth dates!!)
   revalue_stage() %>% 
-  revalue_sex() %>% 
-  
-  dplyr::arrange(GLT,DateObs)
+  revalue_sex() %>%
+  account_translocations() %>% 
+  dplyr::select(Year,DateObs,Region,Group,GLT,Tattoo,Sex,Idade, Disp, Death, Solo) 
+
+data.clean<-data2000 %>% 
+  rbind(data90) %>% 
+  dplyr::mutate(DateObs=format(DateObs,format="%Y-%m")) %>% 
+  dplyr::distinct(DateObs,Region,Group,GLT,.keep_all = T) %>% 
+   dplyr::arrange(Group,GLT,DateObs) 
 
 #check unique group names and Regions
-sort(unique(data.clean$Region))
-sort(unique(data.clean$Group))
+# sort(unique(data.clean$Region))
+# sort(unique(data.clean$Group))
 
 #write a file with group and region names
 # data.clean %>%
@@ -93,15 +104,11 @@ sort(unique(data.clean$Group))
 #filter individuals and produce final files
 
 
-transloc<-
 
-data.clean<-data.clean %>%
-  dplyr::select(Year,DateObs,Region,Group,GLT,Tattoo,Sex,Idade, Disp, Death, Solo)
-
-save(data.clean,file=here::here("Data",
-                                "NewlyCreatedData",
-                                "all_long.RData"))
-
+# save(data.clean,file=here::here("Data",
+#                                 "NewlyCreatedData",
+#                                 "all_long.RData"))
+# 
 #check group names 
 # subseto<-DATA %>% 
 #   filter(Group=="DN"|
@@ -292,7 +299,11 @@ dispind<-data.filter %>%
 
 data.disp<-data.filter %>% 
   dplyr::filter(GLT %in% dispind$GLT) %>% 
-  dplyr::arrange(GLT,DateObs)
+  dplyr::arrange(GLT,DateObs) %>% 
+  dplyr::mutate(To=Group,
+                From=dplyr::lag(Group)) %>% 
+ dplyr::mutate(Change=ifelse(To != From, 1,0)) %>% 
+  dplyr::filter(Change >0)
 
 
 
