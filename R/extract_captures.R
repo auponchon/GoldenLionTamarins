@@ -1,5 +1,5 @@
 
-extract_additional_data <- function(fileadd) {
+extract_capture_data <- function(fileadd) {
 
 block<-read_excel(fileadd,
                   sheet="todos",
@@ -18,7 +18,7 @@ block<-read_excel(fileadd,
                 DateObs=as.Date(DateObs,format="%Y-%m")) %>% 
   dplyr::select(Year,DateObs,Region,Group,GLT,Tattoo,Sex,Idade,Disp,Death,Solo) %>% 
   dplyr::arrange(DateObs,GLT) %>% 
-  dplyr::filter(!is.na(GLT))
+  dplyr::filter(!is.na(GLT))# & Year > 2000)
 
 
 return(block)
@@ -32,12 +32,12 @@ revalue_old_regions<-function(data){
   data$Region<-plyr::revalue(as.factor(data$Region), 
                              c("BOI B" = "Poco das Antas",
                                "FAZ. 2I" =	"Faz. 2 Irmaos",
-                               "FAZ. 2E" = "Faz. Estreito",
+                      #         "FAZ. 2E" = "Faz. Estreito",
                                "FAZ. AF" = "Faz. Afetiva",
                                "FAZ.AF" = "Faz. Afetiva",
                                "FAZ. BE" = "Faz. Boa Esperanca",
                                "FAZ.BE" = "Faz. Boa Esperanca",
-                               "FAZ. BR" = "Faz. Bom Retiro",
+                       #        "FAZ. BR" = "Faz. Bom Retiro",
                                "FAZ. CNC" = "Faz. Cabana nova Conquista",
                                "B-SJ" = "Faz. Cabana nova Conquista",
                    #            "FAZ. BV" = "Faz. Sao Francisco",
@@ -59,7 +59,7 @@ revalue_old_regions<-function(data){
                                "FAZ. SH" = "Faz. Sta Helena",
                                 "FAZ. SH2" = "Faz. Sta Helena 2",
                   #             "FAZ. SJ" = "Faz. Boa Esperanca", for FX group and Faz. Sao Joao for IR
-                               "FAZ. SM" = "Faz. Vale do Cedro",
+                        #       "FAZ. SM" = "Faz. Vale do Cedro",
                                "FAZ.STA.Fé" = "Faz. Sta Fe",
                                "FAZ.STA. B."= "Faz. St Bira",
                                 "FAZ.STA.HEL" = "Faz. Sta Helena",
@@ -69,8 +69,8 @@ revalue_old_regions<-function(data){
                                "FAZ. VC" = "Faz. Vale do Cedro",
                                 "FAZ.VC" = "Faz. Vale do Cedro",
                   #              "FAZ. IU" = "",
-                              "PEDR" = "Poco das Antas",
-                               "REBIO" = "Rebio Uniao",
+                  #            "PEDR" = "Poco das Antas",
+                   #            "REBIO" = "Rebio Uniao",
                                "REBIO." = "Rebio Uniao",
                                "RBIO UNIAO" = "Rebio Uniao",
                                "RBIO P. ANT."= "Poco das Antas",
@@ -82,8 +82,8 @@ revalue_old_regions<-function(data){
                                "SIT.P" = "St. Professor", 
                                "ST. 3I" = "Sitio 4 Irmaos",
                                "ST.3I"= "Sitio 4 Irmaos",
-                               "ST. ELIELTON" ="St. do Eliel",
-                              "VIV 2" = "Poco das Antas"))
+                               "ST. ELIELTON" ="St. do Eliel"))
+                   #           "VIV 2" = "Poco das Antas"))
                                
                                
   data$Group<-plyr::revalue(as.factor(data$Group), 
@@ -94,6 +94,8 @@ revalue_old_regions<-function(data){
                                "LAII" = "LA2",
                                "MFII" = "MF2",
                                "MLII" = "ML2",
+                               "RIS" = "RI",
+                #               "RIS2" = "RI2",
                                "SEDE" = "SD",
                                "STA Fé"	= "Sta Fe"))
   
@@ -102,5 +104,14 @@ revalue_old_regions<-function(data){
                       data$Group=="SI2")] <- "Faz. Sta Helena 2"
   
   return(data)
-                        }
+}
+
+revalue_names_capture<-function(data){
+  data$GLT[which(data$Tattoo=="2405")]<-"2405"
+  data$GLT[which(data$Tattoo=="2155")]<-"2155"
+  data$GLT[which(data$GLT=="2317")]<-data$Tattoo[which(data$GLT=="2317")]
+
+  return(data)
+  
+}
   

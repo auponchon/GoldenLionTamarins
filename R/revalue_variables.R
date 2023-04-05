@@ -209,6 +209,8 @@ c("2 Irmãos" =	"Faz. 2 Irmaos",
                     data$Group=="JD2")] <- "Sitio Joedi"
 
   data$Region[which(data$Group=="JQ")] <- "Poco das Antas"  
+  
+  data$Group[which(data$GLT=="PT3" & data$Year==2004)]<-NA
  
   data$Disp[which(data$GLT=="MK10" & data$Year > 2003 & data$Group=="ML")]<-1
   data$Disp[which(data$GLT=="PA1" & data$Year > 2005 & data$Group=="PA")]<-1
@@ -247,8 +249,15 @@ account_translocations<-function(data){
   data$Disp[which(data$GLT=="UR2" & data$DateObs < ym("2021-07"))]<-2
   data$Disp[which(data$GLT=="FA41" & data$DateObs < ym("2021-07"))]<-2
   data$Disp[which(data$GLT=="MP192" & data$DateObs < ym("2022-01"))]<-2  #to check
-  
-  
+  data$Disp[which(data$GLT=="FA33")]<-2 
+  data$Disp[which(data$GLT=="FA35")]<-2  #to check
+  data$Disp[which(data$GLT=="FB6")]<-2  #to check
+  data$Disp[which(data$GLT=="FB4")]<-2  #to check
+  data$Disp[which(data$GLT=="FB5")]<-2  #to check
+  data$Disp[which(data$GLT=="MP308")]<-2  #to check
+  data$Disp[which(data$GLT=="MP309")]<-2  #to check
+  data$Disp[which(data$GLT=="MP310")]<-2  #to check
+  data$Disp[which(data$GLT=="MP311")]<-2  #to check
   
   return(data)
 }

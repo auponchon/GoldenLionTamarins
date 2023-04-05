@@ -29,7 +29,7 @@ conflict_prefer("mutate", "dplyr")
 source(here::here("R","extract_functions.R"))
 source(here::here("R","revalue_variables.R"))
 source(here::here("R","progress_bar.R"))
-source(here::here("R","extract_pre_2001.R"))
+source(here::here("R","extract_captures.R"))
 
 bad<-c("?","T0","IN","?-1","?-2","?-3","FT","?-4","?-5","?-6", "FT")
 
@@ -56,15 +56,14 @@ files.old<-list.files(here::here("data","RawData","pdfData"),
                       pattern = "xls",recursive=T,
                       full.names = T)
 
-fileadd<-here::here("data","RawData","ProcessamentoMLD.xlsx")
+filecapt<-here::here("data","RawData","ProcessamentoMLD.xlsx")
+filedisp<-here::here("data","RawData","GLT_movement.xls")
 
 #function to read each file separately
 data.recent<- purrr::map_dfr(files.recent, extract_long_data,.progress=T)
 data.pdf<- purrr::map_dfr(files.old, extract_long_data,.progress=T)
-data90<-extract_additional_data(fileadd) %>% 
-  revalue_old_regions(.)
 
-#bind everything
+#bind observations
 DATA<-rbind(data.pdf,data.recent)
 
 #clean data with specific functions
@@ -77,11 +76,20 @@ data2000<-DATA %>%
   account_translocations() %>% 
   dplyr::select(Year,DateObs,Region,Group,GLT,Tattoo,Sex,Idade, Disp, Death, Solo) 
 
+#extract useful captures
+datacapt<-extract_capture_data(filecapt) %>% 
+  revalue_old_regions(.) %>% 
+  dplyr::filter(Group %in% unique(data2000$Group)) %>% 
+  revalue_names_capture()
+
+#datadisp<-extract_disp_data(filedisp)
+
+
 data.clean<-data2000 %>% 
-  rbind(data90) %>% 
-  dplyr::mutate(DateObs=format(DateObs,format="%Y-%m")) %>% 
+  rbind(datacapt) %>% 
+  dplyr::mutate(DateObs=lubridate::floor_date(as_date(DateObs), "month")) %>% 
   dplyr::distinct(DateObs,Region,Group,GLT,.keep_all = T) %>% 
-   dplyr::arrange(Group,GLT,DateObs) 
+   dplyr::arrange(DateObs,Group,GLT) 
 
 #check unique group names and Regions
 # sort(unique(data.clean$Region))
@@ -105,9 +113,9 @@ data.clean<-data2000 %>%
 
 
 
-# save(data.clean,file=here::here("Data",
-#                                 "NewlyCreatedData",
-#                                 "all_long.RData"))
+save(data.clean,file=here::here("Data",
+                                "NewlyCreatedData",
+                                "clean_raw_data_long.RData"))
 # 
 #check group names 
 # subseto<-DATA %>% 
@@ -135,7 +143,7 @@ Duplicates are checked in group and region names, as well as in individuals. Ind
 #| message: false
 #| warning: false
 
-load(here::here("Data","NewlyCreatedData","all_long.RData"))
+load(here::here("Data","NewlyCreatedData","clean_raw_data_long.RData"))
 
 #identify duplicates in individual names
 #create an object with GLT duplicates
@@ -280,7 +288,7 @@ title_file<-paste("Continuity_field_effort_",
   
 ```
 
-# 5- Identifying all dispersal events
+# 5- Identifying successful dispersal events
 
 ```{r}
 
