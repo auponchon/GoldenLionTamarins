@@ -18,7 +18,7 @@ block<-read_excel(fileadd,
                 DateObs=as.Date(DateObs,format="%Y-%m")) %>% 
   dplyr::select(Year,DateObs,Region,Group,GLT,Tattoo,Sex,Idade,Disp,Death,Solo) %>% 
   dplyr::arrange(DateObs,GLT) %>% 
-  dplyr::filter(!is.na(GLT))# & Year > 2000)
+  dplyr::filter(!is.na(GLT) & !is.na(Group))# & Year > 2000)
 
 
 return(block)
@@ -64,7 +64,7 @@ revalue_old_regions<-function(data){
                                "FAZ.STA. B."= "Faz. St Bira",
                                 "FAZ.STA.HEL" = "Faz. Sta Helena",
                                "FAZ. TAM" = "Faz. Tamarins",
-                               "FAZ.TAM" = "Faz. Tamarins",
+                   #            "FAZ.TAM" = "Faz. Tamarins",
                                "FAZ. V" = "Faz. Vendaval",
                                "FAZ. VC" = "Faz. Vale do Cedro",
                                 "FAZ.VC" = "Faz. Vale do Cedro",

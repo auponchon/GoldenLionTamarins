@@ -7,7 +7,7 @@ editor: visual
 
 # Joining groups with spatial locations
 
-Groups are assigned to a region which is itself located with projected coordinates in the local \*\*\* projection system
+Groups are assigned to a region which is itself located with projected coordinates in the local EPSG 31983 projection system
 
 ```{r}
 library(here)
@@ -27,26 +27,31 @@ loc<-read.table(here::here("data","rawData","Landscape","RegionsName.csv"),
   dplyr::rename(Long=CENTROIDE.X.UTM.SAD69.23S,
                 Lat=CENTROIDE.Y.UTM.SAD69.23S,
                 Group=Abreviation) %>% 
-  dplyr::select(-Platform,-City) 
+  dplyr::select(-Platform,-City) %>% 
+  dplyr::filter_all(any_vars(!is.na(.)))
+  
 
 #Join groups and locations for individual observations
+excl<-c("AF","JG", "JR","MF","PA")
+
 
 spatdata<-data.clean %>% 
    dplyr::left_join(.,loc, by="Group",
             multiple="first") %>% 
-  dplyr::filter(!is.na(Long)) %>% 
+  dplyr::filter(!is.na(Long)) %>%
+  dplyr::filter(!Group %in% excl) %>% 
   droplevels() %>% 
   dplyr::arrange(GLT,Group,DateObs) %>% 
   dplyr::mutate(GLT=as.factor(GLT)) %>% 
   dplyr::group_by(GLT)%>% 
   dplyr::filter(!GLT %in% bad & Disp==0 & Death==0 & Solo==0) 
 
-#Idenity changes in groups
+#Identify changes in groups =dispersal)
 ids<-unique(spatdata$GLT)
 spatdisp<-NULL
 
 for (i in 1:length(ids)) {
-  temp<-subset(spatdata,spatdata$GLT==ids[i])
+  temp<-subset(spatdata,spatdata$GLT==ids[i] & spatdata$Disp!=2)
   temp$disp<-0
   if(nrow(temp)>1){
     for (j in 2:nrow(temp)){
@@ -74,10 +79,10 @@ lines_disp <- spdisp %>%
   dplyr::summarise(do_union = FALSE) %>%
   st_cast("LINESTRING")
 
-# write_sf(lines_disp,
-#          here::here("data","NewlyCreatedData","Landscape",
-#                     "disp.lines_2001.shp"),
-#                     delete_layer=T)
+write_sf(lines_disp,
+         here::here("data","NewlyCreatedData","Landscape",
+                    "disp_lines_2001.shp"),
+                    delete_layer=T)
 
 land<-read_sf(here::here("data","RawData","Landscape","Shapefiles Landscape AMLD", "SIG-EDUC Redescobrindo 2021 - Fragmentos de Vegetação.shp"))
 
@@ -98,22 +103,22 @@ fieldgg<-ggplot()+
 
   #           aes(colour=GLT))+
 
-  # coord_sf(xlim = c(longmnr,longmxr), 
-
-  #          ylim=c(latmnr, latmxr),  
-
-  #          expand = FALSE) +
+   # coord_sf(xlim = c(longmnr,longmxr),
+   # 
+   #          ylim=c(latmnr, latmxr),
+   # 
+   #          expand = FALSE) +
 
   #    scale_colour_manual() +
 
-  # annotation_scale(location = "br", 
-  #                  width_hint = 0.3,
-  #                  pad_x = unit(0.3, "cm"), 
-  #                  bar_cols = "black") +
-  # annotation_north_arrow(location = "bl", 
-  #                        which_north = "true",
-  #                        style = ggspatial::north_arrow_nautical(), 
-  #                        pad_y = unit(0.2, "cm")) +
+   annotation_scale(location = "br",
+                    width_hint = 0.3,
+                    pad_x = unit(0.3, "cm"),
+                   bar_cols = "black") +
+   annotation_north_arrow(location = "bl",
+                         which_north = "true",
+                          style = ggspatial::north_arrow_nautical(),
+                          pad_y = unit(0.2, "cm")) +
   theme_void() +
   theme(legend.position = "none")
 

@@ -211,6 +211,11 @@ c("2 Irmãos" =	"Faz. 2 Irmaos",
   data$Region[which(data$Group=="JQ")] <- "Poco das Antas"  
   
   data$Group[which(data$GLT=="PT3" & data$Year==2004)]<-NA
+  data$Group[which(data$Group=="AL" & data$Year<2007)]<-"AL1"
+  data$Group[which(data$GLT=="1303" & 
+                     data$Year>=2014 & 
+                     data$Year<2020 & 
+                     !is.na(data$Group))]<-"AL"
  
   data$Disp[which(data$GLT=="MK10" & data$Year > 2003 & data$Group=="ML")]<-1
   data$Disp[which(data$GLT=="PA1" & data$Year > 2005 & data$Group=="PA")]<-1

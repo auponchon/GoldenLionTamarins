@@ -30,6 +30,7 @@ source(here::here("R","extract_functions.R"))
 source(here::here("R","revalue_variables.R"))
 source(here::here("R","progress_bar.R"))
 source(here::here("R","extract_captures.R"))
+source(here::here("R","extract_disp.R"))
 
 bad<-c("?","T0","IN","?-1","?-2","?-3","FT","?-4","?-5","?-6", "FT")
 
@@ -82,12 +83,12 @@ datacapt<-extract_capture_data(filecapt) %>%
   dplyr::filter(Group %in% unique(data2000$Group)) %>% 
   revalue_names_capture()
 
-#datadisp<-extract_disp_data(filedisp)
+datadisp<-extract_disp_data(filedisp)
 
 
 data.clean<-data2000 %>% 
   rbind(datacapt) %>% 
-  dplyr::mutate(DateObs=lubridate::floor_date(as_date(DateObs), "month")) %>% 
+#  dplyr::mutate(DateObs=lubridate::floor_date(as_date(DateObs), "month")) %>% 
   dplyr::distinct(DateObs,Region,Group,GLT,.keep_all = T) %>% 
    dplyr::arrange(DateObs,Group,GLT) 
 
@@ -136,7 +137,7 @@ save(data.clean,file=here::here("Data",
 
 # 2- Checking duplicates and errors
 
-Duplicates are checked in group and region names, as well as in individuals. Individual variables are also filled, to ensure that they are consistent among observations of the same individual (notably sex and date birth). After data corection, all objects should be empty!
+Duplicates are checked in group and region names, as well as in individuals. Individual variables are also filled, to ensure that they are consistent among observations of the same individual (notably sex and date birth). After data correction, all objects should be empty!
 
 ```{r}
 #| echo: false
@@ -161,8 +162,6 @@ dups<-data.clean %>%
   dplyr::arrange(GLT, DateObs)
 
 ###
-## !! "AF17"  "MP172" "RL15"  "RP3" !!
-##those individuals are still duplicated
 ##Individual Cibele wuth different sex
 
 
