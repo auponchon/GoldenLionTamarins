@@ -172,6 +172,9 @@ sexo<-data.clean %>%
   distinct() %>% 
   dplyr::filter(n()>1)
 
+write.table(sexo,file=here::here("data","NewlyCreatedData","Checks","sex_check.txt"),
+      sep="\t",row.names=F,quote=F)
+
 #MP475 problematic (same birth and both M & F)
 
 #1375 with 3 different dates!!
@@ -372,7 +375,8 @@ setTxtProgressBar(progress_bar(length(dateobs)),i)
 }
 }
 
-
+emigr<-disp %>% 
+  dplyr::filter(id>1)
 
 
 
