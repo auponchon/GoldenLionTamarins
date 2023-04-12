@@ -41,7 +41,8 @@ extract_disp_data <- function(filedisp) {
   
 block<-block.emigr %>% 
   rbind(block.immigr) %>% 
-  dplyr::mutate(DateObs=as.Date(DateObs,format="%Y-%M-%d")) %>% 
+  dplyr::mutate(DateObs=as.Date(DateObs,format="%Y-%M-%d"),
+                File="disp") %>% 
   dplyr::arrange(DateObs,Group,GLT)
    
   return(block)

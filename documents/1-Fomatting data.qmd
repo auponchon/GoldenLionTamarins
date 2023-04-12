@@ -47,13 +47,11 @@ names<-c("chiquinho","Georgia","Luisa","Antônia","Luana",
          "Camilo","André")
 
 #list all files
-
-
-files.recent<-list.files(here::here("data","RawData","Groups"),
+files.recent<-list.files(here::here("data","RawData","ObsData","2009-2022"),
                          pattern = "xls",recursive=T,
                          full.names = T)
 
-files.old<-list.files(here::here("data","RawData","pdfData"),
+files.old<-list.files(here::here("data","RawData","ObsData","2001-2009"),
                       pattern = "xls",recursive=T,
                       full.names = T)
 
@@ -71,11 +69,12 @@ DATA<-rbind(data.pdf,data.recent)
 data2000<-DATA %>% 
   revalue_region() %>% 
   revalue_name() %>% 
-#      revalue_birth() %>%    #issue with FA20 (2 birth dates!!)
+      revalue_birth() %>%    
   revalue_stage() %>% 
   revalue_sex() %>%
   account_translocations() %>% 
-  dplyr::select(Year,DateObs,Region,Group,GLT,Tattoo,Sex,Idade, Disp, Death, Solo) 
+  dplyr::select(Year,DateObs,Region,Group,GLT,Tattoo,
+                Sex,Birth,Idade, Disp, Death, Solo,File) 
 
 #extract useful captures
 datacapt<-extract_capture_data(filecapt) %>% 
@@ -88,8 +87,8 @@ datadisp<-extract_disp_data(filedisp)
 
 data.clean<-data2000 %>% 
   rbind(datacapt) %>% 
-#  dplyr::mutate(DateObs=lubridate::floor_date(as_date(DateObs), "month")) %>% 
-  dplyr::distinct(DateObs,Region,Group,GLT,.keep_all = T) %>% 
+  rbind(datadisp) %>% 
+  dplyr::distinct(DateObs,Group,GLT,.keep_all = T) %>% 
    dplyr::arrange(DateObs,Group,GLT) 
 
 #check unique group names and Regions
@@ -163,7 +162,7 @@ dups<-data.clean %>%
 
 ###
 ##Individual Cibele wuth different sex
-
+#RL15, AF6, Af8
 
 ##checking duplicates in Sex
 sexo<-data.clean %>%
@@ -209,6 +208,10 @@ The dataset for capture-recapture analyses includes individuals which have been 
 Duplicate individual GLT and tattoos are renamed in the code, not in the files (see revalue_variables R file).
 
 ```{r}
+#| echo: false
+#| message: false
+#| warning: false
+
 load(here::here("Data","NewlyCreatedData","all_long.RData"))
 bad<-c("?","T0","IN","?-1","?-2","?-3","FT","?-4","?-5","?-6")
 
@@ -235,6 +238,10 @@ dat<-data.clean %>%
 # 4- Checking continuity in observations
 
 ```{r}
+#| echo: false
+#| message: false
+#| warning: false
+
 library(viridis)
 library(gridExtra)
 
@@ -291,6 +298,10 @@ title_file<-paste("Continuity_field_effort_",
 
 ```{r}
 
+#| echo: false
+#| message: false
+#| warning: false
+
 #filter data and add id count over time
 data.filter<-data.clean %>% 
   dplyr::filter(!GLT %in% bad & Disp==0 & Death==0) %>% 
@@ -311,6 +322,58 @@ data.disp<-data.filter %>%
                 From=dplyr::lag(Group)) %>% 
  dplyr::mutate(Change=ifelse(To != From, 1,0)) %>% 
   dplyr::filter(Change >0)
+
+
+
+```
+
+# 6- Identifying all dispersal events
+
+```{r}
+#| echo: false
+#| message: false
+#| warning: false
+
+
+#filter data and add id count over time
+data.filter<-data.clean %>% 
+  dplyr::filter(!GLT %in% bad & Disp==0 & Death==0) %>% 
+  dplyr::arrange(DateObs, GLT) %>% 
+  group_by(GLT) %>% 
+  mutate(id=row_number())
+disp<-NULL
+
+gp<-sort(unique(data.filter$Group))
+
+for (i in 1:length(gp)){
+  
+singlegp<-data.filter %>% 
+  dplyr::filter(Group==gp[i])
+
+dateobs<-sort(unique(singlegp$DateObs))
+
+if(length(dateobs)>1){
+for (j in 2:length(dateobs)){
+  
+  daygpbef<-singlegp %>% 
+    dplyr::filter(DateObs==dateobs[j-1])
+  
+  daygp<-singlegp %>% 
+    dplyr::filter(DateObs==dateobs[j])
+  
+  miss<-anti_join(daygpbef,daygp,by="GLT")
+  
+  if(nrow(miss)>0){
+disp<-rbind(disp,miss)
+setTxtProgressBar(progress_bar(length(dateobs)),i)  
+
+}
+}
+}
+}
+
+
+
 
 
 

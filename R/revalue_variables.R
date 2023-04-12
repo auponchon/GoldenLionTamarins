@@ -367,3 +367,29 @@ revalue_sex<-function(data){
   
 }
 
+
+revalue_birth<-function(data){
+  
+  data$Birth[data$GLT=="LA12"]<-"02/93"
+  data$Birth[data$GLT=="MP275"]<-"10/20"
+  data$Birth[data$GLT=="FP6"]<-"10/14"
+  data$Birth[data$Birth=="?/21"]<-"09/21"
+  data$Birth[data$Birth=="?/20"]<-"09/20"
+  data$Birth[data$Birth=="?/17"]<-"09/17"
+  data$Birth[data$Birth=="?/16"]<-"09/16"
+  data$Birth[data$Birth=="?/14"]<-"09/14"
+  data$Birth[data$Birth=="?/10"]<-"09/10"
+  data$Birth[data$Birth=="?/07"]<-"09/07"
+  data$Birth[data$Birth=="?/03"]<-"09/03"
+  data$Birth[data$Birth=="?/02"]<-"09/02"
+  data$Birth[data$Birth=="?/01"]<-"09/01"
+  data$Birth[data$Birth=="?/99"]<-"09/99"
+  data$Birth[data$Birth=="1000"]<-"10/00"
+  data$Birth[data$Birth=="9/20"]<-"09/20"
+  data$Birth[data$Birth=="2/21"]<-"02/21"
+ 
+  
+  return(data) 
+  
+}
+

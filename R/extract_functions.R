@@ -79,8 +79,7 @@ clean<- block.full  %>%
                        Grupo),
           Idade = ifelse(GLT=="IN",
                          "IN",
-                         Idade)
-          ) %>%
+                         Idade)) %>%
   fill(Group) %>%    #fill empty group column with site name
   dplyr::mutate(DateObs=as.Date(str_extract(file,
                                       "[0-9]{2}-[0-9]{2}-[0-9]{4}"),     #extract date from file name
@@ -89,9 +88,10 @@ clean<- block.full  %>%
                        Group,
                        NA),
                 Year=year(DateObs),
-                DateObs=as.Date(DateObs,format="%Y-%m")) %>%
+                DateObs=as.Date(DateObs,format="%Y-%m"),
+                File="Obs") %>%
   dplyr::select(Year,DateObs,Region,Group,Grupo, GLT, Nyanzol,Tattoo,Sexo,Radio,  #reorder columns
-                Idade,Birth,Disp,Death,Solo,DateEvent) %>%
+                Idade,Birth,Disp,Death,Solo,DateEvent,File) %>%
    dplyr::arrange(DateObs,Group,GLT) %>% 
   dplyr::distinct(.,DateObs,Region,Group,GLT, .keep_all=T)
 

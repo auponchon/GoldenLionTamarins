@@ -15,8 +15,9 @@ block<-read_excel(fileadd,
                 Disp="0",
                 Death="0",
                 Solo="0",
-                DateObs=as.Date(DateObs,format="%Y-%m")) %>% 
-  dplyr::select(Year,DateObs,Region,Group,GLT,Tattoo,Sex,Idade,Disp,Death,Solo) %>% 
+                DateObs=as.Date(DateObs,format="%Y-%m"),
+                File="capt") %>% 
+  dplyr::select(Year,DateObs,Region,Group,GLT,Tattoo,Sex,Idade,Disp,Death,Solo,File) %>% 
   dplyr::arrange(DateObs,GLT) %>% 
   dplyr::filter(!is.na(GLT) & !is.na(Group))# & Year > 2000)
 
