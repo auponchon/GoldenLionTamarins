@@ -3,12 +3,18 @@
 ### Date: 2023
 
 ### Libraries
+<<<<<<< HEAD
 load.lib = c("dplyr","tibble", "data.table",
              "tidyr", "xlsx", "zoo", "readxl")
+=======
+load.lib = c("dplyr","Hmisc", "tibble", "data.table",
+             "tidyr")
+>>>>>>> 4fd659c (Sex verification)
 sapply(load.lib,require,character=TRUE)
 
 ### Data
 load("D:/monas/Git/repo/glt/GoldenLionTamarins/data/NewlyCreatedData/clean_raw_data_long.RData")
+<<<<<<< HEAD
 data.clean = rowid_to_column(data.clean) # Add a rowid column (observation unique id)
 data.clean$rowid = paste0("obs",data.clean$rowid)
 data.clean = as.data.table(data.clean)
@@ -29,16 +35,45 @@ dup.sex = data.clean %>%
   ungroup()
 n = dup.sex %>% 
   group_by(GLT, SexOK) %>% 
+=======
+data.clean = rowid_to_column(data.clean)
+data.clean$rowid = paste0("obs",data.clean$rowid)
+data.clean = as.data.frame(data.clean)
+summary(data.clean)
+
+### Sex verification
+# Update case mistakes
+data.clean = data.clean %>% 
+  mutate(Sex = ifelse(Sex == "m", "M",
+                      Sex))
+data.clean = data.clean %>% 
+  mutate(Sex = ifelse(Sex == "M0" | Sex == "nonID" | Sex == "S", NA,
+                      Sex))
+
+# Select individuals with duplicated sexes
+dup.sex = data.clean %>% 
+  select(GLT, Sex) %>% 
+  group_by(GLT) %>%
+  filter(n_distinct(Sex) > 1) %>%
+  ungroup()
+n = dup.sex %>% 
+  group_by(GLT, Sex) %>% 
+>>>>>>> 4fd659c (Sex verification)
   summarise(n=n())
 
 ## Fill in NAs for individuals with another value
 # Select GLT with NAs in sex column
 sub.na = dup.sex %>% 
+<<<<<<< HEAD
   filter(is.na(SexOK)) %>% 
+=======
+  filter(is.na(Sex)) %>% 
+>>>>>>> 4fd659c (Sex verification)
   select(GLT) %>% 
   pull()
 # Subset data.clean with the latter GLT, and update the NA value according to the dominant one (na.locf)
 correct.na = data.clean %>% 
+<<<<<<< HEAD
   select(rowid, GLT, SexOK) %>% 
   subset(GLT %in% sub.na) %>% 
   group_by(GLT) %>% 
@@ -49,10 +84,20 @@ correct.na = data.clean %>%
   as.data.table()
 # Update the sex in the dataset where observations match those 
 setDT(data.clean)[correct.na, "SexOK" := .(Sex.b), on = "GLT"]
+=======
+  filter(GLT %in% sub.na) %>% 
+  group_by(GLT) %>% 
+  arrange(GLT, Sex) %>% 
+  mutate(Sex = zoo::na.locf(Sex)) %>% 
+  ungroup()
+# Update the sex in the dataset where observations match those 
+
+>>>>>>> 4fd659c (Sex verification)
 
 # Remove the NAs errors from the table
 dup.sex = dup.sex %>% 
   group_by(GLT) %>% 
+<<<<<<< HEAD
   arrange(GLT, SexOK) %>% 
   mutate(SexOK = zoo::na.locf(SexOK)) %>% 
   filter(n_distinct(SexOK) > 1)
@@ -242,3 +287,25 @@ n = n %>%
                                        Idade))))
 data.clean = data.clean %>% 
   left_join(select(n,c(rowid,Idade2)))
+=======
+  arrange(GLT, Sex) %>% 
+  mutate(Sex = zoo::na.locf(Sex)) %>% 
+  filter(n_distinct(Sex) > 1)
+n = dup.sex %>% 
+  group_by(GLT, Sex) %>% 
+  summarise(n=n())
+n = n %>%
+  pivot_wider(names_from = Sex, values_from = n)
+
+# Locate significant uncertainties
+n = n %>% 
+  mutate(Sex = ifelse(abs(F-M) < 5,"?","OK"))
+
+
+
+# Export errors 
+write.csv(n, "D:/monas/Git/repo/glt/GoldenLionTamarins/data/NewlyCreatedData/Checks/sex_checkV2.csv", row.names=FALSE)
+
+
+### Age and life stage verification
+>>>>>>> 4fd659c (Sex verification)
