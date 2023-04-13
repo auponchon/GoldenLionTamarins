@@ -124,30 +124,4 @@ fieldgg<-ggplot()+
 
 print(fieldgg)
 
-
-```
-
-# Importing older migration events
-
-Another file is available with explicit dispersal events by individuals, with emigration and immigration group names
-
-```{r}
-library(readxl)
-local<-read_excel(here::here("data","rawData","GLT_movement.xls"),
-                  col_names = T) %>% 
-  dplyr::rename(GLT=Individual,
-                Tattoo=Tatoo,
-                DispType=Type.of.dispersal,
-                FragEmigr=Fragment.of.emigration,
-                DispDate=Estimated.date.of.emigration,
-                EmigrDate=Estimated.date.of.emigration,
-                ImmigrDate=Estimated.date.of.Immigration) %>% 
-  dplyr::select(GLT,Sex,Birth,DispType,GroupEmigr,EmigrDate,
-                GroupImmigr,ImmigrDate) %>% 
-  pivot_longer(cols=c(GroupImmigr,ImmigrDate),
-               names_to=c("ImmigrGroup","ImmigrDate"),
-               cols_vary="fastest",
-               names_sep="Mouet",
-               values_to="Immigr")
-
 ```

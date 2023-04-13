@@ -321,8 +321,8 @@ dispind<-data.filter %>%
 data.disp<-data.filter %>% 
   dplyr::filter(GLT %in% dispind$GLT) %>% 
   dplyr::arrange(GLT,DateObs) %>% 
-  dplyr::mutate(To=Group,
-                From=dplyr::lag(Group)) %>% 
+  dplyr::mutate(From=dplyr::lag(Group),
+                To=Group) %>% 
  dplyr::mutate(Change=ifelse(To != From, 1,0)) %>% 
   dplyr::filter(Change >0)
 
