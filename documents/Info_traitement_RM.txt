@@ -10,12 +10,21 @@ En + : données d'indiv translocalisés (tranlocated_ind) ; d'évènements de di
 
 
 
-*** Correction des données de sexe
+*** CORRECTION DU SEXE
+1) Mise à jour des erreurs de typographie (m, M0, S)
+2) Correction du sexe :
+* Cas de figure : individus qui ont une mention de sexe et un ou plusieurs mentions "NA"
+Solution : implémenter le sexe majoritaire dans les cellules NA
+* Cas de figure : plusieurs sexes différents
+Solution : calculer la différence entre les mentions du sexe femelle et du sexe mâle. On considère qu'il y a error quand la différence est inférieure à 7. 
+On exporte et on vérifie manuellement les cas où la différence est inférieure à 7
+On implémente le sexe majoritaire sinon
 
 
 
-*** Correction des données d'âge
+*** CORRECTION DE L'AGE
 Deux sources de données fiables : fichier de Valéria ("BirthDates.xlsx") et données issues de GLT_movement. 
+
 I. Données 1989-2022
 Données sources : Utilisation des données de naissance (fichier de Valéria : BirthDates.xlsx) (naissances de 1989 à 2001)
 EXCEL :

@@ -9,7 +9,7 @@ sapply(load.lib,require,character=TRUE)
 
 ### Data
 load("D:/monas/Git/repo/glt/GoldenLionTamarins/data/NewlyCreatedData/clean_raw_data_long.RData")
-data.clean = rowid_to_column(data.clean)
+data.clean = rowid_to_column(data.clean) # Add a rowid column (observation unique id)
 data.clean$rowid = paste0("obs",data.clean$rowid)
 data.clean = as.data.table(data.clean)
 summary(data.clean)
@@ -65,9 +65,12 @@ n = n %>%
   pivot_wider(names_from = Sex, values_from = n)
 
 # Locate significant uncertainties
+# Compute the difference in mentions of both sexes
+# Significant uncertainties < 7
 n = n %>% 
   mutate(Sex = ifelse(abs(F-M) < 7,"?","OK")) %>% 
   column_to_rownames("GLT")
+# Select the uncertainties
 rf.sex = n %>% 
   filter(Sex == "?") %>% 
   select(F, M) %>% 
@@ -80,11 +83,11 @@ rf.sex = data.clean %>%
   arrange(GLT)
 
 
-# Assign the dominant sex where there is one ("OK")
+# Assign the dominant sex for the individuals for which the difference is above 7 and deemed non significant
 n_ok = n %>% 
   filter(Sex == "OK") %>% 
   select(F, M)
-n_ok$Sex.b <- apply(n_ok, 1, function(x) paste0(names(n_ok)[x == max(x)]))
+n_ok$Sex.b <- apply(n_ok, 1, function(x) paste0(names(n_ok)[x == max(x)])) # For each individual, we implement the most-mentioned sex
 n_ok = n_ok %>% 
   rownames_to_column(var="GLT") %>% 
   select(c("GLT","Sex.b"))
