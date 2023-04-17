@@ -29,11 +29,11 @@ plot_continuity<-function(data,freq,title_plot,title_file,W,H){
                show.legend=F) +
     scale_colour_manual(values=colorme) +
     scale_y_discrete(guide=guide_axis(n.dodge = 2)) + 
-    scale_x_date(limits=c(as.Date("2001-08-01",format="%F"),
+    scale_x_date(limits=c(as.Date("1989-01-01",format="%F"),
                           as.Date("2023-01-01",format="%F")),
-                 breaks=seq(as.Date("2001-08-01",format="%F"),
+                 breaks=seq(as.Date("1989-01-01",format="%F"),
                             as.Date("2022-11-01",format="%F"),
-                            "4 years")) +
+                            "6 years")) +
     theme_bw() +
     labs(x="Date",
          y="Groups",
@@ -44,7 +44,7 @@ plot_continuity<-function(data,freq,title_plot,title_file,W,H){
     
   }
   
-  tiff(here::here("outputs",title_file),
+  tiff(here::here("outputs","Conservation regions",title_file),
        width=W,
        height=H,
        res=600,

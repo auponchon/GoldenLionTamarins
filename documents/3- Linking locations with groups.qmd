@@ -46,6 +46,8 @@ spatdata<-data.clean %>%
   dplyr::group_by(GLT)%>% 
   dplyr::filter(!GLT %in% bad & Disp==0 & Death==0 & Solo==0) 
 
+region_groups<-st_join(spatdata,land)
+
 #Identify changes in groups =dispersal)
 ids<-unique(spatdata$GLT)
 spatdisp<-NULL
@@ -84,7 +86,7 @@ write_sf(lines_disp,
                     "disp_lines_2001.shp"),
                     delete_layer=T)
 
-land<-read_sf(here::here("data","RawData","Landscape","Shapefiles Landscape AMLD", "SIG-EDUC Redescobrindo 2021 - Fragmentos de Vegetação.shp"))
+land<-sf::read_sf(here::here("data","RawData","Landscape","Shapefiles Landscape AMLD", "SIG-EDUC Redescobrindo 2021 - Fragmentos de Vegetação")) 
 
 fieldgg<-ggplot()+
   geom_sf(data = land,

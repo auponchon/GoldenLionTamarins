@@ -31,6 +31,7 @@ source(here::here("R","revalue_variables.R"))
 source(here::here("R","progress_bar.R"))
 source(here::here("R","extract_captures.R"))
 source(here::here("R","extract_disp.R"))
+source(here::here("R","extract_true_region_names.R"))
 
 bad<-c("?","T0","IN","?-1","?-2","?-3","FT","?-4","?-5","?-6", "FT")
 
@@ -72,7 +73,6 @@ data2000<-DATA %>%
       revalue_birth() %>%    
   revalue_stage() %>% 
   revalue_sex() %>%
-  account_translocations() %>% 
   dplyr::select(Year,DateObs,Region,Group,GLT,Tattoo,
                 Sex,Birth,Idade, Disp, Death, Solo,File) 
 
@@ -84,12 +84,18 @@ datacapt<-extract_capture_data(filecapt) %>%
 
 datadisp<-extract_disp_data(filedisp)
 
+data.regions<-extract_true_region_names()
+
 
 data.clean<-data2000 %>% 
   rbind(datacapt) %>% 
   rbind(datadisp) %>% 
+  account_translocations() %>% 
+  left_join(data.regions,by="Group") %>% 
+  dplyr::mutate(DateObs=as.Date(DateObs,format="%Y-%m-%d")) %>% 
   dplyr::distinct(DateObs,Group,GLT,.keep_all = T) %>% 
    dplyr::arrange(DateObs,Group,GLT) 
+
 
 #check unique group names and Regions
 # sort(unique(data.clean$Region))
@@ -180,7 +186,6 @@ write.table(sexo,file=here::here("data","NewlyCreatedData","Checks","sex_check.t
 #1375 with 3 different dates!!
 #AF22, AF23, AF24, AF25 born after observation and dispersed?!
 #check FA40 (2018 & 2019)
-#check FT (Part of duplicate names)
 #JP23 duplicate
 #check 1311, 1312, MP104, MP108, MP109, MP176, MP292, MP313, MP99, TM20, UR4
 
@@ -248,7 +253,7 @@ dat<-data.clean %>%
 library(viridis)
 library(gridExtra)
 
-load(here::here("Data","NewlyCreatedData","all_long.RData"))
+source(here::here("R","plot_continuity.R"))
 
 fq<-data.clean %>%  
   dplyr::filter(!GLT %in% bad & Disp==0 & Death==0 & Solo==0) %>% 
@@ -259,7 +264,7 @@ fq<-data.clean %>%
   dplyr::arrange(n) %>% 
   drop_na()
 
-colorme<-rep(viridis(n=20,option="H"),time=11)
+colorme<-rep(viridis(n=22,option="H"),time=11)
 title_plot<-"Monitoring continuity in all regions"
 title_file<-"Continuity_field_effort_all_regions.tif"
 
@@ -267,11 +272,12 @@ title_file<-"Continuity_field_effort_all_regions.tif"
 plot_continuity(data.clean,fq,title_plot,title_file,W=6000,H=6500)
   
   
-   regio<-unique(data.clean$Region)
+   regio<-sort(unique(data.clean$UMMPs))
+   
    
    for (k in 1:length(regio)){
      sub<-data.clean %>% 
-       dplyr::filter(Region==regio[k]) 
+       dplyr::filter(UMMPs==regio[k]) 
        
       fq<-sub %>%  
   group_by(Group,DateObs) %>% 

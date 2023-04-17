@@ -295,6 +295,8 @@ revalue_name<-function(data){
   data$GLT[data$Tattoo=="Nelson"]<-"Nelson"
   data$GLT[data$Tattoo=="1318"]<-"1318"
   data$GLT[data$Tattoo=="AM1"]<-"AM1"
+  data$Tattoo[data$Tattoo=="Si4"]<-"SI4"
+  
 
   
   data$GLT[data$GLT=="FA40" & data$Tattoo=="UR2"]<-"FA40.1"
@@ -309,7 +311,7 @@ revalue_name<-function(data){
   data$GLT[data$GLT=="1318" & data$Sexo=="F"]<-"1318.1"
   data$GLT[data$GLT=="ST40" & data$Sexo=="F"]<-"ST40.1"
   data$GLT[data$GLT=="EM11" & data$Sexo=="M"]<-"EM11.1"
-  data$GLT[data$GLT=="SF1" & data$Sexo=="F"]<-"SF1.1"
+  data$GLT[data$GLT=="SF1" & data$Sexo=="M"]<-"SF1.1"
   data$GLT[data$GLT=="SF4" & data$Sexo=="F"]<-"SF4.1"
   data$GLT[data$GLT=="SF3" & data$Sexo=="F"]<-"SF3.1"
   
@@ -393,3 +395,17 @@ revalue_birth<-function(data){
   
 }
 
+
+revalue_true_regions<-function(data){
+  
+    data$UMMPs<-plyr::revalue(as.factor(data$UMMPs), 
+                              plyr::revalue(c("Poço das Antas" = "Poco das Antas",
+                                  "Imbaú I" = "Imbau I",
+                                  "Imbaú II" = "Imbau II",
+                                  "Imbaú III" = "Imbau III",
+                                  "União I"="Uniao I",
+                                  "União II" = "Uniao II")))
+    
+    return(data)
+  
+}
