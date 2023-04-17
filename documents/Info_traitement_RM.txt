@@ -1,0 +1,44 @@
+Descriptif traitements données GLT
+Romain Monassier
+
+Données :
+2001-2007 = PDF
+1989-2009 = capture
+2009-2022 = Excel
+
+clean.raw.data.long = données d'observation. Identifiant du GLT = "GLT" ou "Tattoo".
+En + : données d'indiv translocalisés (tranlocated_ind) ; d'évènements de dispersion (GLT_movement) ; de capture (processamento_mld). 
+
+*** Correction des données de sexe
+
+
+
+*** Correction des données d'âge
+Deux sources de données fiables : fichier de Valéria ("BirthDates.xlsx") et données issues de GLT_movement. 
+I. Données 1989-2022
+Données sources : Utilisation des données de naissance (fichier de Valéria : BirthDates.xlsx) (naissances de 1989 à 2001)
+EXCEL :
+- Création d'un champ BirthDMY au format texte et à partir de la colonne BirthDate
+- Quand le jour n'est pas connu : utilisation de 01/
+- Identification des doublons dans le fichier de Valéria : existence de doublons dont les données sont identiques : OL7 OL8 RV6 PT3 OL10 MA3 RV7 + T4 mais qui n'a pas de date de naissance renseignée
+R : CF le script
+1) Import des fichiers
+2) Suppression des GLT dupliqués
+
+
+II. Données 2001-2022
+Données fiables = celles issues de GLT_movement.
+Import des données (.Rdata)
+Traitement dans R
+Merge avec les données de 1989-2001 dans un nouveau champ
+
+III. Vérification et champ Idade
+1) Vérifier dates de naissances (multiples dates) :
+* NA si multiples dates hors erreurs évidentes (dates proches < 31 jours, erreurs de typo). 
+2) Vérifier les individus dont la date de naissance = la date de première observation : vérifier les groupes les mieux suivis (cf liste), croiser l'information avec le poids (> 400 g). 
+3) Créer les colonnes Birth sûre et Birth ?
+4) Inférer le champ Idade sachant que :
+* IN, FN ou TO = Infant (jeune < 1 an) ; JU = juvénile ; SA = subadulte ; AD = adulte. On considère que JU < 1, SA = [1-3], AD = > 3.
+Méthodes :
+- à partir de la date de naissance
+- à partir de la première date d'observation de juvénile (est né 1 ou 2 mois avant).

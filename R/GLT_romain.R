@@ -4,7 +4,7 @@
 
 ### Libraries
 load.lib = c("dplyr","tibble", "data.table",
-             "tidyr", "xlsx", "zoo")
+             "tidyr", "xlsx", "zoo", "readxl")
 sapply(load.lib,require,character=TRUE)
 
 ### Data
@@ -97,44 +97,63 @@ write.xlsx(rf.sex, "D:/monas/Git/repo/glt/GoldenLionTamarins/data/NewlyCreatedDa
 
 ### Age and life stage verification
 
-# Update typing errors
-data.clean %>% 
-  group_by(Birth) %>%
-  summarise(no_rows = length(Birth)) %>% 
-  print(n=300)
+## Birth Dates from 1989 to 2001
+BirthDates = read_excel("D:/monas/Git/repo/glt/GoldenLionTamarins/data/NewlyCreatedData/Checks/BirthDates.xlsx")
+# Remove duplicated rows (GLT)
+BirthDates = BirthDates[!duplicated(BirthDates$GLT), ]
+# Check typing errors
 data.clean = data.clean %>% 
-  mutate(Birth = ifelse(Birth == "'" | Birth == "-" | Birth == "?" | Birth == "??" | Birth == "died"
-                        | Birth == "42614" | Birth == "42615" | Birth == "FA20" | Birth == "RC1"
-                        | Birth == "RC2" | Birth == "RC3", NA,
-                        ifelse(Birth == "10/ 21", "10/21",
-                               ifelse(Birth == "1015", "10/15",
-                                      Birth))))
-
+  left_join(select(BirthDates, c(1:3,5)))
+data.clean %>% 
+  group_by(BirthDMY) %>%
+  summarise(no_rows = length(Birth)) %>% 
+  print(n=200)
 # Conversion of Birth variable to Date format
 n = data.clean %>% 
-  select(c(rowid, DateObs, GLT, Birth, Idade)) %>% 
-  filter(!is.na(Birth))
-n$Birth = paste0('01/', n$Birth)
-n$Birth = n$Birth %>% as.Date(n$Birth, format="%d/%m/%y")
+  select(c(rowid, DateObs, GLT, BirthDMY, Idade)) %>% 
+  filter(!is.na(BirthDMY))
+n$BirthDMY = as.Date(n$BirthDMY, format="%d/%m/%y")
+
+
+
+## Birth dates post-2001
+# Update typing errors for the Birth field
+# data.clean %>% 
+#   group_by(Birth) %>%
+#   summarise(no_rows = length(Birth)) %>% 
+#   print(n=300)
+# data.clean = data.clean %>% 
+#   mutate(Birth = ifelse(Birth == "'" | Birth == "-" | Birth == "?" | Birth == "??" | Birth == "died"
+#                         | Birth == "42614" | Birth == "42615" | Birth == "FA20" | Birth == "RC1"
+#                         | Birth == "RC2" | Birth == "RC3", NA,
+#                         ifelse(Birth == "10/ 21", "10/21",
+#                                ifelse(Birth == "1015", "10/15",
+#                                       Birth))))
+# n = data.clean %>% 
+#   select(c(rowid, DateObs, GLT, Birth, Idade)) %>% 
+#   filter(!is.na(Birth))
+# n$Birth = paste0('01/', n$Birth)
+# n$Birth = n$Birth %>% as.Date(n$Birth, format="%d/%m/%y")
+
+
 IsDate <- function(mydate, date.format = "%d/%m/%y") {
   tryCatch(!is.na(as.Date(mydate, date.format)),  
            error = function(err) {FALSE})  
 }
-
 IsDate(n$DateObs)
 
-## Duplicated/equivocal birth dates
+# Duplicated/equivocal birth dates
 dup.birth = n %>% 
-  select(GLT, Birth) %>% 
+  select(GLT, BirthDMY) %>% 
   group_by(GLT) %>%
-  filter(n_distinct(Birth) > 1) %>%
+  filter(n_distinct(BirthDMY) > 1) %>%
   ungroup()
 dup.birth = dup.birth %>% 
-  group_by(GLT, Birth) %>% 
+  group_by(GLT, BirthDMY) %>% 
   summarise(n=n())
 dup.birth = dup.birth %>% 
   group_by(GLT) %>% 
-  mutate(Births = paste0(Birth, collapse = " or ")) %>% 
+  mutate(Births = paste0(BirthDMY, collapse = " or ")) %>% 
   distinct(GLT, Births) %>% 
   ungroup()
 dup.birth = dup.birth %>% 
@@ -166,7 +185,8 @@ dup.birth5$opt3 = as.Date(x = dup.birth5$opt3, format="%Y-%m-%d")
 dup.birth5$opt4 = as.Date(x = dup.birth5$opt4, format="%Y-%m-%d")
 dup.birth5$opt5 = as.Date(x = dup.birth5$opt5, format="%Y-%m-%d")
 
-# Implementing the Idade column
+
+## Implementing the Idade column
 n = n %>% 
   mutate(Idade2 = ifelse(difftime(n$DateObs, n$Birth, units="days") <= 365, "JU",
                          ifelse(difftime(n$DateObs, n$Birth, units="days") >365 & difftime(n$DateObs, n$Birth, units="days")<=1095, "SA",
