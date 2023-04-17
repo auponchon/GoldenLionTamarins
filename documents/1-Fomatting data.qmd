@@ -88,11 +88,13 @@ data.regions<-extract_true_region_names()
 
 
 data.clean<-data2000 %>% 
-  rbind(datacapt) %>% 
+  rbind(datacapt) %>%
+  dplyr::mutate(DateObs=as.Date(DateObs,format="%Y-%m-%d"),
+                Birth=as.Date(paste("01/",Birth, sep=""),format="%d/%m/%y")) %>% 
   rbind(datadisp) %>% 
   account_translocations() %>% 
   left_join(data.regions,by="Group") %>% 
-  dplyr::mutate(DateObs=as.Date(DateObs,format="%Y-%m-%d")) %>% 
+  
   dplyr::distinct(DateObs,Group,GLT,.keep_all = T) %>% 
    dplyr::arrange(DateObs,Group,GLT) 
 
@@ -280,8 +282,6 @@ plot_continuity(data.clean,fq,title_plot,title_file,W=6000,H=6500)
        dplyr::filter(UMMPs==regio[k]) 
        
       fq<-sub %>%  
-  group_by(Group,DateObs) %>% 
-  dplyr::count() %>% 
   group_by(Group) %>% 
   dplyr::count() %>% 
   dplyr::arrange(n) %>% 
@@ -300,6 +300,20 @@ title_file<-paste("Continuity_field_effort_",
  setTxtProgressBar(progress_bar(length(regio)),k)  
  
    }
+   
+   #Nombre d'observations par groupe
+   
+  gpobs<- data.clean %>%  
+  dplyr::filter(!GLT %in% bad & Disp!=1 & Death==0 & Solo==0) %>% 
+  group_by(Group) %>% 
+   dplyr::summarize(MinYear=min(Year),
+                    MaxYear=max(Year),
+                    N=n_distinct(DateObs), 
+                    .groups = "drop") %>% 
+     dplyr::arrange(desc(N)) %>% 
+     write.csv2(here::here("data","NewlyCreatedData","Nb_obs_gp.csv"),
+                row.names=F)
+     
   
 ```
 
@@ -374,9 +388,9 @@ for (j in 2:length(dateobs)){
   
   if(nrow(miss)>0){
 disp<-rbind(disp,miss)
-setTxtProgressBar(progress_bar(length(dateobs)),i)  
 
-}
+  }
+  setTxtProgressBar(progress_bar(length(gp)),i)  
 }
 }
 }

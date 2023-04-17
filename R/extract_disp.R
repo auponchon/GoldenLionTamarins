@@ -8,7 +8,7 @@ extract_disp_data <- function(filedisp) {
                                   "date",
                                   rep("text",3),
                                   "date")) %>% 
-    dplyr::filter(!is.na(Individual) & Include=="yes") %>% 
+    dplyr::filter(!is.na(Individual) & !Include=="no") %>% 
     dplyr::rename(GLT=Individual,
                   Tattoo=Tatoo) 
   
@@ -23,7 +23,7 @@ extract_disp_data <- function(filedisp) {
                   Disp="0",
                   Death="0",
                   Solo="0") %>% 
-    dplyr::select(Year,DateObs,Region,Group,GLT,Tattoo,Sex,Idade,Disp,Death,Solo)
+    dplyr::select(Year,DateObs,Region,Group,GLT,Tattoo,Sex,Birth,Idade,Disp,Death,Solo)
     
     
     
@@ -36,12 +36,14 @@ extract_disp_data <- function(filedisp) {
                   Disp="0",
                   Death="0",
                   Solo="0") %>% 
-    dplyr::select(Year,DateObs,Region,Group,GLT,Tattoo,Sex,Idade,Disp,Death,Solo)
+    dplyr::filter(!is.na(Year)) %>% 
+    dplyr::select(Year,DateObs,Region,Group,GLT,Tattoo,Sex,Birth, Idade,Disp,Death,Solo)
   
   
 block<-block.emigr %>% 
   rbind(block.immigr) %>% 
   dplyr::mutate(DateObs=as.Date(DateObs,format="%Y-%M-%d"),
+                Birth = as.Date(Birth,format="%Y-%M"),
                 File="disp") %>% 
   dplyr::arrange(DateObs,Group,GLT)
    

@@ -11,13 +11,14 @@ block<-read_excel(fileadd,
          DateObs=Date,
          Tattoo=Tatoo) %>% 
   dplyr::mutate(Year=year(DateObs),
+                Birth=NA,
                 Idade=NA,
                 Disp="0",
                 Death="0",
                 Solo="0",
                 DateObs=as.Date(DateObs,format="%Y-%m"),
                 File="capt") %>% 
-  dplyr::select(Year,DateObs,Region,Group,GLT,Tattoo,Sex,Idade,Disp,Death,Solo,File) %>% 
+  dplyr::select(Year,DateObs,Region,Group,GLT,Tattoo,Sex,Birth,Idade,Disp,Death,Solo,File) %>% 
   dplyr::arrange(DateObs,GLT) %>% 
   dplyr::filter(!is.na(GLT) & !is.na(Group))# & Year > 2000)
 

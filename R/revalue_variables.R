@@ -389,7 +389,11 @@ revalue_birth<-function(data){
   data$Birth[data$Birth=="1000"]<-"10/00"
   data$Birth[data$Birth=="9/20"]<-"09/20"
   data$Birth[data$Birth=="2/21"]<-"02/21"
- 
+  data$Birth[data$Birth=="10/ 21"]<-"10/21"
+  data$Birth[data$Birth=="?"]<-NA
+  data$Birth[data$Birth=="??"]<-NA
+  data$Birth[data$Birth=="-"]<-NA
+  
   
   return(data) 
   
