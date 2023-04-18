@@ -18,7 +18,7 @@ Solution : implémenter le sexe majoritaire dans les cellules NA
 * Cas de figure : plusieurs sexes différents
 Solution : calculer la différence entre les mentions du sexe femelle et du sexe mâle. On considère qu'il y a erreur quand la différence est inférieure à 7. 
 ** On exporte et on vérifie manuellement les cas où la différence est inférieure à 7. Incertitudes sur LC4, OL16, PR15. Résultats : LC4 = F, les autres NA.
-** On implémente le sexe majoritaire sinon et on vérifie que l'implémentatio est pertinente. Incertitudes sur 1292, 1294, CM13, LA15, MP33, RL11, RL14, Rl2, RT2, RV3, RZ9, SF2, SF3, SF4, SK19, ST14, ST3, ST40 : GLT et tattoo diffèrent, régions/groupes différents, divergences données de capture/d'observation = plusieurs individus différents ?
+** On implémente le sexe majoritaire sinon et on vérifie que l'implémentatio est pertinente. Incertitudes sur RL11, RL13, SF3, SF4 et SK19 : GLT et tattoo diffèrent, régions/groupes différents, divergences données de capture/d'observation = plusieurs individus différents ?
 
 
 
@@ -34,20 +34,37 @@ EXCEL :
 R : CF le script
 1) Import des fichiers
 2) Suppression des GLT dupliqués
+3) Formater au format date dd/mm/YYYY
 
 
 II. Données 2001-2022
-Import des données (.Rdata)
-Traitement dans R
-Merge avec les données de 1989-2001 dans un nouveau champ
-Vérifier cohérence entre dates de dispersion (de GLT_movement) et de naissance (variable "date_test")
+1) Import des données : champ Birth de data.clean
+2) Traitement dans R : modifier les erreurs de typo, formatter si besoin au format date
 
-III. Vérification et champ Idade
-1) Vérifier dates de naissances (multiples dates) :
-* NA si multiples dates hors erreurs évidentes (dates proches < 31 jours, erreurs de typo). 
-2) Vérifier les individus dont la date de naissance = la date de première observation : vérifier les groupes les mieux suivis (cf liste), croiser l'information avec le poids (> 400 g). 
-3) Créer les colonnes Birth sûre et Birth ?
-4) Inférer le champ Idade sachant que :
+III. Jointure des deux datasets
+
+IV. Correction
+1) Vérifier les incohérences entre les deux jeux de données : différence entre les dates > 0 jour
+* Si différence : attribuer la date du jeu de donnée de VR (BirthDates.xls)
+
+2) Vérifier les incohérences entre les dates de naissance et les dates d'émigration, ie émigration avant la naissance
+* Si erreur : attribuer NA, extraire les individus pour vérification
+* Incertitudes sur 
+
+3) Identifier les multiples dates
+* Résumer les différentes dates de naissance renseignées
+* Subset selon le nombre de dates (2, 3, 4 ou 5)
+* NA si multiples dates hors erreurs évidentes (dates proches < 31 jours, erreurs de typo)
+
+4) Vérifier les individus dont la date de naissance = la date de première observation : vérifier les groupes les mieux suivis (cf liste), croiser l'information avec le poids (> 400 g). 
+
+5) Vérifier les dates de naissance des individus GLT nommés ?
+
+6) Voir si le fichier de Valéria comprend les informations pour les individus incertains
+
+
+V. Implémenter le champ Idade
+Sachant que :
 * IN, FN ou TO = Infant (jeune < 1 an) ; JU = juvénile ; SA = subadulte ; AD = adulte. On considère que JU < 1, SA = [1-3], AD = > 3.
 Méthodes :
 - à partir de la date de naissance
