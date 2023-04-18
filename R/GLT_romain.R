@@ -17,85 +17,92 @@ summary(data.clean)
 ### Sex verification
 # Update typing errors
 data.clean = data.clean %>% 
-  mutate(Sex = ifelse(Sex == "m", "M",
-                      Sex))
-data.clean = data.clean %>% 
-  mutate(Sex = ifelse(Sex == "M0" | Sex == "nonID" | Sex == "S", NA,
-                      Sex))
+  mutate(SexOK = ifelse(Sex == "m", "M",
+                        ifelse(Sex == "M0" | Sex == "nonID" | Sex == "S", NA,
+                               Sex)))
 
 # Select individuals with duplicated sexes
 dup.sex = data.clean %>% 
-  select(GLT, Sex) %>% 
+  select(GLT, SexOK) %>% 
   group_by(GLT) %>%
-  filter(n_distinct(Sex) > 1) %>%
+  filter(n_distinct(SexOK) > 1) %>%
   ungroup()
 n = dup.sex %>% 
-  group_by(GLT, Sex) %>% 
+  group_by(GLT, SexOK) %>% 
   summarise(n=n())
 
 ## Fill in NAs for individuals with another value
 # Select GLT with NAs in sex column
 sub.na = dup.sex %>% 
-  filter(is.na(Sex)) %>% 
+  filter(is.na(SexOK)) %>% 
   select(GLT) %>% 
   pull()
 # Subset data.clean with the latter GLT, and update the NA value according to the dominant one (na.locf)
 correct.na = data.clean %>% 
-  select(rowid, GLT, Sex) %>% 
+  select(rowid, GLT, SexOK) %>% 
   subset(GLT %in% sub.na) %>% 
   group_by(GLT) %>% 
-  arrange(GLT, Sex) %>% 
-  mutate(Sex = zoo::na.locf(Sex)) %>% 
-  rename(Sex.b = Sex) %>% 
+  arrange(GLT, SexOK) %>% 
+  mutate(SexOK = zoo::na.locf(SexOK)) %>% 
+  rename(Sex.b = SexOK) %>% 
   ungroup() %>% 
   as.data.table()
 # Update the sex in the dataset where observations match those 
-setDT(data.clean)[correct.na, "Sex" := .(Sex.b), on = "GLT"]
+setDT(data.clean)[correct.na, "SexOK" := .(Sex.b), on = "GLT"]
 
 # Remove the NAs errors from the table
 dup.sex = dup.sex %>% 
   group_by(GLT) %>% 
-  arrange(GLT, Sex) %>% 
-  mutate(Sex = zoo::na.locf(Sex)) %>% 
-  filter(n_distinct(Sex) > 1)
+  arrange(GLT, SexOK) %>% 
+  mutate(SexOK = zoo::na.locf(SexOK)) %>% 
+  filter(n_distinct(SexOK) > 1)
 n = dup.sex %>% 
-  group_by(GLT, Sex) %>% 
+  group_by(GLT, SexOK) %>% 
   summarise(n=n())
 n = n %>%
-  pivot_wider(names_from = Sex, values_from = n)
+  pivot_wider(names_from = SexOK, values_from = n)
 
 # Locate significant uncertainties
 # Compute the difference in mentions of both sexes
 # Significant uncertainties < 7
 n = n %>% 
-  mutate(Sex = ifelse(abs(F-M) < 7,"?","OK")) %>% 
+  mutate(SexOK = ifelse(abs(F-M) < 7,"?","OK")) %>% 
   column_to_rownames("GLT")
 # Select the uncertainties
-rf.sex = n %>% 
-  filter(Sex == "?") %>% 
+uncertain = n %>% 
+  filter(SexOK == "?") %>% 
   select(F, M) %>% 
   rownames_to_column(var="GLT") %>% 
   select(GLT) %>% 
   unlist()
+# Red flags
 rf.sex = data.clean %>% 
-  select(c(1:8)) %>% 
-  filter(GLT %in% rf.sex) %>% 
+  filter(GLT %in% uncertain) %>% 
   arrange(GLT)
-
-
+# Sex correction
+data.clean$SexOK[data.clean$GLT == "LC4"] <- "F"
+data.clean$SexOK[data.clean$GLT == "O16"] <- NA
+data.clean$SexOK[data.clean$GLT == "PR15"] <- NA
 # Assign the dominant sex for the individuals for which the difference is above 7 and deemed non significant
 n_ok = n %>% 
-  filter(Sex == "OK") %>% 
+  filter(SexOK == "OK") %>% 
   select(F, M)
 n_ok$Sex.b <- apply(n_ok, 1, function(x) paste0(names(n_ok)[x == max(x)])) # For each individual, we implement the most-mentioned sex
 n_ok = n_ok %>% 
   rownames_to_column(var="GLT") %>% 
   select(c("GLT","Sex.b"))
-setDT(data.clean)[n_ok, "Sex" := .(Sex.b), on = "GLT"] # Correct the dataset
+setDT(data.clean)[n_ok, "SexOK" := .(Sex.b), on = "GLT"] # Correct the dataset
 
+# Manually select uncertain rows based on visual inspection
+rf.sex = data.clean %>% 
+  filter(GLT == "1292" | GLT == "1294" | GLT == "CM13" | GLT == "LA15" | GLT == "MP33" | 
+           GLT == "RL11" | GLT == "RL14" | GLT == "RL2" | GLT == "RT2" | GLT == "RV3" | 
+           GLT == "RZ9" | GLT == "SF2" | GLT == "SF3" | GLT == "SF4" | GLT == "SK19" | 
+           GLT == "ST14" | GLT == "ST3" | GLT == "ST40" | GLT == "RL13")
 
 ## Export errors 
 write.xlsx(rf.sex, "D:/monas/Git/repo/glt/GoldenLionTamarins/data/NewlyCreatedData/Checks/sex_checkV2.xlsx", row.names=FALSE)
+
 
 
 ### Age and life stage verification
