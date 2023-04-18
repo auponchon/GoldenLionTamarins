@@ -1,0 +1,72 @@
+---
+title: "Landscape analysis"
+author: "Aurore Ponchon"
+format: html
+editor: visual
+---
+
+# Linking landscape composition with individual movements
+
+```{r}
+
+library(here)
+library(raster)
+library(tidyverse)
+library(sf)
+
+#import landscape files
+
+#land cover for each each
+rast<-list.files(here::here("data","RawData","Landscape","Rasters land cover"),
+                 full.names=T)
+#single forest patches
+land<-sf::read_sf(here::here("data","RawData","Landscape","Shapefiles Landscape AMLD", 
+                             "SIG-EDUC Redescobrindo 2021 - Fragmentos de Vegetação.shp"))
+#conservation units (patches)
+ummp<-sf::read_sf(here::here("data","RawData","Landscape","Shapefiles Landscape AMLD",
+                             "SIG-LGCI_UMMP-13.shp")) %>% 
+  dplyr::select(Id,UMMPs,geometry)
+
+#projection for Brazil
+proj<-"+proj=utm +zone=23 +south +ellps=GRS80 +towgs84=0,0,0,0,0,0,0 +units=m +no_defs +type=crs"
+
+#etxent of study area in geographic coordinates
+extreg<-extent(-42.7,-41.9,-22.9,-22.3)
+
+
+#for (i in 1:length(rast)){
+
+
+rast1<-raster(rast[1]) %>% 
+  raster::crop(.,extreg) %>%    #crop to the study region
+  projectRaster(., crs=proj ,method="ngb",res=30) #project
+  
+forest<-c(3,5,49)
+notforest<-c(9,11,21,29)
+buildings<-c(15,23,24,25)
+agri<-41
+water<-c(30,31,32,33)
+
+#reassign codes for different habitats
+# 0 = mer
+# 3 = 5 = 49 = forêt
+# 9 = 11 = 21 = 29 = formation végétale pas forêt
+# 15 = 24 = 25 = buildings
+# 41 = agriculture 
+# 12 = 13 = 30 = 31 = 32 = 41 = NA
+# 33 = water
+
+rast1[rast1==0]<-NA
+rast1[rast1 %in% forest]<-1
+rast1[rast1 %in% notforest]<-2
+rast1[rast1==agri]<-3
+rast1[rast1 %in% water]<-4
+rast1[rast1 %in% buildings]<-5
+
+plot(rast1)
+
+  
+#}
+
+
+```
