@@ -314,6 +314,7 @@ revalue_name<-function(data){
   data$GLT[data$GLT=="SF1" & data$Sexo=="M"]<-"SF1.1"
   data$GLT[data$GLT=="SF4" & data$Sexo=="F"]<-"SF4.1"
   data$GLT[data$GLT=="SF3" & data$Sexo=="F"]<-"SF3.1"
+  data$GLT[data$GLT=="RL2" & data$Tattoo=="SE5"]<-"SE5.1"
   
    data$Group[data$GLT=="979"] <-"LB"
 
