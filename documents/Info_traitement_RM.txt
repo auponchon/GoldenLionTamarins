@@ -4,9 +4,9 @@ Romain Monassier
 Données :
 Données d'observation avec composition des groupes (/ semaines) = clean.raw.data.long. Identifiant du GLT = "GLT" ou "Tattoo".
 En + : données d'indiv translocalisés (tranlocated_ind) ; d'évènements de dispersion (GLT_movement, 1989-2001) ; de capture (processamento_mld, 1989-2009). 
-2001-2007 = PDF
-1989-2009 = capture
-2009-2022 = Excel
+Format des données :
+* 2001-2007 = PDF
+* 2009-2022 = Excel
 
 
 
@@ -16,10 +16,15 @@ En + : données d'indiv translocalisés (tranlocated_ind) ; d'évènements de di
 * Cas de figure : individus qui ont une mention de sexe et un ou plusieurs mentions "NA"
 Solution : implémenter le sexe majoritaire dans les cellules NA
 * Cas de figure : plusieurs sexes différents
-Solution : calculer la différence entre les mentions du sexe femelle et du sexe mâle. On considère qu'il y a error quand la différence est inférieure à 7. 
-On exporte et on vérifie manuellement les cas où la différence est inférieure à 7
-On implémente le sexe majoritaire sinon
+Solution : calculer la différence entre les mentions du sexe femelle et du sexe mâle. On considère qu'il y a erreur quand la différence est inférieure à 7. 
+On exporte et on vérifie au cas par cas
+3) Vérification au cas par cas
+Incertitudes sur les individus : RL11, RL13, SF3, SF4 et SK19
 
+Corrections :
+"LC4" = "F"
+"O16" = NA
+"PR15" = NA
 
 
 *** CORRECTION DE L'AGE
@@ -34,20 +39,33 @@ EXCEL :
 R : CF le script
 1) Import des fichiers
 2) Suppression des GLT dupliqués
-
+3) Filtrer les NAs
 
 II. Données 2001-2022
-Données fiables = celles issues de GLT_movement.
 Import des données (.Rdata)
 Traitement dans R
-Merge avec les données de 1989-2001 dans un nouveau champ
+Champ "Birth" de data.clean
 
-III. Vérification et champ Idade
-1) Vérifier dates de naissances (multiples dates) :
-* NA si multiples dates hors erreurs évidentes (dates proches < 31 jours, erreurs de typo). 
-2) Vérifier les individus dont la date de naissance = la date de première observation : vérifier les groupes les mieux suivis (cf liste), croiser l'information avec le poids (> 400 g). 
-3) Créer les colonnes Birth sûre et Birth ?
-4) Inférer le champ Idade sachant que :
+III. Jointure des deux jeux de données
+
+IV. Verification des erreurs
+1) Incohérences entre les dates de naissance renseignées
+* Si incohérence : garder la date de naissance issue de BirthDates (dates de naissance données par VR)
+2) Erreurs du jeu de données GLT_movement
+* Comparaison entre la date de naissance renseignée et la date d'émigration supposée
+* Si erreur : extraction des individus à faire valider
+* Incertitudes sur les individus A7 (deux dates d'émigration : 1993-01-01 et 1996-05-01 = on attribue 1996), CA9, LB6 (deux dates de naissance : 1998-04-01 et 2001-07-01 = on attribue 1998), SK19
+3) Dates de naissances multiples
+* Subset en plusieurs jeux de données
+* NA, hors erreurs évidentes (dates proches < 70 jours, erreurs de typo). 
+4) Vérifier les individus dont la date de naissance = la date de première observation : 
+* Calcul de la différence
+* Si la différence est négative : extraire les individus concernés et les vérifier
+5) Vérifier les individus des mêms groupes ayant la même date de naissance
+* Pour les groupes les plus suivis uniquement (cf liste NB_obs_gp), croiser l'information avec le poids (> 400 g). * Pour les groupes les moins suivis : NA
+6) Vérifier les individus "?", chercher données dans le jeu de données de VR
+
+V. Inférer le champ Idade sachant que :
 * IN, FN ou TO = Infant (jeune < 1 an) ; JU = juvénile ; SA = subadulte ; AD = adulte. On considère que JU < 1, SA = [1-3], AD = > 3.
 Méthodes :
 - à partir de la date de naissance

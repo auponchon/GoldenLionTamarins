@@ -3,18 +3,13 @@
 ### Date: 2023
 
 ### Libraries
-<<<<<<< HEAD
 load.lib = c("dplyr","tibble", "data.table",
-             "tidyr", "xlsx", "zoo", "readxl")
-=======
-load.lib = c("dplyr","Hmisc", "tibble", "data.table",
-             "tidyr")
->>>>>>> 4fd659c (Sex verification)
+             "tidyr", "xlsx", "zoo", "readxl",
+             "readr")
 sapply(load.lib,require,character=TRUE)
 
 ### Data
 load("D:/monas/Git/repo/glt/GoldenLionTamarins/data/NewlyCreatedData/clean_raw_data_long.RData")
-<<<<<<< HEAD
 data.clean = rowid_to_column(data.clean) # Add a rowid column (observation unique id)
 data.clean$rowid = paste0("obs",data.clean$rowid)
 data.clean = as.data.table(data.clean)
@@ -35,45 +30,16 @@ dup.sex = data.clean %>%
   ungroup()
 n = dup.sex %>% 
   group_by(GLT, SexOK) %>% 
-=======
-data.clean = rowid_to_column(data.clean)
-data.clean$rowid = paste0("obs",data.clean$rowid)
-data.clean = as.data.frame(data.clean)
-summary(data.clean)
-
-### Sex verification
-# Update case mistakes
-data.clean = data.clean %>% 
-  mutate(Sex = ifelse(Sex == "m", "M",
-                      Sex))
-data.clean = data.clean %>% 
-  mutate(Sex = ifelse(Sex == "M0" | Sex == "nonID" | Sex == "S", NA,
-                      Sex))
-
-# Select individuals with duplicated sexes
-dup.sex = data.clean %>% 
-  select(GLT, Sex) %>% 
-  group_by(GLT) %>%
-  filter(n_distinct(Sex) > 1) %>%
-  ungroup()
-n = dup.sex %>% 
-  group_by(GLT, Sex) %>% 
->>>>>>> 4fd659c (Sex verification)
   summarise(n=n())
 
 ## Fill in NAs for individuals with another value
 # Select GLT with NAs in sex column
 sub.na = dup.sex %>% 
-<<<<<<< HEAD
   filter(is.na(SexOK)) %>% 
-=======
-  filter(is.na(Sex)) %>% 
->>>>>>> 4fd659c (Sex verification)
   select(GLT) %>% 
   pull()
 # Subset data.clean with the latter GLT, and update the NA value according to the dominant one (na.locf)
 correct.na = data.clean %>% 
-<<<<<<< HEAD
   select(rowid, GLT, SexOK) %>% 
   subset(GLT %in% sub.na) %>% 
   group_by(GLT) %>% 
@@ -82,22 +48,13 @@ correct.na = data.clean %>%
   rename(Sex.b = SexOK) %>% 
   ungroup() %>% 
   as.data.table()
-# Update the sex in the dataset where observations match those 
+# Update the SexOK in the dataset where observations match those 
 setDT(data.clean)[correct.na, "SexOK" := .(Sex.b), on = "GLT"]
-=======
-  filter(GLT %in% sub.na) %>% 
-  group_by(GLT) %>% 
-  arrange(GLT, Sex) %>% 
-  mutate(Sex = zoo::na.locf(Sex)) %>% 
-  ungroup()
-# Update the sex in the dataset where observations match those 
 
->>>>>>> 4fd659c (Sex verification)
 
 # Remove the NAs errors from the table
 dup.sex = dup.sex %>% 
   group_by(GLT) %>% 
-<<<<<<< HEAD
   arrange(GLT, SexOK) %>% 
   mutate(SexOK = zoo::na.locf(SexOK)) %>% 
   filter(n_distinct(SexOK) > 1)
@@ -113,7 +70,7 @@ n = n %>%
 n = n %>% 
   mutate(SexOK = ifelse(abs(F-M) < 7,"?","OK")) %>% 
   column_to_rownames("GLT")
-# Select the uncertainties
+ # Select the uncertainties
 uncertain = n %>% 
   filter(SexOK == "?") %>% 
   select(F, M) %>% 
@@ -128,6 +85,7 @@ rf.sex = data.clean %>%
 data.clean$SexOK[data.clean$GLT == "LC4"] <- "F"
 data.clean$SexOK[data.clean$GLT == "O16"] <- NA
 data.clean$SexOK[data.clean$GLT == "PR15"] <- NA
+
 # Assign the dominant sex for the individuals for which the difference is above 7 and deemed non significant
 n_ok = n %>% 
   filter(SexOK == "OK") %>% 
@@ -163,7 +121,7 @@ data.clean %>%
   print(n=200)
 # Filter NA data
 n1 = data.clean %>%
-  select(c(rowid, DateObs, GLT, Tattoo, Birth_VR, Idade)) %>%
+  select(c(rowid, DateObs, GLT, Tattoo, Group, Birth_VR, Idade)) %>%
   filter(!is.na(Birth_VR) & Birth_VR != "?")
 n1$Birth_VR = as.Date(n1$Birth_VR, format="%d/%m/%y")
 
@@ -185,7 +143,7 @@ data.clean %>%
 #                                ifelse(Birth_mov == "1015", "10/15",
 #                                       Birth_mov))))
 n2 = data.clean %>%
-  select(c(rowid, DateObs, GLT, Tattoo, Birth_mov, Idade)) %>%
+  select(c(rowid, DateObs, GLT, Tattoo, Group, Birth_mov, Idade)) %>%
   filter(!is.na(Birth_mov))
 # n2$Birth_mov = paste0('01/', n2$Birth_mov)
 n2$Birth_mov = as.Date(n2$Birth_mov, format="%d/%m/%y")
@@ -234,6 +192,9 @@ n = n %>%
 rf.birthdates = n[grepl("^-", n$diff.emig.birth), ]
 n = n %>% 
   filter(!grepl("^-", n$diff.emig.birth))
+n$Estimated.date.of.emigration[n$GLT == "A7"] <- "1996-05-01"
+n$Birth[n$GLT == "LB6"] <- "1998-04-01"
+
 
 # Duplicated/equivocal birth dates
 dup.birth = n %>% 
@@ -257,27 +218,55 @@ dup.birth = dup.birth %>%
 # Two different dates
 dup.birth2 = dup.birth %>% 
   filter(is.na(opt3)) %>% 
-  select(1:3)
+  select(1:3) %>% 
+  as.data.table()
 dup.birth2$opt1 = as.Date(x = dup.birth2$opt1, format="%Y-%m-%d")
 dup.birth2$opt2 = as.Date(x = dup.birth2$opt2, format="%Y-%m-%d")
 dup.birth2 = dup.birth2 %>% 
   mutate(diffBirth = abs(difftime(opt1, opt2, units="days")))
+dup.birth2 = dup.birth2 %>% 
+  mutate(Birth.b = ifelse(diffBirth <= 31, opt1, NA))
+dup.birth2$Birth.b = as.Date(dup.birth2$Birth.b)
+setDT(n)[dup.birth2, "Birth" := .(Birth.b), on = "GLT"] # Correct the dataset
+
 # Three different dates
 dup.birth3 = dup.birth %>% 
   filter(is.na(opt4) & !is.na(opt3)) %>% 
-  select(1:4)
+  select(1:4) %>% 
+  as.data.table()
 dup.birth3$opt1 = as.Date(x = dup.birth3$opt1, format="%Y-%m-%d")
 dup.birth3$opt2 = as.Date(x = dup.birth3$opt2, format="%Y-%m-%d")
 dup.birth3$opt3 = as.Date(x = dup.birth3$opt3, format="%Y-%m-%d")
+n$Birth[n$GLT == "1375"] <- NA
+n$Birth[n$GLT == "AF20"] <- NA
+n$Birth[n$GLT == "KE10"] <- NA
+n$Birth[n$GLT == "SP23"] <- NA
+
 # Five different dates
 dup.birth5 = dup.birth %>% 
-  filter(!is.na(opt5))
+  filter(!is.na(opt5)) %>% 
+  as.data.table()
 dup.birth5$opt1 = as.Date(x = dup.birth5$opt1, format="%Y-%m-%d")
 dup.birth5$opt2 = as.Date(x = dup.birth5$opt2, format="%Y-%m-%d")
 dup.birth5$opt3 = as.Date(x = dup.birth5$opt3, format="%Y-%m-%d")
 dup.birth5$opt4 = as.Date(x = dup.birth5$opt4, format="%Y-%m-%d")
 dup.birth5$opt5 = as.Date(x = dup.birth5$opt5, format="%Y-%m-%d")
+n$Birth[n$GLT == "FT"] <- NA
+n$Birth[n$GLT == "IN"] <- NA
+n$Birth[n$GLT == "T0"] <- NA
 
+
+# Differences between birth dates and dates of observation
+n = n %>% 
+  mutate(diff.obs.birth = difftime(DateObs, Birth, units="days"))
+rf1.birthdates = n %>% 
+  filter(grepl("^-", n$diff.obs.birth)) # individuals observed before their birth
+
+# Individuals within groups with same birth dates
+Nb_obs_gp <- read_delim("data/NewlyCreatedData/Nb_obs_gp.csv", delim=";")
+n %>% 
+  select(c(GLT, Group, Birth)) %>% 
+  filter(if_all(Group:Birth, ~ GLT == .x))
 
 ## Implementing the Idade column
 n = n %>% 
@@ -287,25 +276,3 @@ n = n %>%
                                        Idade))))
 data.clean = data.clean %>% 
   left_join(select(n,c(rowid,Idade2)))
-=======
-  arrange(GLT, Sex) %>% 
-  mutate(Sex = zoo::na.locf(Sex)) %>% 
-  filter(n_distinct(Sex) > 1)
-n = dup.sex %>% 
-  group_by(GLT, Sex) %>% 
-  summarise(n=n())
-n = n %>%
-  pivot_wider(names_from = Sex, values_from = n)
-
-# Locate significant uncertainties
-n = n %>% 
-  mutate(Sex = ifelse(abs(F-M) < 5,"?","OK"))
-
-
-
-# Export errors 
-write.csv(n, "D:/monas/Git/repo/glt/GoldenLionTamarins/data/NewlyCreatedData/Checks/sex_checkV2.csv", row.names=FALSE)
-
-
-### Age and life stage verification
->>>>>>> 4fd659c (Sex verification)
