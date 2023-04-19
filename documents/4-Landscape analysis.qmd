@@ -13,6 +13,7 @@ library(here)
 library(raster)
 library(tidyverse)
 library(sf)
+library(landscapemetrics)
 
 #import landscape files
 
@@ -48,9 +49,9 @@ agri<-41
 water<-c(30,31,32,33)
 
 #reassign codes for different habitats
-# 0 = mer
-# 3 = 5 = 49 = forêt
-# 9 = 11 = 21 = 29 = formation végétale pas forêt
+# 0 = sea
+# 3 = 5 = 49 = forest
+# 9 = 11 = 21 = 29 = vegetation not forest
 # 15 = 24 = 25 = buildings
 # 41 = agriculture 
 # 12 = 13 = 30 = 31 = 32 = 41 = NA
@@ -65,7 +66,10 @@ rast1[rast1 %in% buildings]<-5
 
 plot(rast1)
 
-  
+check_landscape(rast1)
+show_patches(rast1,class="all")
+lsm_c_area_mn(rast1)
+  show_lsm(rast1,what = "lsm_p_area")
 #}
 
 
