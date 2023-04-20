@@ -14,7 +14,7 @@ library(raster)
 library(tidyverse)
 library(sf)
 library(landscapemetrics)
-
+source(here::here("R","progress_bar.R"))
 #import landscape files
 
 #land cover for each each
@@ -33,15 +33,15 @@ proj<-"+proj=utm +zone=23 +south +ellps=GRS80 +towgs84=0,0,0,0,0,0,0 +units=m +n
 
 #etxent of study area in geographic coordinates
 extreg<-extent(-42.7,-41.9,-22.9,-22.3)
+size<-NULL
+
+for (i in 1:length(rast)){
 
 
-#for (i in 1:length(rast)){
-
-
-rast1<-raster(rast[1]) %>% 
+rast1<-raster(rast[i]) %>% 
   raster::crop(.,extreg) %>%    #crop to the study region
   projectRaster(., crs=proj ,method="ngb",res=30) #project
-  
+
 forest<-c(3,5,49)
 notforest<-c(9,11,21,29)
 buildings<-c(15,23,24,25)
@@ -64,13 +64,17 @@ rast1[rast1==agri]<-3
 rast1[rast1 %in% water]<-4
 rast1[rast1 %in% buildings]<-5
 
-plot(rast1)
+setTxtProgressBar(progress_bar(length(rast)),i)  
 
 check_landscape(rast1)
-show_patches(rast1,class="all")
-lsm_c_area_mn(rast1)
-  show_lsm(rast1,what = "lsm_p_area")
-#}
+#show_patches(rast1,class="all")
+yy<- lsm_c_area_mn(rast1) %>% 
+      dplyr:: mutate(Year=readr::parse_number(rast[i]))
+show_lsm(rast1,what = "lsm_p_area")
+ 
+ size<-rbind(size,yy)
+ 
+}
 
 
 ```
