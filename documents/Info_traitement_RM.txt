@@ -49,7 +49,7 @@ R : CF le script
 II. Données 2001-2022
 Import des données (.Rdata)
 Traitement dans R
-Champ "Birth" de data.clean
+Champ "Birth" de data.clean (Birth_mov)
 
 III. Jointure des deux jeux de données
 
@@ -62,9 +62,9 @@ IV. Verification des erreurs
 * Si erreur : extraction des individus à faire valider
 * Incertitudes sur les individus 
 A7 (deux dates d'émigration : 1993-01-01 et 1996-05-01 = on attribue 1996)
-CA9
+CA9 = NA
 LB6 (deux dates de naissance : 1998-04-01 et 2001-07-01 = on attribue 1998)
-SK19
+SK19 = NA
 
 3) Dates de naissances multiples
 * NA, hors erreurs évidentes (dates proches < 180 jours, erreurs de typo)
@@ -73,13 +73,14 @@ SK19
 * Cinq dates différentes : incertitudes sur FT, IN, TO
 
 
-4) Vérifier les individus dont la date de naissance = la date d'observation : 
+4) Vérifier les individus dont la date de naissance > la date de première observation : 
 * Calcul de la différence
 * Si la différence est négative : extraire les individus concernés
 * Vérifier / attribuer NA
 
 5) Vérifier les individus des mêmes groupes ayant la même date de naissance
-* Pour les groupes les plus suivis uniquement (cf liste NB_obs_gp), croiser l'information avec le poids (> 400 g). * Pour les groupes les moins suivis : NA
+* Pour les groupes les plus suivis uniquement (cf liste NB_obs_gp), croiser l'information avec le poids et le stade 
+* Pour les groupes les moins suivis : NA
 
 6) Individus vus pour la première fois adultes et ayant une date de naissance
 * Mettre la date de naissance en NA
@@ -89,6 +90,112 @@ SK19
 V. Inférer le champ Idade sachant que :
 * IN, FN ou TO = Infant (jeune < 1 an) ; JU = juvénile ; SA = subadulte ; AD = adulte. On considère que JU < 1, SA = [1-3], AD = > 3.
 Méthodes :
-- à partir de la date de naissance
-- à partir de la première date d'observation de juvénile (né 3 mois avant)
+- à partir de la date de naissance : date d'observation - 3 mois
+- à l'aide du poids : JU < 500 g et AD > 500 g
+ET regarder les incohérences (juvéniles > 500 g et adultes < 500 g) (n = 99 individus)
+GLT
+ 1:   AF5 NA
+ 2:   AF6 NA
+ 3:  MP19 AD
+ 4:  MP29 AD
+ 5:  MP33 AD
+ 6:  MP34 AD
+ 7:  MP35 AD
+ 8:   PI4 OK
+ 9:   SK6 NA
+10:   AR1 AD
+11:   AR2 AD
+12:   AR3 AD
+13:   AX5 OK
+14:   BB1 AD
+15:   BB2 AD
+16:   BB4 AD
+17:   BI2 AD
+18:   BI5 AD
+19:   BR1 AD
+20:   BV1 AD
+21:   BV2 AD
+22:   BV3 AD
+23:   E34 AD
+24:   EL1 AD
+25:   EL2 AD
+26:   FG1 AD
+27:  IG10 AD
+28:  IG12 AD
+29:  IG13 AD
+30:  IG16 AD
+31:  IG17 AD
+32:   IG3 AD
+33:   IG8 AD
+34:   IG9 AD
+35:   IR1 AD
+36:   IR2 AD
+37:   JD1 AD
+38:   JD5 AD
+39:   JD9 AD
+40:  JG12 AD sauf obs2721 (2002-05-01) = JU
+41:   JO1 AD
+42:   JO2 AD
+43:   KL5 AD
+44:   KL8 NA
+45:   LS1 AD
+46:   MB1 AD
+47:   MB2 AD
+48:   MB3 AD
+49:   MB8 AD
+50:   MB9 AD
+51:   MD1 AD
+52:  MP12 AD
+53:  MP13 AD
+54:   MP5 AD
+55:   MP6 AD
+56:   MP7 AD
+57:   MP8 AD
+58:   O38 AD à partir de 2003-11
+59:   O39 AD
+60:   O43 AD
+61:   PJ1 AD
+62:   PJ2 AD
+63:   PR4 obs3654 == SA
+64:   PS1 AD
+65:   PS2 AD
+66:   PS3 AD
+67:   PV1 AD
+68:  RT13 BirthOK == 2006-03-01
+69:  RT14 BirthOK == 2006-03-01
+70:  RT15 AD
+71:  RT16 AD
+72: RT2.1 AD
+73:   RT6 AD
+74:  RV14 OK mais approximatif
+75:  RV15 OK mais approximatif
+76:  RV34 AD
+77:   SD1 AD
+78:   SD3 AD
+79:   SD4 AD
+80:   SF3 AD
+81:   SF4 AD à partir de 2004-04
+82:   SF5 AD
+83:   SF6 AD
+84:   SF9 AD
+85:  SH11 AD
+86:  SH13 AD
+87:  ST40 obs7431 == SA
+88:  ST49 NA
+89:  TR31 AD
+90:  TR32 AD
+91:   VC1 AD
+92:  VC10 AD
+93:  VC11 AD
+94:  VC17 AD
+95:   VC8 AD
+96:   VC9 AD
+97:  WS41 AD
+98:  WS42 AD
+99:  WS44 AD
+ET passer leur BirthOK en NA
+
+- si le champ Idade est toujours vide : à l'aide du champ Idade déjà existant
 - en regardant les fichiers source de 2001 à 2009 pour les 15 groupes les plus suivis (individus en fin de bloc)
+
+V. Regarder les GLT qui n'ont ni Idade ni BirthDate
