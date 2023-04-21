@@ -28,6 +28,16 @@ ummp<-sf::read_sf(here::here("data","RawData","Landscape","Shapefiles Landscape 
                              "SIG-LGCI_UMMP-13.shp")) %>% 
   dplyr::select(Id,UMMPs,geometry)
 
+loc<-read.table(here::here("data","rawData","Landscape","RegionsName.csv"),
+                header=T,sep=";") %>% 
+  dplyr::rename(Long=CENTROIDE.X.UTM.SAD69.23S,
+                Lat=CENTROIDE.Y.UTM.SAD69.23S,
+                Group=Abreviation) %>% 
+  dplyr::select(-Platform,-City) %>% 
+  dplyr::filter_all(any_vars(!is.na(.))) %>% 
+  sf::st_as_sf(., coords = c("Long","Lat")) %>% 
+  sf::st_set_crs(31983)
+
 #projection for Brazil
 proj<-"+proj=utm +zone=23 +south +ellps=GRS80 +towgs84=0,0,0,0,0,0,0 +units=m +no_defs +type=crs"
 
@@ -35,12 +45,30 @@ proj<-"+proj=utm +zone=23 +south +ellps=GRS80 +towgs84=0,0,0,0,0,0,0 +units=m +n
 extreg<-extent(-42.7,-41.9,-22.9,-22.3)
 size<-NULL
 
+rastall<-raster(rast[1]) %>% 
+  raster::crop(.,extreg) %>%    #crop to the study region
+  projectRaster(., crs=proj ,method="ngb",res=30) %>%  #project 
+  mask(.,ummp)
+
+patches<-raster(rast[1]) %>% 
+  raster::crop(.,extreg) %>%    #crop to the study region
+  projectRaster(., crs=proj ,method="ngb",res=30) %>%  #project 
+  mask(.,ummp)
+
+
 for (i in 1:length(rast)){
+#i<-1
+
+ummp<-sf::read_sf(here::here("data","RawData","Landscape","Shapefiles Landscape AMLD", "SIG-LGCI_UMMP-13.shp")) %>% 
+  dplyr::select(Id,UMMPs,geometry)
+
+land<-sf::read_sf(here::here("data","RawData","Landscape","Shapefiles Landscape AMLD", "SIG-EDUC Redescobrindo 2021 - Fragmentos de Vegetação.shp")) 
 
 
 rast1<-raster(rast[i]) %>% 
   raster::crop(.,extreg) %>%    #crop to the study region
-  projectRaster(., crs=proj ,method="ngb",res=30) #project
+  projectRaster(., crs=proj ,method="ngb",res=30) %>%  #project 
+  mask(.,ummp)
 
 forest<-c(3,5,49)
 notforest<-c(9,11,21,29)
@@ -66,15 +94,47 @@ rast1[rast1 %in% buildings]<-5
 
 setTxtProgressBar(progress_bar(length(rast)),i)  
 
-check_landscape(rast1)
+#check_landscape(rast1)
 #show_patches(rast1,class="all")
-yy<- lsm_c_area_mn(rast1) %>% 
-      dplyr:: mutate(Year=readr::parse_number(rast[i]))
-show_lsm(rast1,what = "lsm_p_area")
+zz<- get_patches(rast1,class=1)
+zzz<-zz$layer_1$class_1
+names(zzz)<-paste("cover",parse_number(rast[i]),sep="")
+patches<-stack(zzz,patches)
+
+
+#ll<-get_patches(rast1,class=1)
+xx<-spatialize_lsm(rast1, what = "lsm_p_area")
+rr<-xx$layer_1$lsm_p_area
+names(rr)<-paste("cover",parse_number(rast[i]),sep="")
+
+#show_lsm(rast1, what = "lsm_p_area", class=1,labels = TRUE)
+ rastall<-stack(rr,rastall)
  
- size<-rbind(size,yy)
+yy<-extract_lsm(rast1,loc,class=1)  %>% 
+  dplyr:: mutate(Year=paste("cover",readr::parse_number(rast[i]),sep=""))
+ 
+  size<-rbind(size,yy)
+
  
 }
 
+
+raster::writeRaster(rastall,
+                    filename=here::here("data",
+                                       "NewlyCreatedData",
+                                       "Landscape raster",
+                                       "SizeAreaRaster.asc"),
+                    bylayer=T,
+                    overwrite=T)
+
+raster::writeRaster(patches,
+                    filename=here::here("data",
+                                       "NewlyCreatedData",
+                                       "Landscape raster",
+                                       "PatchRaster.asc"),
+                    bylayer=T,
+                    overwrite=T)
+
+save(size,file=here::here("data","NewlyCreatedData","SizeArea_table.RData"))
 
 ```
