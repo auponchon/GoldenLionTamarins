@@ -55,14 +55,15 @@ patches<-raster(rast[1]) %>%
   projectRaster(., crs=proj ,method="ngb",res=30) %>%  #project 
   mask(.,ummp)
 
-
-for (i in 1:length(rast)){
-#i<-1
-
 ummp<-sf::read_sf(here::here("data","RawData","Landscape","Shapefiles Landscape AMLD", "SIG-LGCI_UMMP-13.shp")) %>% 
   dplyr::select(Id,UMMPs,geometry)
 
 land<-sf::read_sf(here::here("data","RawData","Landscape","Shapefiles Landscape AMLD", "SIG-EDUC Redescobrindo 2021 - Fragmentos de Vegetação.shp")) 
+
+
+for (i in 1:length(rast)){
+# i<-2
+
 
 
 rast1<-raster(rast[i]) %>% 
@@ -114,12 +115,11 @@ yy<-extract_lsm(rast1,loc,class=1)  %>%
   dplyr:: mutate(Year=paste("cover",readr::parse_number(rast[i]),sep=""))
  
   size<-rbind(size,yy)
-
  
 }
 
 
-raster::writeRaster(rastall,
+terra::writeRaster(rastall,
                     filename=here::here("data",
                                        "NewlyCreatedData",
                                        "Landscape raster",
@@ -127,14 +127,34 @@ raster::writeRaster(rastall,
                     bylayer=T,
                     overwrite=T)
 
-raster::writeRaster(patches,
+terra::writeRaster(patches,
                     filename=here::here("data",
                                        "NewlyCreatedData",
                                        "Landscape raster",
                                        "PatchRaster.asc"),
-                    bylayer=T,
-                    overwrite=T)
+                    overwrite=T,
+                    bylayer=T)
+
+update(terra::rast(rastall), names=TRUE)
 
 save(size,file=here::here("data","NewlyCreatedData","SizeArea_table.RData"))
 
+
+sizearea<-terra::extract(rastall,loc) %>% 
+  as.data.frame(.) %>% 
+   cbind(loc) %>% 
+  pivot_longer(cols=1:30,
+               names_to="Cover",
+               values_to="Size") %>% 
+  dplyr::mutate(Year=parse_number(Cover),
+                Fragment.Region=as.factor(Fragment.Region),
+                Group=as.factor(Group),
+                Patch= as.factor(brasil_coverage_1991)) %>% 
+  dplyr::filter(Group=="JR" | Group=="SP"| Group=="LP") %>% 
+  dplyr::arrange(Group,Year)
+
+
+ggg<-ggplot(sizearea,aes(x=Year,y=Size,group=Group)) +
+  geom_line(aes(color=Group))
+  print(ggg)
 ```
