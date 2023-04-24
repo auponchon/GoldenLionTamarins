@@ -33,7 +33,7 @@ SK19 = NA
 
 
 *** CORRECTION DE L'AGE
-Deux sources de données fiables : fichier de Valéria ("BirthDates.xlsx") et données issues de GLT_movement. 
+Deux sources de données : fichier de Valéria ("BirthDates.xlsx") et données issues de GLT_movement. 
 
 I. Données 1989-2022
 Données sources : Utilisation des données de naissance (fichier de Valéria : BirthDates.xlsx) (naissances de 1989 à 2001)
@@ -53,7 +53,7 @@ Champ "Birth" de data.clean (Birth_mov)
 
 III. Jointure des deux jeux de données
 
-IV. Verification des erreurs
+IV. Verification des erreurs dans les dates de naissance
 1) Incohérences entre les dates de naissance renseignées
 * Si incohérence : garder la date de naissance issue de BirthDates (dates de naissance données par VR)
 
@@ -62,8 +62,8 @@ IV. Verification des erreurs
 * Si erreur : extraction des individus à faire valider
 * Incertitudes sur les individus 
 A7 (deux dates d'émigration : 1993-01-01 et 1996-05-01 = on attribue 1996)
-CA9 = NA
 LB6 (deux dates de naissance : 1998-04-01 et 2001-07-01 = on attribue 1998)
+CA9 = NA
 SK19 = NA
 
 3) Dates de naissances multiples
@@ -73,7 +73,7 @@ SK19 = NA
 * Cinq dates différentes : incertitudes sur FT, IN, TO
 
 
-4) Vérifier les individus dont la date de naissance > la date de première observation : 
+4) Vérifier les individus dont la date de naissance < la date de première observation : 
 * Calcul de la différence
 * Si la différence est négative : extraire les individus concernés
 * Vérifier / attribuer NA
@@ -88,11 +88,15 @@ SK19 = NA
 7) Vérifier les individus "?", chercher données dans le jeu de données de VR
 
 V. Inférer le champ Idade sachant que :
-* IN, FN ou TO = Infant (jeune < 1 an) ; JU = juvénile ; SA = subadulte ; AD = adulte. On considère que JU < 1, SA = [1-3], AD = > 3.
+* IN, FN ou TO = Infant (jeune < 1 an) ; JU = juvénile ; SA = subadulte ; AD = adulte. 
+On considère que JU < 1, SA = [1-3], AD = > 3.
 Méthodes :
-- à partir de la date de naissance : date d'observation - 3 mois
-- à l'aide du poids : JU < 500 g et AD > 500 g
-ET regarder les incohérences (juvéniles > 500 g et adultes < 500 g) (n = 99 individus)
+1) à partir de la date de naissance 
+2) à l'aide du poids : JU < 500 g et AD > 500 g
+3) à l'aide du champ Idade existant
+
+ERREURS :
+1) Incohérences entre le stade et le poids (juvéniles > 500 g et adultes < 500 g) (n = 99 individus)
 GLT
  1:   AF5 NA
  2:   AF6 NA
@@ -195,7 +199,219 @@ GLT
 99:  WS44 AD
 ET passer leur BirthOK en NA
 
-- si le champ Idade est toujours vide : à l'aide du champ Idade déjà existant
-- en regardant les fichiers source de 2001 à 2009 pour les 15 groupes les plus suivis (individus en fin de bloc)
+2) Incohérences chronologiques (eg adulte qui passe juvénile) (n = 295)
+  1 ?    NA
+  2 1267 AD à partir de ObsOrder == 2
+  3 AF1  AD à partir de ObsOrder == 7
+  4 AF11 AD à partir de ObsOrder == 4
+  5 AF13 2010-01-18 == SA
+  6 AF2  2005-01-13 == SA
+  7 AF3  AD à partir de ObsOrder == 6
+  8 AF4  AD à partir de ObsOrder == 6
+  9 AF8  AD à partir de ObsOrder == 5
+ 10 AL1  AD à partir de ObsOrder == 2
+ 11 AR4  2004-08-04 == SA, 2004-04-01 == SA, 2004-06-01 == SA
+ 12 AS1  1992-09-14 == NA
+ 13 AS10 2002-06-01 == SA
+ 14 AS14 2002-05-01 == JU, 2003-07-18 == SA
+ 15 AS4  2000-08-23 == SA, 2001-07-05 == SA
+ 16 AS5  2001-09-01 == AD
+ 17 AT8  2004-06-03 == SA
+ 18 AT9  2004-06-03 == SA
+ 19 AX12 2006-03-02 == SA
+ 20 AX13 2007-03-28 == SA
+ 21 AX14 2007-03-28 == SA
+ 22 AX15 NA
+ 23 AX19 2008-05-27 == SA
+ 24 AX20 AD à partir de ObsOrder == 3 (2009-03-01)
+ 25 AX21 AD à partir de ObsOrder == 3 (2009-03-01)
+ 26 AX5  2004-05-21 == SA
+ 27 BE1  2004-01-19 == SA
+ 28 BE2  AD à partir de ObsOrder == 12
+ 29 BE5  2007-03-01 == AD, 2007-05-01 == AD
+ 30 BE6  AD à partir de ObsOrder == 6
+ 31 BI1  NA
+ 32 CA18 2000-06-30 == SA
+ 33 CA19 2001-07-11 == SA
+ 34 DI2  AD
+ 35 DN1  2004-07-18 == SA, 2004-09-15 == SA
+ 36 DN2  2004-09-15 == SA
+ 37 E12  1997-03-04 == SA
+ 38 E24  2003-07-10 == SA
+ 39 E25  AD à partir de 2003-07-10
+ 40 E27  AD à partir de 2004-04-01
+ 41 E28  AD à partir de 2005-01-01
+ 42 E30  AD à partir de 2005-01-01
+ 43 E35  AD à partir de 2008-08-16
+ 44 FX3  AD à partir de 2004-03-17
+ 45 FX4  AD à partir de 2004-03-17
+ 46 GM3  AD à partir de 2006-07-11
+ 47 GM4  AD à partir de 2006-07-11
+ 48 GM5  AD à partir de 2006-07-11
+ 49 IG1  AD à partir de 2004-01-21
+ 50 IG2  AD à partir de 2004-01-21
+ 51 IG5  AD à partir de 2007-03-01
+ 52 IP1  AD
+ 53 JG10 2002-03-25 == SA, 2003-01-21 == SA
+ 54 JG17 2004-11-01 == JU
+ 55 JG2  AD
+ 56 JG6  AD
+ 57 JG7  AD à partir de 2002-03-26
+ 58 JG8  2002-03-26 == SA, 2003-01-08 == SA
+ 59 JP10 AD à partir de 2009-07-01
+ 60 JP12 AD à partir de 2009-07-01
+ 61 JP13 AD à partir de 2009-07-01
+ 62 JP14 AD à partir de 2009-07-01
+ 63 JP3  AD à partir de 2005-01-01
+ 64 JP4  2005-06-13 == SA
+ 65 JP5  AD à partir de 2007-03-01
+ 66 JP6  AD à partir de 2007-03-01
+ 67 JP7  AD
+ 68 JP8  AD
+ 69 JP9  AD à partir de 2008-05-28
+ 70 KE14 AD à partir de 2006-07-05
+ 71 KE15 AD à partir de 2006-07-05
+ 72 KE16 AD à partir de 2006-07-15
+ 73 KE5  AD
+ 74 KE6  AD
+ 75 KE8  2004-07-27 == SA
+ 76 LA34 2001-09-01 == AD
+ 77 LA42 AD à partir de 2004-07-01
+ 78 LA43 2004-09-20 == SA
+ 79 LC20 AD à partir de 2001-07-31
+ 80 LC22 AD
+ 81 LC24 AD à partir de 2001-07-31
+ 82 LC30 AD
+ 83 MA11 AD à partir de 1998-06-22
+ 84 MA14 AD
+ 85 MA15 AD
+ 86 MA28 AD à partir de 2004-04-01
+ 87 MA37 AD à partir de 2008-08-30
+ 88 MA9  NA
+ 89 MC9  AD
+ 90 MD2  AD
+ 91 MF2  NA
+ 92 MK13 2003-10-01 == AD
+ 93 MK14 2003-10-01 == AD
+ 94 MK5  AD à partir de 1999-04-12
+ 95 MP242 NA
+ 96 MP243 NA
+ 97 MP244 NA
+ 98 MP245 NA
+ 99 MP302 NA
+100 MP303 NA
+101 MP304
+102 MP305
+103 MP306
+104 MP307
+105 MP452
+106 MP453
+107 NC1  
+108 O30  
+109 O33  
+110 O37  
+111 O38  
+112 O41  
+113 O42  
+114 OL10 
+115 OL11 
+116 OL12 
+117 OL15 
+118 OL16 
+119 OL18 
+120 OL19 
+121 OL23 
+122 OL27 
+123 OL7  
+124 OL8  
+125 OL9  
+126 PA3  
+127 PA4  
+128 PA5  
+129 PI11 
+130 PI12 
+131 PI14 
+132 PI15 
+133 PI2  
+134 PI4  
+135 PI6  
+136 PR2  
+137 PR9  
+138 PT10 
+139 PT6  
+140 RL11 
+141 RL13 
+142 RL15 
+143 RL16 
+144 RL23 
+145 RP2  
+146 RT12 
+147 RT19 
+148 RT4  
+149 RV10 
+150 RV12 
+151 RV17 
+152 RV18 
+153 RV2  
+154 RV25 
+155 RV26 
+156 RV27 
+157 RV31 
+158 RV35 
+159 SE5  
+160 SF1  
+161 SH1  
+162 SH10 
+163 SH4  
+164 SH5  
+165 SH6  
+166 SH7  
+167 SH8  
+168 SH9  
+169 SI2  
+170 SI6  
+171 SI7  
+172 SI8  
+173 SP12 
+174 SP2  
+175 SP4  
+176 SP6  
+177 SP8  
+178 SP9  
+179 ST10 
+180 ST12 
+181 ST29 
+182 ST32 
+183 ST34 
+184 ST35 
+185 ST41 
+186 ST44 
+187 T0   
+188 TM1  
+189 TM2  
+190 TM3  
+191 TM5  
+192 TR12 
+193 TR13 
+194 TR17 
+195 TR18 
+196 TR2  
+197 TR20 
+198 TR21 
+199 TR34 
+200 TR36 
+201 TR37 
+202 TR38 
+203 TR4  
+204 TR6  
+205 W26  
+206 W6   
+* Pour ces individus : BirthDate == NA
+
 
 V. Regarder les GLT qui n'ont ni Idade ni BirthDate
+- en regardant les fichiers source de 2001 à 2009 pour les 15 groupes les plus suivis (individus en fin de bloc)
+
+VI. Résumé statistique
+- Histogramme des poids
+- Individus qui ont un sexe/stade renseigné (ou pas)
