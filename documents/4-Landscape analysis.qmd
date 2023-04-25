@@ -45,11 +45,13 @@ proj<-"+proj=utm +zone=23 +south +ellps=GRS80 +towgs84=0,0,0,0,0,0,0 +units=m +n
 extreg<-extent(-42.7,-41.9,-22.9,-22.3)
 size<-NULL
 
+#create an initial raster for size area
 rastall<-raster(rast[1]) %>% 
   raster::crop(.,extreg) %>%    #crop to the study region
   projectRaster(., crs=proj ,method="ngb",res=30) %>%  #project 
   mask(.,ummp)
 
+#create an initial raster for patches
 patches<-raster(rast[1]) %>% 
   raster::crop(.,extreg) %>%    #crop to the study region
   projectRaster(., crs=proj ,method="ngb",res=30) %>%  #project 
@@ -64,18 +66,18 @@ land<-sf::read_sf(here::here("data","RawData","Landscape","Shapefiles Landscape 
 for (i in 1:length(rast)){
 # i<-2
 
-
-
+#get land cover
 rast1<-raster(rast[i]) %>% 
   raster::crop(.,extreg) %>%    #crop to the study region
   projectRaster(., crs=proj ,method="ngb",res=30) %>%  #project 
   mask(.,ummp)
 
-forest<-c(3,5,49)
-notforest<-c(9,11,21,29)
-buildings<-c(15,23,24,25)
-agri<-41
-water<-c(30,31,32,33)
+#assign habitat types
+forest<-c(3,4,5,49)
+notforest<-c(9,11,12,13,29)
+buildings<-c(22,23,24,25,30)
+agri<-c(14,15,41,21)
+water<-c(31,32,33)
 
 #reassign codes for different habitats
 # 0 = sea
@@ -89,7 +91,7 @@ water<-c(30,31,32,33)
 rast1[rast1==0]<-NA
 rast1[rast1 %in% forest]<-1
 rast1[rast1 %in% notforest]<-2
-rast1[rast1==agri]<-3
+rast1[rast1 %in% agri]<-3
 rast1[rast1 %in% water]<-4
 rast1[rast1 %in% buildings]<-5
 
@@ -106,7 +108,7 @@ patches<-stack(zzz,patches)
 #ll<-get_patches(rast1,class=1)
 xx<-spatialize_lsm(rast1, what = "lsm_p_area")
 rr<-xx$layer_1$lsm_p_area
-names(rr)<-paste("cover",parse_number(rast[i]),sep="")
+names(rr)<-paste("Area",parse_number(rast[i]),sep="")
 
 #show_lsm(rast1, what = "lsm_p_area", class=1,labels = TRUE)
  rastall<-stack(rr,rastall)
@@ -135,7 +137,6 @@ terra::writeRaster(patches,
                     overwrite=T,
                     bylayer=T)
 
-update(terra::rast(rastall), names=TRUE)
 
 save(size,file=here::here("data","NewlyCreatedData","SizeArea_table.RData"))
 
@@ -149,12 +150,12 @@ sizearea<-terra::extract(rastall,loc) %>%
   dplyr::mutate(Year=parse_number(Cover),
                 Fragment.Region=as.factor(Fragment.Region),
                 Group=as.factor(Group),
-                Patch= as.factor(brasil_coverage_1991)) %>% 
-  dplyr::filter(Group=="JR" | Group=="SP"| Group=="LP") %>% 
+                Patch= as.factor(brasil_coverage_1990)) %>% 
+  dplyr::filter(Group=="AX" | Group=="PA"| Group=="PT") %>% 
   dplyr::arrange(Group,Year)
 
 
-ggg<-ggplot(sizearea,aes(x=Year,y=Size,group=Group)) +
-  geom_line(aes(color=Group))
+ggg<-ggplot(sizearea,aes(x=Year,y=Size,group=Fragment.Region)) +
+  geom_line(aes(color=Fragment.Region))
   print(ggg)
 ```

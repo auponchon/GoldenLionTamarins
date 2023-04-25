@@ -222,7 +222,7 @@ Duplicate individual GLT and tattoos are renamed in the code, not in the files (
 #| message: false
 #| warning: false
 
-load(here::here("Data","NewlyCreatedData","all_long.RData"))
+load(here::here("Data","NewlyCreatedData","clean_raw_data_long.RData"))
 bad<-c("?","T0","IN","?-1","?-2","?-3","FT","?-4","?-5","?-6")
 
 sum.up<-data.clean %>% 
