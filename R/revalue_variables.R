@@ -217,8 +217,6 @@ c("2 Irmãos" =	"Faz. 2 Irmaos",
                      data$Year<2020 & 
                      !is.na(data$Group))]<-"AL"
  
-  data$Group[which(data$Group=="PA" & data$Region=="Poco das Antas")]<-"PDA"
-  
   
   
   data$Disp[which(data$GLT=="MK10" & data$Year > 2003 & data$Group=="ML")]<-1
@@ -322,8 +320,14 @@ revalue_name<-function(data){
   data$GLT[data$GLT=="RL2" & data$Tattoo=="SE5"]<-"SE5.1"
   
    data$Group[data$GLT=="979"] <-"LB"
+   
+   levels(data$Group) <- c(levels(data$Group), "PDA")
+   
+   data$Group[which(data$Group=="PA" & 
+                      data$Region=="Poco das Antas")]<-"PDA"
+   
+   
 
-  
    return(data)
   
 }
