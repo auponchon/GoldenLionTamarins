@@ -54,10 +54,17 @@ Champ "Birth" de data.clean (Birth_mov)
 III. Jointure des deux jeux de données
 
 IV. Verification des erreurs dans les dates de naissance
-1) Incohérences entre les dates de naissance renseignées
+1) Dates de naissances multiples (de la variable Birth_mov)
+* Correction si erreurs évidentes (dates proches, ie < 180 jours)
+* Deux dates différentes : incertitudes sur 56 individus
+* Trois dates différentes : incertitudes sur 1375 (NA), AF20, E25, KE10, KE4, RV6, SP23
+* Cinq dates différentes : incertitudes sur FT, IN, TO
+
+3) Incohérences entre les dates de naissance renseignées
 * Si incohérence : garder la date de naissance issue de BirthDates (dates de naissance données par VR)
 
-2) Erreurs du jeu de données GLT_movement
+
+3) Différences entre la date de naissance et la date d'émigration de GLT_movement
 * Comparaison entre la date de naissance renseignée et la date d'émigration supposée
 * Si erreur : extraction des individus à faire valider
 * Incertitudes sur les individus 
@@ -66,34 +73,51 @@ LB6 (deux dates de naissance : 1998-04-01 et 2001-07-01 = on attribue 1998)
 CA9 = NA
 SK19 = NA
 
-3) Vérifier les individus dont la date de naissance < la date de première observation : 
-* Calcul de la différence
-* Si la différence est négative : extraire les individus concernés
-* Vérifier / attribuer NA
 
-4) Vérifier les individus des mêmes groupes ayant la même date de naissance
-* Pour les groupes les plus suivis uniquement (cf liste NB_obs_gp), croiser l'information avec le poids et le stade 
-* Pour les groupes les moins suivis : NA
+4) Vérifier les individus dont la date de naissance < la date de première observation : 
+* Calcul de la différence
+* Si la différence est négative : extraire les individus concernés :
+A7, AS1, CA17, CM5, MA9, PT7, PT8, SE11, TR4, TR6
+* Attribuer NA
 
 5) Individus vus pour la première fois adultes et ayant une date de naissance
 * Mettre la date de naissance en NA
+
+
+6) Vérifier les individus des mêmes groupes ayant la même date de naissance
+* Pour les groupes les plus suivis uniquement (cf liste NB_obs_gp), croiser l'information avec le poids et le stade 
+* Pour les groupes les moins suivis : NA
+
 
 
 V. Inférer le champ Idade sachant que :
 * IN, FN ou TO = Infant (jeune < 1 an) ; JU = juvénile ; SA = subadulte ; AD = adulte. 
 On considère que JU < 1, SA = [1-3], AD = > 3.
 Méthodes :
-1) à partir de la date de naissance Birth_VR 
-2) à l'aide du poids : JU < 400 g et AD > 400 g
-* Implémentation automatique selon le nombre de jours qui séparent la date de mesure du poids
-3) à l'aide du champ Idade existant
-4) à l'aide de la date de naissance Birth_mov
 
-ATTENTION Dates de naissances multiples (de la variable Birth_mov)
-* NA, hors erreurs évidentes (dates proches < 180 jours, erreurs de typo)
-* Deux dates différentes : incertitudes sur 56 individus
-* Trois dates différentes : incertitudes sur 1375, AF20, KE10, SP23
-* Cinq dates différentes : incertitudes sur FT, IN, TO
+1) à partir de la date de naissance Birth_VR 
+
+2) à l'aide du poids : JU < 400 g et AD > 400 g
+POUR LES INDIVIDUS DONT LE POIDS EST CONNU A UNE OU PLUSIEURS DATES
+* CAS 1 : individus qui ont un poids adulte à 1 ou plusieurs dates
+= On attribue adulte aux observations postérieures à la date de mesure de poids adulte (ie > 400 g)
+Le reste ne peut être inféré
+* CAS 2 : individus qui ont un poids juvénile à 1 ou plusieurs dates
+= On attribue juvéniel aux observations antérieures à la date de mesure de poids juvénile (ie < 400 g)
+Le reste ne peut être inféré
+
+3) à l'aide d'une date de naissance inferrée depuis Idade
+A FAIRE
+
+4) à l'aide du champ Idade existant
+* Examen préalable des inconsistances entre la variable Idade pré-existante et la variable IdadeOK inférée
+* Changer Idade comme pour 11 individus
+* Remplir IdadeOK avec Idade là où NA
+
+
+5) à l'aide de la date de naissance Birth_mov
+
+
 
 ERREURS :
 1) Incohérences entre le stade et le poids (juvéniles > 400 g et adultes < 400 g)
