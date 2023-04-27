@@ -106,8 +106,7 @@ terra::writeRaster(rastall,
 terra::writeRaster(patches,
                     filename=here::here(paste0("data",
                                        "NewlyCreatedData",
-                                       "Landscape raster",
-                                       names(patches)),
+                                       "Landscape rast")),
                     overwrite=T,
                     bylayer=T)
 
