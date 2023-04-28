@@ -9,7 +9,7 @@ xx<-raster(layer) %>%
 forest<-c(3,4,5,49)
 notforest<-c(9,11,12,13,29)
 buildings<-c(22,23,24,25,30)
-agri<-c(14,15,41,21)
+agri<-c(14,15,41,21,39)
 water<-c(31,32,33)
 
 #reassign codes for different habitats

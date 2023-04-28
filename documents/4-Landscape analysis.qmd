@@ -15,6 +15,7 @@ library(tidyverse)
 library(sf)
 library(landscapemetrics)
 source(here::here("R","progress_bar.R"))
+source(here::here("R","create_raster.R"))
 #import landscape files
 
 #land cover for each each
@@ -38,15 +39,17 @@ loc<-read.table(here::here("data","rawData","Landscape","RegionsName.csv"),
   sf::st_as_sf(., coords = c("Long","Lat")) %>% 
   sf::st_set_crs(31983)
 
+#etxent of study area in geographic coordinates
+extreg<-extent(-42.7,-41.9,-22.9,-22.3)
+size<-NULL
+
+
 #projection for Brazil
 proj<-"+proj=utm +zone=23 +south +ellps=GRS80 +towgs84=0,0,0,0,0,0,0 +units=m +no_defs +type=crs"
 
 coverStack<-purrr::map(rast,create_raster_stack,.progress=T)
 save(coverStack, file=here::here("data","NewlyCreatedData","Cover_rasters.RData"))
 
-#etxent of study area in geographic coordinates
-extreg<-extent(-42.7,-41.9,-22.9,-22.3)
-size<-NULL
 
 #create an initial raster for size area
 rastall<-create_raster_stack(rast[1])
@@ -115,24 +118,61 @@ save(size,file=here::here("data","NewlyCreatedData","SizeArea_table.RData"))
 save(rastall,file=here::here("data","NewlyCreatedData","Raster_size.RData"))
 save(patches,file=here::here("data","NewlyCreatedData","Raster_patches.RData"))
 
+load(here::here("Data","NewlyCreatedData","clean_raw_data_long.RData"))
+
+group.reg<-data.clean %>% 
+  ungroup() %>% 
+  distinct_at(vars(Year,Group,UMMPs), keep_all=F)
 
 sizearea<-terra::extract(rastall,loc) %>% 
   as.data.frame(.) %>% 
    cbind(loc) %>% 
+  left_join (group.reg, by="Group") %>% 
   pivot_longer(cols=1:30,
                names_to="Cover",
                values_to="Size") %>% 
   dplyr::mutate(Year=parse_number(Cover),
                 Fragment.Region=as.factor(Fragment.Region),
                 Group=as.factor(Group),
-                Patch= as.factor(brasil_coverage_1990)) %>% 
-  # dplyr::filter(Group=="SI2" | Group=="PA"| Group=="AL"|Group=="SP"|
-  #                 Group=="AFII" | Group=="TMII" | Group== "LA2" |
-  #                 Group=="LP" |Group=="CLA" | Group=="Ataliba") %>% 
-  dplyr::arrange(Group,Year)
+                Patch= as.factor(brasil_coverage_1990),
+                UMMPs=as.factor(UMMPs)) %>% 
+# dplyr::filter(UMMPs=="Rio Vermelho") %>%    #Aldeia II,  Rio Vermelho
+  dplyr::arrange(Group,Year) %>% 
+  drop_na() %>% 
+  distinct()
 
 
-ggg<-ggplot(sizearea,aes(x=Year,y=Size,group=Fragment.Region)) +
-  geom_line(aes(color=Fragment.Region))
+ggg<-ggplot(sizearea,aes(x=Year,y=Size,group=Group)) +
+  geom_line(aes(color=Group),show.legend = F) +
+  facet_wrap(.~UMMPs, nrow=2) 
   print(ggg)
+  
+  
+
+
+library(gganimate)
+library(gifski)
+
+  
+
+mydf <- purrr::map_dfr(
+  coverStack, 
+  ~setNames(as.data.frame(as(., "SpatialPixelsDataFrame")), c('value', 'x', 'y')), 
+  .id = 'year'
+)
+
+gg <- ggplot(mydf, 
+  aes(x = x, y = y, fill = value)) +
+  geom_tile() +
+  scale_fill_viridis_c() +
+  ggthemes::theme_map()
+
+gganim <- gg + 
+  transition_time(as.numeric(year)) +
+   labs(subtitle = "Year: {round(frame_time,digits=0)}") 
+   
+
+animate(gganim, height = 1000, width =2000,res=300,fps=5,
+        renderer = gifski_renderer())
+anim_save(filename = here::here("outputs","GIF_range_expansion.gif"))
 ```
