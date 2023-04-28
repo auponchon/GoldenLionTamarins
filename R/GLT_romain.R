@@ -635,6 +635,8 @@ idade.checks4 = idade.checks %>%
 # Jointure
 data.clean = data.clean %>% 
   left_join(select(n,c(rowid,IdadeOK)))
+# Check remaining NAs
+# A FAIRE
 sub = data.clean %>% 
   group_by(GLT) %>% 
   filter(any(is.na(IdadeOK) & any(!is.na(IdadeOK)))) %>% 
