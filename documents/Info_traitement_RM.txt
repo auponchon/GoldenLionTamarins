@@ -38,7 +38,7 @@ Plusieurs sexes différents (n=43 GLT, soit 2,08% des GLT)
 16 ST3       1    19 NA
 
 
-*** CORRECTION DE L'AGE
+*** CORRECTION DE LA CATEGORIE D'AGE (IDADE)
 Deux sources de données : fichier de Valéria ("BirthDates.xlsx") et données issues de GLT_movement. 
 
 I. Données 1989-2022
@@ -135,7 +135,6 @@ A7 = NA
 CA9 = NA
 SK19 = NA
 
-
 4) Individus observés avant la date de naissance renseignée :
 * Calcul de la différence
 * NA aux individus dont la différence est négative (n=111 GLT)
@@ -143,7 +142,7 @@ SK19 = NA
 5) Individus vus pour la première fois adultes et ayant une date de naissance (n=203 GLT)
 * Mettre la date de naissance en NA
 
-6) Individus dont la date de naissance = la date de première observation (n=84 GLT) (on ne considère que les dates de Birth_mov, car on postule que celles de VR sont bonnes)
+6) Individus dont la date de naissance = la date de première observation (n=84 GLT)
 * Date de naissance en NA
 
 7) Extraire les individus des mêmes groupes ayant la même date de naissance et une date de naissance qui est égale à la date de première observation
@@ -165,27 +164,27 @@ Méthodes :
 * On leur attribue une date de naissance fictive qui vaut la date d'observation - 3 mois
 
 3) à l'aide du poids : JU < 400 g et AD > 400 g
-POUR LES INDIVIDUS DONT LE POIDS EST CONNU A UNE OU PLUSIEURS DATES
-* CAS 1 : individus qui ont un poids adulte à 1 ou plusieurs dates
-= On attribue adulte aux observations postérieures à la date de mesure de poids adulte (ie > 400 g)
-Le reste ne peut être inféré
-* CAS 2 : individus qui ont un poids juvénile à 1 ou plusieurs dates
-= On attribue juvéniel aux observations antérieures à la date de mesure de poids juvénile (ie < 400 g)
-Le reste ne peut être inféré
 
 
 4) à l'aide du champ Idade existant
 * Examen préalable des inconsistances entre la variable Idade pré-existante et la variable IdadeOK inférée
 * Remplir IdadeOK avec Idade là où NA
 
-
 5) à l'aide de la date de naissance Birth_mov
+
+A CHAQUE FOIS : on remplit le stade de vie à l'aide des Idade connus à certaines dates
+* CAS 1 : individus adultes à une ou plusieurs dates
+= On attribue adulte aux observations postérieures à la date où l'individu est adulte
+* CAS 2 : individus juvéniles à une ou plusieurs dates
+= On attribue juvénile aux observations antérieures à la date où l'individu est juvénile
+* CAS 3 : individus juvéniles à une ou plusieurs dates
+= On attribue adulte aux observations 3 ans postérieures (1095 jours) à la date où l'individu est juvénile
 
 
 
 ERREURS :
 1) Incohérences entre le stade et le poids (juvéniles > 400 g et adultes < 400 g)
-* Erreurs : juvéniles de plus de 400 g = 95 GLT
+* Erreurs : juvéniles de plus de 400 g = 96 GLT
 * Erreurs : adultes de moins de 400 g = 1 GLT
 
 2) Incohérences dans le stade de vie : adulte qui passe juvénile, etc.
@@ -528,10 +527,9 @@ TROISIEME VERIFICATION
 34:   TR4
 
 V. Regarder les GLT qui n'ont ni Idade ni BirthDate
+Export : idade_checks_v4_NA
+* Vérification visuelle
 
-VI. Quantifier l'erreur
-1) Birth_mov
-2) Idade
 
 VII. Résumé statistique
 RETIRER LES IN, T0, FN (infants)
