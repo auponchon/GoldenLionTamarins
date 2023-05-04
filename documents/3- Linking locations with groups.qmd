@@ -84,7 +84,10 @@ spdisp<-spatdisp1 %>%
 lines_disp <- spdisp %>% 
   group_by(GLT) %>%
   dplyr::summarise(do_union = FALSE) %>%
-  st_cast("LINESTRING") %>% 
+  st_cast("LINESTRING") 
+
+
+lines_disp<- lines_disp %>% 
   dplyr::mutate(Dist=as.vector(st_length(lines_disp,by="id")/1000))
 
 write_sf(lines_disp,
@@ -132,6 +135,14 @@ fieldgg<-ggplot()+
   theme_void() +
   theme(legend.position = "none")
 
-print(fieldgg)
 
+
+tiff(filename=here::here("outputs","Dispersal_lines.tif"), 
+            res=300,
+            units="px",
+            height=1500,
+            width=3000,
+            compression="lzw")
+print(fieldgg)
+dev.off()
 ```
