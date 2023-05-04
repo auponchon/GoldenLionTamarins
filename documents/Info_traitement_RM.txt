@@ -30,7 +30,7 @@ Plusieurs sexes différents (n=43 GLT, soit 2,08% des GLT)
  8 PV4      14     1 NA
  9 RL11      3    15 NA
 10 RL13      2    15 NA
-11 RT1       1    19 NA
+11 RT1       1    19 M
 12 SE3      17     2 NA
 13 SF3       2     9 NA
 14 SF4       1    10 NA
@@ -57,12 +57,10 @@ Import des données (.Rdata)
 Traitement dans R
 Champ "Birth" de data.clean (Birth_mov)
 
-III. Jointure des deux jeux de données
-
-IV. Verification des erreurs dans les dates de naissance
+III. Verification des erreurs dans les dates de naissance
 1) Dates de naissances multiples (de la variable Birth_mov)
 SOLUTION : Correction si erreurs évidentes (dates proches, ie < 180 jours)
-* Deux dates différentes (n=120 individus) : correction pour les individus aux dates proches, incertitudes sur 52 individus (NA)
+* Deux dates différentes (n=120 individus) : correction pour les individus aux dates proches, incertitudes sur 52 individus = Mettre la date de naissance en NA
  1:  AS14
  2:  AT10
  3:  AT11
@@ -124,35 +122,37 @@ SOLUTION : Correction si erreurs évidentes (dates proches, ie < 180 jours)
 6:  RV6
 7: SP23
 * Cinq dates différentes : incertitudes sur FT, IN, TO. Birth = NA.
+TOTAL : 53 individus avec NA
 
-2) Incohérences entre les dates de naissance renseignées (n=253 GLT)
+2) Incohérences entre les dates de naissance renseignées (n=255 GLT)
 * Si incohérence : garder la date de naissance issue de BirthDates (dates de naissance données par VR)
 
 3) Différences entre la date de naissance et la date d'émigration de GLT_movement
 * Comparaison entre la date de naissance renseignée et la date d'émigration supposée
-* Incertitudes sur les individus (n=3)
+* Incertitudes sur les individus (n=3) = Mettre la date de naissance en NA
 A7 = NA
 CA9 = NA
 SK19 = NA
 
 4) Individus observés avant la date de naissance renseignée :
 * Calcul de la différence
-* NA aux individus dont la différence est négative (n=111 GLT)
+* Mettre la date de naissance en NA si la différence est négative (n=111 GLT)
 
 5) Individus vus pour la première fois adultes et ayant une date de naissance (n=203 GLT)
 * Mettre la date de naissance en NA
 
-6) Individus dont la date de naissance = la date de première observation (n=84 GLT)
-* Date de naissance en NA
+6) Individus dont la date de naissance (Birth_mov) = la date de première observation (n=84 GLT)
+* Mettre la date de naissance en NA
 
-7) Extraire les individus des mêmes groupes ayant la même date de naissance et une date de naissance qui est égale à la date de première observation
-Erreurs : n = 81 GLT
+7) Individus des mêmes groupes ayant la même date de naissance (n=460)
+* Quand >= 3 individus : Mettre la date de naissance en NA
+* Rajouter error type : Grp_sameBD (si n=3 ou n=4 : Grp_sameBD_?P)
 
 EXPORT des individus avec des dates de naissance erronnées/incertaines (n=454)
 
 
 
-V. Inférer le champ Idade sachant que :
+IV. Inférer le champ Idade sachant que :
 * IN, FN ou TO = Infant (jeune < 1 an) ; JU = juvénile ; SA = subadulte ; AD = adulte. 
 On considère que JU < 1, SA = [1-3], AD = > 3.
 Méthodes :
@@ -531,7 +531,7 @@ Export : idade_checks_v4_NA
 * Vérification visuelle
 
 
-VII. Résumé statistique
+VI. Résumé statistique
 RETIRER LES IN, T0, FN (infants)
 - Histogramme des poids
 - Individus qui ont un sexe/stade renseigné (ou pas)
