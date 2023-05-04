@@ -76,6 +76,7 @@ data2000<-DATA %>%
   dplyr::select(Year,DateObs,Region,Group,GLT,Tattoo,
                 Sex,Birth,Idade, Disp, Death, Solo,File) 
 
+
 #extract useful captures
 datacapt<-extract_capture_data(filecapt) %>% 
   revalue_old_regions(.) %>% 
@@ -327,7 +328,7 @@ title_file<-paste("Continuity_field_effort_",
 
 #filter data and add id count over time
 data.filter<-data.clean %>% 
-  dplyr::filter(!GLT %in% bad & Disp==0 & Death==0) %>% 
+  dplyr::filter(!GLT %in% bad & Disp!=1 & Death==0) %>% 
   dplyr::arrange(DateObs, GLT) %>% 
   group_by(GLT) %>% 
   mutate(id=row_number())
@@ -342,9 +343,17 @@ data.disp<-data.filter %>%
   dplyr::filter(GLT %in% dispind$GLT) %>% 
   dplyr::arrange(GLT,DateObs) %>% 
   dplyr::mutate(From=dplyr::lag(Group),
-                To=Group) %>% 
- dplyr::mutate(Change=ifelse(To != From, 1,0)) %>% 
-  dplyr::filter(Change >0)
+                To=Group)
+ # dplyr::mutate(Change=ifelse(To != From, 1,0)) %>% 
+ #  dplyr::filter(Change >0) 
+  
+
+  
+  
+  # write.xlsx(.,
+  #            file=here::here("data","NewlyCretaedData","Successful_dispersal.xlsx"),
+  #            col.nmes=T,
+  #            row.names=F)
 
 
 

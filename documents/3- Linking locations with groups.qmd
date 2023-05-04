@@ -44,7 +44,12 @@ spatdata<-data.clean %>%
   dplyr::arrange(GLT,Group,DateObs) %>% 
   dplyr::mutate(GLT=as.factor(GLT)) %>% 
   dplyr::group_by(GLT)%>% 
-  dplyr::filter(!GLT %in% bad & Disp==0 & Death==0 & Solo==0) 
+  dplyr::filter(!GLT %in% bad & Disp==0 & Death==0 & Solo==0) %>% 
+sf::st_as_sf(., coords = c("Long","Lat")) %>% 
+  sf::st_set_crs(31983) 
+
+land<-sf::read_sf(here::here("data","RawData","Landscape","Shapefiles Landscape AMLD", "SIG-EDUC Redescobrindo 2021 - Fragmentos de Vegetação.shp")) 
+
 
 region_groups<-st_join(spatdata,land)
 
@@ -79,14 +84,17 @@ spdisp<-spatdisp1 %>%
 lines_disp <- spdisp %>% 
   group_by(GLT) %>%
   dplyr::summarise(do_union = FALSE) %>%
-  st_cast("LINESTRING")
+  st_cast("LINESTRING") %>% 
+  dplyr::mutate(Dist=as.vector(st_length(lines_disp,by="id")/1000))
 
 write_sf(lines_disp,
-         here::here("data","NewlyCreatedData","Landscape",
-                    "disp_lines_2001.shp"),
+         here::here("data","NewlyCreatedData","Dispersal lines",
+                    "disp_lines.shp"),
+                    delete_dsn = T,
                     delete_layer=T)
 
-land<-sf::read_sf(here::here("data","RawData","Landscape","Shapefiles Landscape AMLD", "SIG-EDUC Redescobrindo 2021 - Fragmentos de Vegetação")) 
+
+#jjit<-st_jitter(spdisp, factor = 0.1)
 
 fieldgg<-ggplot()+
   geom_sf(data = land,
