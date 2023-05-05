@@ -3,6 +3,7 @@
 xx<-raster(layer) %>% 
   raster::crop(.,extreg) %>%    #crop to the study region
   projectRaster(., crs=proj ,method="ngb",res=30) %>%  #project 
+#  raster::aggregate(., fact=3,fun=max) %>% 
   mask(.,ummp)
 
 

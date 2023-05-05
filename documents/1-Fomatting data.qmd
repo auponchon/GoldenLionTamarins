@@ -349,11 +349,12 @@ data.disp<-data.filter %>%
   
 
   
-  
-  # write.xlsx(.,
-  #            file=here::here("data","NewlyCretaedData","Successful_dispersal.xlsx"),
-  #            col.nmes=T,
-  #            row.names=F)
+
+  write.xlsx(as.data.frame(data.disp),
+             file=here::here("data","NewlyCreatedData","Successful_dispersal.xlsx"),
+             sheetName = "Sheet1",
+             col.names=T,
+             row.names=F)
 
 
 
@@ -405,7 +406,14 @@ disp<-rbind(disp,miss)
 }
 
 emigr<-disp %>% 
-  dplyr::filter(id>1)
+  dplyr::filter(id>1) %>% 
+  as.data.frame(.) %>% 
+  write.xlsx(.,file=here::here("data","NewlyCreatedData","All_dispersal_events.xlsx"),
+             sheetName = "Sheet1",
+             col.names=T,
+             row.names=F)
+
+
 
 
 
