@@ -129,7 +129,7 @@ save(patches,file=here::here("data","NewlyCreatedData","Raster_patches.RData"))
 
 ```
 
-# GIF of cover
+# GIF of habitat cover and size area
 
 ```{r}
 
@@ -147,7 +147,7 @@ group.reg<-data.clean %>%
   distinct_at(vars(Year,Group,UMMPs), keep_all=F)
 
 
-reg<-unique(group.reg$UMMPs)
+reg<-sort(unique(group.reg$UMMPs))
 
 totsizearea<-NULL
 
@@ -158,7 +158,6 @@ for (p in 1:length(reg)){
 pda<- ummp %>% 
    dplyr::filter(UMMPs==reg[p])
 
-if(nrow(pda)>0){
 habitatcrop<- purrr::map(coverStack,crop,pda)
 habcropstack<-stack(habitatcrop)
 
@@ -267,24 +266,38 @@ groupy<-sizearea %>%
 
 }
 }
-
-# 
-# ggg<-ggplot(sizerast,aes(x=Year,y=Habitat,group=Group)) +
-#   geom_line(aes(color=Group),show.legend = F) 
-#   print(ggg)
 ```
 
-# Evolution of size over time
+# Evolution of size area of patches over time
 
 ```{r}
 
+reg<-sort(unique(totsizearea$UMMPs))
+
+totsizearea<-totsizearea %>% 
+  dplyr::filter(Group!="MF" & Group !="JR" & Group != "PH2")
+
+for (k in 1:length(reg)){
 
 xx<-totsizearea %>% 
-  dplyr::filter(Group!="MF" & Group !="JR" & Group != "PH2") %>% 
-  dplyr::filter(UMMPs=="Imbau I")
+  dplyr::filter(UMMPs==reg[k])
 
 ggg<-ggplot(xx,aes(x=Year,y=Size,group=Group)) +
   geom_line(aes(color=Group)) +
-  facet_wrap(.~Group)
+  facet_wrap(.~Group) +
+  scale_colour_viridis_d(option="turbo")
   print(ggg)
+  
+   setTxtProgressBar(progress_bar(length(reg)),k)  
+   
+  tiff(file=here::here("outputs","Size Area",paste0("Size_",reg[k],".tif")),
+       res=300,
+       width=2000,
+       height=1500,
+       units="px",
+       compression="lzw")
+  print(ggg)
+  dev.off()
+  
+  }
 ```

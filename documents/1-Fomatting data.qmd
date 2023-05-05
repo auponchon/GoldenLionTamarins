@@ -198,9 +198,10 @@ ind<-data.clean %>%
   dplyr::filter(GLT!=Tattoo) %>% 
   dplyr::arrange(GLT,DateObs)
 
+
 #check duplicates with groups and regions
 group<-data.clean %>% 
-  dplyr::filter(Disp==0 & Death==0 & Solo ==0) %>% 
+  dplyr::filter(Disp!=1 & Death==0 & Solo ==0) %>% 
   dplyr::group_by(Group) %>% 
   dplyr::select(Group,Region) %>% 
   dplyr::distinct() %>% 
@@ -309,6 +310,7 @@ title_file<-paste("Continuity_field_effort_",
   group_by(Group) %>% 
    dplyr::summarize(MinYear=min(Year),
                     MaxYear=max(Year),
+                    Duration=max(Year)-min(Year),
                     N=n_distinct(DateObs), 
                     .groups = "drop") %>% 
      dplyr::arrange(desc(N)) %>% 
