@@ -31,7 +31,8 @@ ummp<-sf::read_sf(here::here("data","RawData","Landscape","Shapefiles Landscape 
                              "SIG-LGCI_UMMP-13.shp")) %>% 
   dplyr::select(Id,UMMPs,geometry) %>% 
   dplyr::mutate(UMMPs = as.factor(UMMPs)) 
-  ummp$UMMPs<-plyr::revalue(ummp$UMMPs, c("Imbaú I" = "Imbau I",
+  
+ummp$UMMPs<-plyr::revalue(ummp$UMMPs, c("Imbaú I" = "Imbau I",
                          "Imbaú II" = "Imbau II",
                          "Imbaú III" = "Imbau III",
                          "Poço das Antas" = "Poco das Antas",
@@ -148,6 +149,8 @@ group.reg<-data.clean %>%
 
 reg<-unique(group.reg$UMMPs)
 
+totsizearea<-NULL
+
 for (p in 1:length(reg)){
   
   setTxtProgressBar(progress_bar(length(reg)),p)  
@@ -199,6 +202,8 @@ sizearea<-terra::extract(sizecrop,loc) %>%
   drop_na() %>% 
   distinct()
 
+totsizearea<-rbind(totsizearea,sizearea)
+
 #convert raster stack to dataframe
 habrast<- purrr::map_dfr(
   habitatcrop, 
@@ -224,49 +229,62 @@ groupy<-sizearea %>%
   dplyr::filter(UMMPs==reg[p])
 
 
-gghab <- ggplot(habrast, aes(x = x, y = y)) +
-  geom_tile(aes(fill = value)) +
-  scale_fill_viridis_c()  +
-   geom_point(data=groupy, aes(x=long,y=lat,color=Group),shape=17,size=4,
-              show_legend=F)  
-print(gghab)
-
-gganimhab <- gghab + 
-  transition_time(as.numeric(Year)) +
-   labs(subtitle = "Year: {round(frame_time,digits=0)}") 
-   
-print(c("animate habitat ", p))
-animate(gganimhab, height = 1000, width =2000,nframes=32,res=250,
-        renderer = gifski_renderer())
-anim_save(filename = here::here("outputs", "GIF cover",
-                                paste("GIF_cover_",reg[p],".gif")))
+# gghab <- ggplot(habrast, aes(x = x, y = y)) +
+#   geom_tile(aes(fill = value)) +
+#   scale_fill_viridis_c()  +
+#    geom_point(data=groupy, aes(x=long,y=lat,color=Group),shape=17,size=4,
+#               show.legend=F)  
+# print(gghab)
+# 
+# gganimhab <- gghab + 
+#   transition_time(as.numeric(Year)) +
+#    labs(subtitle = "Year: {round(frame_time,digits=0)}") 
+#    
+# print(c("animate habitat ", p))
+# animate(gganimhab, height = 1000, width =2000,nframes=32,res=250,
+#         renderer = gifski_renderer())
+# anim_save(filename = here::here("outputs", "GIF cover",
+#                                 paste("GIF_cover_",reg[p],".gif")))
           
           
-ggsize <- ggplot(sizerast, aes(x = x, y = y)) +
-  geom_tile(aes(fill = value)) +
-  scale_fill_viridis_c()  +
-   geom_point(data=groupy, aes(x=long,y=lat,color=Group),shape=17,size=4,
-              show_legend=F)  
-print(ggsize)
-
-gganimsize <- ggsize + 
-  transition_time(as.numeric(Year)) +
-   labs(subtitle = "Year: {round(frame_time,digits=0)}") 
-
- print(c("animate size ", p))  
-
-animate(gganimsize, height = 1000, width =2000,nframes=32,res=250,
-        renderer = gifski_renderer())
-anim_save(filename = here::here("outputs","GIF cover",paste0("GIF_size_",reg[p],
-                                       ".gif")))
+# ggsize <- ggplot(sizerast, aes(x = x, y = y)) +
+#   geom_tile(aes(fill = value)) +
+#   scale_fill_viridis_c()  +
+#    geom_point(data=groupy, aes(x=long,y=lat,color=Group),shape=17,size=4,
+#               show.legend=F)  
+# print(ggsize)
+# 
+# gganimsize <- ggsize + 
+#   transition_time(as.numeric(Year)) +
+#    labs(subtitle = "Year: {round(frame_time,digits=0)}") 
+# 
+#  print(c("animate size ", p))  
+# 
+# animate(gganimsize, height = 1000, width =2000,nframes=32,res=250,
+#         renderer = gifski_renderer())
+# anim_save(filename = here::here("outputs","GIF cover",paste0("GIF_size_",reg[p],
+#                                        ".gif")))
 
 }
 }
-
-
 
 # 
-# ggg<-ggplot(habarea,aes(x=Year,y=Habitat,group=Group)) +
+# ggg<-ggplot(sizerast,aes(x=Year,y=Habitat,group=Group)) +
 #   geom_line(aes(color=Group),show.legend = F) 
 #   print(ggg)
+```
+
+# Evolution of size over time
+
+```{r}
+
+
+xx<-totsizearea %>% 
+  dplyr::filter(Group!="MF" & Group !="JR" & Group != "PH2") %>% 
+  dplyr::filter(UMMPs=="Imbau I")
+
+ggg<-ggplot(xx,aes(x=Year,y=Size,group=Group)) +
+  geom_line(aes(color=Group)) +
+  facet_wrap(.~Group)
+  print(ggg)
 ```
