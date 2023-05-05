@@ -121,11 +121,11 @@ SOLUTION : Correction si erreurs évidentes (dates proches, ie < 180 jours)
 5:  KE4
 6:  RV6
 7: SP23
-* Cinq dates différentes : incertitudes sur FT, IN, TO. Birth = NA.
 TOTAL : 53 individus avec NA
 
-2) Incohérences entre les dates de naissance renseignées (n=255 GLT)
+2) Incohérences entre les dates de naissance renseignées
 * Si incohérence : garder la date de naissance issue de BirthDates (dates de naissance données par VR)
+* PUIS : implémenter les dates de naissance NA pour les individus ayant une date de naissance connue
 
 3) Différences entre la date de naissance et la date d'émigration de GLT_movement
 * Comparaison entre la date de naissance renseignée et la date d'émigration supposée
@@ -136,59 +136,66 @@ SK19 = NA
 
 4) Individus observés avant la date de naissance renseignée :
 * Calcul de la différence
-* Mettre la date de naissance en NA si la différence est négative (n=111 GLT)
+* Mettre la date de naissance en NA si la différence est négative 
 
-5) Individus vus pour la première fois adultes et ayant une date de naissance (n=203 GLT)
+5) Individus dont la date de naissance (Birth_mov) = la date de première observation 
 * Mettre la date de naissance en NA
 
-6) Individus dont la date de naissance (Birth_mov) = la date de première observation (n=84 GLT)
-* Mettre la date de naissance en NA
-
-7) Individus des mêmes groupes ayant la même date de naissance (n=460)
+6) Individus des mêmes groupes ayant la même date de naissance 
 * Quand >= 3 individus : Mettre la date de naissance en NA
 * Rajouter error type : Grp_sameBD (si n=3 ou n=4 : Grp_sameBD_?P)
 
-EXPORT des individus avec des dates de naissance erronnées/incertaines (n=454)
+?) Individus vus pour la première fois adultes et ayant une date de naissance 
+* Mettre la date de naissance en NA
+
+EXPORT des individus avec des dates de naissance erronnées/incertaines (n=923)
 
 
 
 IV. Inférer le champ Idade sachant que :
-* IN, FN ou TO = Infant (jeune < 1 an) ; JU = juvénile ; SA = subadulte ; AD = adulte. 
-On considère que JU < 1, SA = [1-3], AD = > 3.
+
+On considère les catégories d'âge suivantes :
+0-2 mois (0-60 jours) = Infant (IN)
+3-5 mois (61-150 jours) = Juvenile (JU)
+6-10 mois (151-300 jours) = Advanced Juvenile (AdvJU)
+11-18 mois (301-540 jours) = Sub-adult (SA)
+> 18 mois (> 540 jours) = Adult (AD)
+
+
 Méthodes :
 
-1) à partir de la date de naissance Birth_VR 
-
-2) à l'aide d'une date de naissance inferrée depuis Idade
-* On extrait les individus observés la première fois comme juvéniles
-* On leur attribue une date de naissance fictive qui vaut la date d'observation - 3 mois
-
-3) à l'aide du poids : JU < 400 g et AD > 400 g
-
-
-4) à l'aide du champ Idade existant
-* Examen préalable des inconsistances entre la variable Idade pré-existante et la variable IdadeOK inférée
+1) à partir de la date de naissance Birth_OK
+2) à l'aide du champ Idade existant
 * Remplir IdadeOK avec Idade là où NA
+3) à l'aide du poids : AD > 550 g
 
-5) à l'aide de la date de naissance Birth_mov
+? A l'aide d'une date de naissance inferrée depuis Idade ?
+* On extrait les individus observés la première fois comme juvéniles
+* On leur attribue une date de naissance fictive qui vaut la date d'observation - 5 mois
 
-A CHAQUE FOIS : on remplit le stade de vie à l'aide des Idade connus à certaines dates
+PUIS on remplit les cases vides à l'aide des catégories d'âge connues à certaines dates
 * CAS 1 : individus adultes à une ou plusieurs dates
 = On attribue adulte aux observations postérieures à la date où l'individu est adulte
 * CAS 2 : individus juvéniles à une ou plusieurs dates
 = On attribue juvénile aux observations antérieures à la date où l'individu est juvénile
 * CAS 3 : individus juvéniles à une ou plusieurs dates
-= On attribue adulte aux observations 3 ans postérieures (1095 jours) à la date où l'individu est juvénile
+= On attribue adulte aux observations 16 mois postérieures (480 jours) à la date où l'individu est juvénile
+* CAS 4 : individus sub-adultes à une ou plusieurs dates
+= On attribue adulte aux observations 8 mois postérieures (240 jours) à la date où l'individu est sub-adulte
 
 
 
 ERREURS :
-1) Incohérences entre le stade et le poids (juvéniles > 400 g et adultes < 400 g)
-* Erreurs : juvéniles de plus de 400 g = 96 GLT
-* Erreurs : adultes de moins de 400 g = 1 GLT
+1) Incohérences entre le stade et le poids (adultes < 550 g) et pour lesquels la date de naissance (VR) est inconnue
+2) Incohérences entre les deux variables Idade
+3) Incohérences chronologiques
+EXPORT pour vérification manuelle
 
-2) Incohérences dans le stade de vie : adulte qui passe juvénile, etc.
-* Vérification manuelle
+
+
+
+
+/!\ ANCIEN
 
 PREMIERE VERIFICATION
 * Majorité des erreurs = adulte qui repasse sub-adulte puis à nouveau adulte
