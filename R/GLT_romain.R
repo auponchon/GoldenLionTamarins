@@ -225,7 +225,7 @@ errors.index = dup.birth2 %>%
 
 # Three different dates
 dup.birth3 = dup.birth %>% 
-  filter(is.na(opt4) & !is.na(opt3)) %>% 
+  filter(!is.na(opt3)) %>% 
   select(1:4) %>% 
   as.data.table()
 dup.birth3$opt1 = as.Date(x = dup.birth3$opt1, format="%Y-%m-%d")
@@ -288,7 +288,8 @@ setDT(n)[errors, c("BirthOK") := .(Birth.b), on = "GLT"] # Correct the dataset
 
 # 3rd ERROR : comparison between the estimated date of emigration and the Birth Date
 errors = n %>% 
-  left_join(select(GLT_mov,c(GLT, Estimated.date.of.emigration)))
+  left_join(select(GLT_mov,c(GLT, Estimated.date.of.emigration))) %>% 
+  filter(GLT!="?" & GLT!="IN" & GLT!="FT" & GLT!="T0")
 errors = errors %>% 
   mutate(diff.emig.birth = difftime(Estimated.date.of.emigration, BirthOK, units="days"))
 rf.birthdates = errors[grepl("^-", errors$diff.emig.birth), ]
@@ -360,17 +361,18 @@ errors.index = errors.index %>%
 setDT(n)[errors, c("BirthOK") := .(Birth.b), on = "GLT"] # Correct the dataset
 
 
-# # OTHER ERROR : individuals first observed as adults with known birth dates
-# # SOLUTION : NA
-# errors = n %>% 
-#   filter(Idade == "AD" & ObsOrder == 1 & !is.na(BirthOK)) %>% 
-#   mutate(Birth.b = NA)
-# rf.birthdates = errors %>% 
-#   distinct(GLT, .keep_all = TRUE) %>% 
-#   mutate(error_type = "Adult_with_BD")
-# errors.index = errors.index %>% 
-#   union(select(rf.birthdates,c(GLT, error_type)))
-# setDT(n)[errors, c("BirthOK") := .(Birth.b), on = "GLT"] # Correct the dataset
+# 7th ERROR : individuals first observed as adults with known birth dates
+# SOLUTION : NA
+errors = n %>%
+  filter(Idade == "AD" & ObsOrder == 1 & !is.na(BirthOK)) %>%
+  filter(GLT!="?" & GLT!="IN" & GLT!="FT" & GLT!="T0") %>%
+  mutate(Birth.b = NA)
+rf.birthdates = errors %>%
+  distinct(GLT, .keep_all = TRUE) %>%
+  mutate(error_type = "Adult_with_BD")
+errors.index = errors.index %>%
+  union(select(rf.birthdates,c(GLT, error_type)))
+setDT(n)[errors, c("BirthOK") := .(Birth.b), on = "GLT"] # Correct the dataset
 
 
 # Export birth dates errors
@@ -380,7 +382,8 @@ rf.birthdates = data.clean %>%
   select(c(rowid, GLT, Tattoo, Group, Region, DateObs, ObsOrder, Birth_mov, Birth_VR, Idade, Weight, File)) %>% 
   left_join(errors.index) %>% 
   arrange(GLT, ObsOrder)
-write.xlsx(rf.birthdates, "D:/monas/Git/repo/glt/GoldenLionTamarins/data/NewlyCreatedData/Checks/red_flags_birthdates1.xlsx", row.names=FALSE)
+rf.birthdates %>% summarise(n_GLT=n_distinct(GLT))
+# write.xlsx(rf.birthdates, "D:/monas/Git/repo/glt/GoldenLionTamarins/data/NewlyCreatedData/Checks/red_flags_birthdates1.xlsx", row.names=FALSE)
 
 
 
@@ -389,11 +392,10 @@ write.xlsx(rf.birthdates, "D:/monas/Git/repo/glt/GoldenLionTamarins/data/NewlyCr
 ## From the correct birth date
 n = n %>% 
   mutate(IdadeOK = ifelse(difftime(n$DateObs, n$BirthOK, units="days") <= 60, "IN",
-                         ifelse(difftime(n$DateObs, n$BirthOK, units="days") > 60 & difftime(n$DateObs, n$BirthOK, units="days") <= 150, "JU",
-                                ifelse(difftime(n$DateObs, n$BirthOK, units="days") > 150 & difftime(n$DateObs, n$BirthOK, units="days") <= 300, "AdvJU",
-                                       ifelse(difftime(n$DateObs, n$BirthOK, units="days") > 300 & difftime(n$DateObs, n$BirthOK, units="days") <= 540, "SA",
-                                              ifelse(difftime(n$DateObs, n$BirthOK, units="days") > 540, "AD", 
-                                                     NA))))))
+                         ifelse(difftime(n$DateObs, n$BirthOK, units="days") > 60 & difftime(n$DateObs, n$BirthOK, units="days") <= 300, "JU",
+                                ifelse(difftime(n$DateObs, n$BirthOK, units="days") > 300 & difftime(n$DateObs, n$BirthOK, units="days") <= 540, "SA",
+                                       ifelse(difftime(n$DateObs, n$BirthOK, units="days") > 540, "AD", 
+                                              NA)))))
 
 ## Using the Idade existing field
 n$Idade = as.character(n$Idade)
@@ -420,41 +422,42 @@ n = n %>%
 
 # Append the Idade variable and fill
 # CASE 1 : individual known as adults at least once
-sub_AD = n %>% 
+sub = n %>% 
   group_by(GLT) %>%
   filter(GLT!="?" & GLT!="IN" & GLT!="FT" & GLT!="T0") %>% 
-  filter(all(c("AD", NA) %in% IdadeOK)) %>% 
-  filter(IdadeOK == "AD" | is.na(IdadeOK)) %>% 
-  mutate(RefDate = first(DateObs[!is.na(IdadeOK)])) %>% 
-  ungroup() # Extract the earlier date where IdadeOK is known
-sub_AD = sub_AD %>% 
-  group_by(GLT) %>% 
+  filter(IdadeOK=="AD") %>% 
+  mutate(RefDate = first(DateObs[IdadeOK=="AD"])) %>% 
+  ungroup() %>% 
+  select(GLT,RefDate) %>% 
+  distinct() # Extract the earlier date where IdadeOK is known
+sub_AD = n %>% 
+  left_join(sub) %>% 
   arrange(GLT, DateObs) %>%
+  filter(!is.na(RefDate)) %>% 
   mutate(diff = DateObs - RefDate,
-         diff_days = as.numeric(diff, units = 'days')) %>% 
-  mutate(diff_days = ifelse(is.na(diff_days), 0, diff_days)) # Compute the time difference between the reference date and the observation date
+         diff_days = as.numeric(diff, units = 'days')) # Compute the time difference between the reference date and the observation date
 sub_AD = sub_AD %>% 
-  filter(!grepl("^-", diff_days)) %>% 
-  mutate(Idade.b = "AD") %>% 
-  filter(is.na(IdadeOK) & !is.na(Idade.b)) %>% 
+  filter(!grepl("^-", diff_days) & (IdadeOK=="SA" | is.na(IdadeOK))) %>% 
+  mutate(Idade.b = "AD") %>%
   as.data.table() # Assign "Adult" to every observation
 setDT(n)[sub_AD, "IdadeOK" := .(Idade.b), on = "rowid"] # Correct the dataset
 # CASE 2 : individuals known as juveniles at least once
-sub_JU = n %>% 
+sub = n %>% 
   group_by(GLT) %>%
   filter(GLT!="?" & GLT!="IN" & GLT!="FT" & GLT!="T0") %>% 
-  filter(all(c("JU", NA) %in% IdadeOK)) %>% 
-  filter(IdadeOK == "JU" | is.na(IdadeOK)) %>% 
-  mutate(RefDate = first(DateObs[!is.na(IdadeOK)])) %>% 
-  ungroup() # Extract the earlier date where IdadeOK is known
-sub_JU = sub_JU %>% 
-  group_by(GLT) %>% 
+  filter(IdadeOK=="JU") %>% 
+  mutate(RefDate = first(DateObs[IdadeOK=="JU"])) %>% 
+  ungroup() %>% 
+  select(GLT,RefDate) %>% 
+  distinct() # Extract the earlier date where IdadeOK is known
+sub_JU = n %>% 
+  left_join(sub) %>% 
   arrange(GLT, DateObs) %>%
+  filter(!is.na(RefDate)) %>% 
   mutate(diff = DateObs - RefDate,
-         diff_days = as.numeric(diff, units = 'days')) %>% 
-  mutate(diff_days = ifelse(is.na(diff_days), 0, diff_days)) # Compute the time difference between the reference date and the observation date
+         diff_days = as.numeric(diff, units = 'days')) # Compute the time difference between the reference date and the observation date
 sub_JU = sub_JU %>% 
-  filter(grepl("^-", diff_days)) %>% 
+  filter(grepl("^-", diff_days) & (IdadeOK=="SA" | is.na(IdadeOK))) %>% 
   mutate(Idade.b = "JU") %>% 
   as.data.table() # Assign "Juv" to every observation
 setDT(n)[sub_JU, "IdadeOK" := .(Idade.b), on = "rowid"] # Correct the dataset
@@ -498,6 +501,15 @@ sub_SA = sub_SA %>%
 setDT(n)[sub_SA, "IdadeOK" := .(Idade.b), on = "rowid"] # Correct the dataset
 
 
+## Correct pointed out errors
+errors.index = c("AF4","AX22","AX23","AX24","BI1","DI2","DN1","EL2","FG1","IR1",
+                 "IR2","JO1","LS1","MB8","MB9","MD1","MD2","NC1","O21","OL30",
+                 "PA5","PR1","RL11","RT15","RV34","SD1","SD4","SF9","W21","CM15",
+                 "JP23","TM6","TM7")
+cols = c("IdadeOK","BirthOK")
+n[n$GLT %in% errors.index, cols] <- NA
+
+
 ## Remaining errors
 # Check Idade incoherences according to the weight
 rf.Idade = n %>% 
@@ -522,10 +534,9 @@ rf.Idade = n %>%
   filter(GLT!="?" & GLT!="IN" & GLT!="FT" & GLT!="T0") %>% 
   mutate(IdadeNum = ifelse(IdadeOK == "IN", 1,
                           ifelse(IdadeOK =="JU", 2,
-                                 ifelse(IdadeOK =="AdvJU", 3,
-                                        ifelse(IdadeOK =="SA", 4,
-                                               ifelse(IdadeOK =="AD", 5,
-                                                      NA))))))
+                                 ifelse(IdadeOK =="SA", 3,
+                                        ifelse(IdadeOK =="AD", 4,
+                                               NA)))))
 rf.Idade = rf.Idade %>%
   group_by(GLT) %>% 
   arrange(ObsOrder) %>% 
@@ -540,76 +551,44 @@ errors.index = errors.index %>%
   union(select(rf.Idade,c(GLT, error_type))) %>% 
   as.data.table()
 
-
+# Export errors
 errors.index = errors.index[, list(error_type = paste(error_type, collapse="+")), by = GLT] # Paste multiple errors for same individuals
 idade.checks = n %>% 
   filter(GLT %in% errors.index$GLT) %>% 
   select(rowid, GLT, Tattoo, Group, DateObs, ObsOrder, Weight, Birth_VR, Birth_mov, BirthOK, Idade, IdadeOK) %>% 
   left_join(errors.index) %>%
   arrange(GLT, ObsOrder) %>% 
-  filter(GLT!="?" & GLT!="IN" & GLT!="T0")
-write.xlsx(idade.checks, "D:/monas/Git/repo/glt/GoldenLionTamarins/data/NewlyCreatedData/Checks/idade_checks_v1.xlsx", row.names=FALSE)
-
-
-
-
+  filter(GLT!="?" & GLT!="IN" & GLT!="T0") %>% 
+  filter(error_type!="Diff_Idade")
+# The remaining rows are new errors that need to be checked
+idade.checks = idade.checks %>%
+  subset(!(GLT %in% corrections$GLT))
+# write.xlsx(idade.checks, "D:/monas/Git/repo/glt/GoldenLionTamarins/data/NewlyCreatedData/Checks/idade_checks_v2.xlsx", row.names=FALSE)
 
 
 ## Corrected Idade via manual inspection
-# First inspection
+# Corrections
 idade.checked1 = read_excel("D:/monas/Git/repo/glt/GoldenLionTamarins/data/NewlyCreatedData/Checks/idade_checked_v1.xlsx",
-                     na="NA")
+                            na="NA")
 idade.checked1 = as.data.table(idade.checked1)
 corrections = idade.checked1 %>% 
-  filter(IdadeOK != Idade_correct) %>% 
-  filter(!is.na(Idade_correct)) %>% 
-  select(rowid, GLT, Idade_correct)
-setDT(n)[corrections, "IdadeOK" := .(Idade_correct), on = "rowid"] # Correct the dataset
-# Second inspection
-idade.checked2 = read_excel("D:/monas/Git/repo/glt/GoldenLionTamarins/data/NewlyCreatedData/Checks/idade_checked_v2.xlsx",
-                            na="NA")
-idade.checked2 = as.data.table(idade.checked2)
-corrections = idade.checked2 %>% 
-  filter(IdadeOK != Idade_correct) %>% 
-  filter(!is.na(Idade_correct)) %>% 
-  select(rowid, GLT, Idade_correct)
-setDT(n)[corrections, "IdadeOK" := .(Idade_correct), on = "rowid"] # Correct the dataset
-# Third inspection
-idade.checked3 = read_excel("D:/monas/Git/repo/glt/GoldenLionTamarins/data/NewlyCreatedData/Checks/idade_checked_v3.xlsx",
-                            na="NA")
-idade.checked3 = as.data.table(idade.checked3)
-corrections = idade.checked3 %>% 
-  filter(IdadeOK != Idade_correct) %>% 
-  filter(!is.na(Idade_correct)) %>% 
-  select(rowid, GLT, Idade_correct)
-setDT(n)[corrections, "IdadeOK" := .(Idade_correct), on = "rowid"] # Correct the dataset
+  filter(IdadeOK != IdadeCorrect) %>% 
+  filter(!is.na(IdadeCorrect)) %>% 
+  select(rowid, GLT, IdadeCorrect)
+setDT(n)[corrections, "IdadeOK" := .(IdadeCorrect), on = "rowid"] # Correct the dataset
 
-## Subset remaining uncertain rows
-# From the local file manually corected
-errors.index = idade.checked1 %>% 
-  filter(is.na(Idade_correct)) %>% 
-  select(-c(Idade_correct,BirthOK))
-errors.index = idade.checked2 %>%
-  filter(is.na(Idade_correct)) %>% 
-  select(-c(Idade_correct,BirthOK)) %>% 
-  union(errors.index) %>% 
-  arrange(GLT, ObsOrder)
-errors.index = idade.checked3 %>%
-  filter(is.na(Idade_correct)) %>% 
-  select(-c(Idade_correct,BirthOK)) %>% 
-  union(errors.index) %>% 
-  arrange(GLT, ObsOrder)
-errors.index %>% summarise(n=n_distinct(GLT))
-# write.xlsx(errors.index, "D:/monas/Git/repo/glt/GoldenLionTamarins/data/NewlyCreatedData/Checks/red_flags_idade1.xlsx", row.names=FALSE)
-# From a comparison between new pointed out errors and the last local correction
-# The remaining rows are new errors that need to be checked
-idade.checks4 = idade.checks %>%
-  subset(!(GLT %in% errors.index$GLT)) %>% 
-  subset(!(GLT %in% idade.checked1$GLT)) %>% 
-  subset(!(GLT %in% idade.checked2$GLT)) %>% 
-  subset(!(GLT %in% idade.checked3$GLT))
-# write.xlsx(idade.checks3, "D:/monas/Git/repo/glt/GoldenLionTamarins/data/NewlyCreatedData/Checks/idade_checks_v3.xlsx", row.names=FALSE)
 
+# Red flags
+errors.index = c("AF4","AX22","AX23","AX24","BI1","DI2","DN1","EL2","FG1","IR1",
+                 "IR2","JO1","LS1","MB8","MB9","MD1","MD2","NC1","O21","OL30",
+                 "PA5","PR1","RL11","RT15","RV34","SD1","SD4","SF9","W21","CM15",
+                 "JP23","TM6","TM7")
+rf.Idade1 = data.clean %>% 
+  filter(GLT %in% errors.index) %>% 
+  select(c(rowid, GLT, Tattoo, Group, Region, DateObs, ObsOrder, Birth_mov, Birth_VR, Idade, Weight, File)) %>% 
+  arrange(GLT, ObsOrder)
+rf.Idade1 %>% summarise(n_GLT=n_distinct(GLT))
+# write.xlsx(rf.Idade1, "D:/monas/Git/repo/glt/GoldenLionTamarins/data/NewlyCreatedData/Checks/red_flags_idade1.xlsx", row.names=FALSE)
 
 
 ## Jointure
@@ -617,12 +596,19 @@ data.clean = data.clean %>%
   left_join(select(n,c(rowid,BirthOK,IdadeOK)))
 # Check remaining NAs
 sub = data.clean %>% 
+  filter(GLT!="?" & GLT!="IN" & GLT!="FT" & GLT!="T0") %>% 
   group_by(GLT) %>% 
   filter(any(is.na(IdadeOK) & any(!is.na(IdadeOK)))) %>% 
-  select(c(rowid,GLT,DateObs,ObsOrder,Birth_VR,Birth_mov,Weight,Idade,IdadeOK)) %>% 
+  select(c(rowid,GLT,DateObs,ObsOrder,Birth_VR,Birth_mov,BirthOK,Weight,Idade,IdadeOK)) %>% 
   as.data.table()
 # write.xlsx(sub, "D:/monas/Git/repo/glt/GoldenLionTamarins/data/NewlyCreatedData/Checks/idade_checks_v4_NA.xlsx", row.names=FALSE)
-
+# Full data
+sub = data.clean %>% 
+  filter(GLT!="?" & GLT!="IN" & GLT!="FT" & GLT!="T0") %>% 
+  group_by(GLT) %>% 
+  filter(all(!is.na(IdadeOK))) %>% 
+  ungroup()
+sub %>% summarise(n_GLT=n_distinct(GLT))
 
 ## Statistical summaries
 # Weight
