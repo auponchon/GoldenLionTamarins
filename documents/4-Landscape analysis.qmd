@@ -100,7 +100,7 @@ names(rr)<-paste("Area",parse_number(rast[i]),sep="")
 #show_lsm(rast1, what = "lsm_p_area", class=1,labels = TRUE)
  rastsize<-stack(rr,rastsize)
  
-yy<-extract_lsm(cover1,loc,class=1)  %>% 
+yy<-extract_lsm(cover1,loc,class=5)  %>% 
   dplyr:: mutate(Year=paste("cover",readr::parse_number(rast[i]),sep=""))
  
   size<-rbind(size,yy)
