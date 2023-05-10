@@ -622,12 +622,22 @@ sub = data.clean %>%
 
 
 ### Statistical summaries
-# Reliable data
-sub = data.clean %>% 
-  filter(IdadeError == "None" & BirthError == "None") %>% 
-  group_by(GLT) %>% 
+sub = data.clean %>%
+  filter(GLT!="?" & GLT!="IN" & GLT!="FT" & GLT!="T0") %>% 
+  group_by(Group) %>% 
   filter(all(!is.na(IdadeOK))) %>% 
+  filter(!is.na(Group)) %>% 
+  ungroup() # Groups with all individuals with known age categories
+sub = sub %>% 
+  group_by(Group) %>% 
+  mutate(Monit_Years = diff(range(Year))) %>% 
+  mutate(Monit_1stYear = min(Year), 
+         Monit_LastYear = max(Year)) %>%
+  mutate(Monit_Period = paste0(unique(c(Monit_1stYear, Monit_LastYear)), collapse = '-')) %>%
   ungroup()
+ggplot(data = sub, aes(x=Group,y=Year)) +
+  geom_boxplot()
+  
 sub %>% 
   group_by(Group, Region) %>% 
   summarise(n_GLT=n_distinct(GLT)) %>% 
