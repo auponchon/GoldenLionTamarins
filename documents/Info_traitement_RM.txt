@@ -231,8 +231,6 @@ SOLUTION : passer leur Idade en NA
 
 
 V. Regarder les GLT qui n'ont ni Idade ni BirthDate
-Export : idade_checks_v4_NA
-* Vérification visuelle
 
 
 VI. Résumé statistique

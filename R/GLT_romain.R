@@ -144,6 +144,11 @@ rf.sex = rf.sex %>%
   filter(GLT!="LC4" & GLT!="RT1")
 # write.xlsx(rf.sex, "D:/monas/Git/repo/glt/GoldenLionTamarins/data/NewlyCreatedData/Checks/sex_checkV3.xlsx", row.names=FALSE)
 
+# Mutate a new variable precising sex errors in the dataset
+data.clean = data.clean %>% 
+  mutate(SexError = ifelse(GLT %in% rf.sex$GLT, "Duplicated", "None")) %>% 
+  mutate(SexError = ifelse(is.na(SexOK), NA, SexError))
+
 
 
 ### Age and life stage verification
@@ -377,10 +382,14 @@ setDT(n)[errors, c("BirthOK") := .(Birth.b), on = "GLT"] # Correct the dataset
 
 # Export birth dates errors
 errors.index = errors.index[, list(error_type = paste(error_type, collapse="+")), by = GLT] # Paste multiple errors for same individuals
+data.clean = data.clean %>% 
+  left_join(errors.index) %>% 
+  rename(BirthError = error_type) %>% 
+  mutate(BirthError = ifelse(is.na(BirthError), "None", BirthError)) %>% 
+  mutate(BirthError = ifelse(GLT %in% "?" | GLT %in% "IN" | GLT %in% "FT" | GLT %in% "T0", "UnknownGLT", BirthError))
 rf.birthdates = data.clean %>% 
   filter(GLT %in% errors.index$GLT) %>% 
-  select(c(rowid, GLT, Tattoo, Group, Region, DateObs, ObsOrder, Birth_mov, Birth_VR, Idade, Weight, File)) %>% 
-  left_join(errors.index) %>% 
+  select(c(rowid, GLT, Tattoo, Group, Region, DateObs, ObsOrder, Birth_mov, Birth_VR, Idade, Weight, File, BirthError)) %>% 
   arrange(GLT, ObsOrder)
 rf.birthdates %>% summarise(n_GLT=n_distinct(GLT))
 # write.xlsx(rf.birthdates, "D:/monas/Git/repo/glt/GoldenLionTamarins/data/NewlyCreatedData/Checks/red_flags_birthdates1.xlsx", row.names=FALSE)
@@ -501,15 +510,6 @@ sub_SA = sub_SA %>%
 setDT(n)[sub_SA, "IdadeOK" := .(Idade.b), on = "rowid"] # Correct the dataset
 
 
-## Correct pointed out errors
-errors.index = c("AF4","AX22","AX23","AX24","BI1","DI2","DN1","EL2","FG1","IR1",
-                 "IR2","JO1","LS1","MB8","MB9","MD1","MD2","NC1","O21","OL30",
-                 "PA5","PR1","RL11","RT15","RV34","SD1","SD4","SF9","W21","CM15",
-                 "JP23","TM6","TM7")
-cols = c("IdadeOK","BirthOK")
-n[n$GLT %in% errors.index, cols] <- NA
-
-
 ## Remaining errors
 # Check Idade incoherences according to the weight
 rf.Idade = n %>% 
@@ -551,18 +551,36 @@ errors.index = errors.index %>%
   union(select(rf.Idade,c(GLT, error_type))) %>% 
   as.data.table()
 
-# Export errors
+# ERRORS
 errors.index = errors.index[, list(error_type = paste(error_type, collapse="+")), by = GLT] # Paste multiple errors for same individuals
+# Red flags
+sub = c("AF4","AX22","AX23","AX24","BI1","DI2","DN1","EL2","FG1","IR1",
+                 "IR2","JO1","LS1","MB8","MB9","MD1","MD2","NC1","O21","OL30",
+                 "PA5","PR1","RL11","RT15","RV34","SD1","SD4","SF9","W21","CM15",
+                 "JP23","TM6","TM7")
+rf.Idade = errors.index %>% 
+  filter(GLT %in% sub)
+cols = c("IdadeOK","BirthOK")
+n[n$GLT %in% rf.Idade, cols] <- NA
+# Red flags
+rf.Idade = data.clean %>% 
+  filter(GLT %in% sub) %>% 
+  select(c(rowid, GLT, Tattoo, Group, Region, DateObs, ObsOrder, Birth_mov, Birth_VR, Idade, Weight, File)) %>% 
+  left_join(rf.Idade) %>% 
+  arrange(GLT, ObsOrder)
+rf.Idade %>% summarise(n_GLT=n_distinct(GLT))
+# write.xlsx(rf.Idade, "D:/monas/Git/repo/glt/GoldenLionTamarins/data/NewlyCreatedData/Checks/red_flags_idade1.xlsx", row.names=FALSE)
+
+# Remaining checks
+idade.checks = errors.index %>% 
+  filter(!(GLT %in% sub))
 idade.checks = n %>% 
-  filter(GLT %in% errors.index$GLT) %>% 
+  filter(GLT %in% idade.checks$GLT) %>% 
   select(rowid, GLT, Tattoo, Group, DateObs, ObsOrder, Weight, Birth_VR, Birth_mov, BirthOK, Idade, IdadeOK) %>% 
-  left_join(errors.index) %>%
+  left_join(idade.checks) %>%
   arrange(GLT, ObsOrder) %>% 
   filter(GLT!="?" & GLT!="IN" & GLT!="T0") %>% 
   filter(error_type!="Diff_Idade")
-# The remaining rows are new errors that need to be checked
-idade.checks = idade.checks %>%
-  subset(!(GLT %in% corrections$GLT))
 # write.xlsx(idade.checks, "D:/monas/Git/repo/glt/GoldenLionTamarins/data/NewlyCreatedData/Checks/idade_checks_v2.xlsx", row.names=FALSE)
 
 
@@ -576,24 +594,20 @@ corrections = idade.checked1 %>%
   filter(!is.na(IdadeCorrect)) %>% 
   select(rowid, GLT, IdadeCorrect)
 setDT(n)[corrections, "IdadeOK" := .(IdadeCorrect), on = "rowid"] # Correct the dataset
+# The remaining rows are new errors that need to be checked
+idade.checks = idade.checks %>%
+  subset(!(GLT %in% corrections$GLT))
 
 
-# Red flags
-errors.index = c("AF4","AX22","AX23","AX24","BI1","DI2","DN1","EL2","FG1","IR1",
-                 "IR2","JO1","LS1","MB8","MB9","MD1","MD2","NC1","O21","OL30",
-                 "PA5","PR1","RL11","RT15","RV34","SD1","SD4","SF9","W21","CM15",
-                 "JP23","TM6","TM7")
-rf.Idade1 = data.clean %>% 
-  filter(GLT %in% errors.index) %>% 
-  select(c(rowid, GLT, Tattoo, Group, Region, DateObs, ObsOrder, Birth_mov, Birth_VR, Idade, Weight, File)) %>% 
-  arrange(GLT, ObsOrder)
-rf.Idade1 %>% summarise(n_GLT=n_distinct(GLT))
-# write.xlsx(rf.Idade1, "D:/monas/Git/repo/glt/GoldenLionTamarins/data/NewlyCreatedData/Checks/red_flags_idade1.xlsx", row.names=FALSE)
 
 
 ## Jointure
 data.clean = data.clean %>% 
-  left_join(select(n,c(rowid,BirthOK,IdadeOK)))
+  left_join(select(n,c(rowid,BirthOK,IdadeOK))) %>% 
+  left_join(select(rf.Idade,c(rowid,error_type))) %>% 
+  rename(IdadeError = error_type) %>% 
+  mutate(IdadeError = ifelse(is.na(IdadeError), "None", IdadeError)) %>% 
+  mutate(IdadeError = ifelse(GLT %in% "?" | GLT %in% "IN" | GLT %in% "FT" | GLT %in% "T0", "UnknownGLT", IdadeError))
 # Check remaining NAs
 sub = data.clean %>% 
   filter(GLT!="?" & GLT!="IN" & GLT!="FT" & GLT!="T0") %>% 
@@ -602,15 +616,23 @@ sub = data.clean %>%
   select(c(rowid,GLT,DateObs,ObsOrder,Birth_VR,Birth_mov,BirthOK,Weight,Idade,IdadeOK)) %>% 
   as.data.table()
 # write.xlsx(sub, "D:/monas/Git/repo/glt/GoldenLionTamarins/data/NewlyCreatedData/Checks/idade_checks_v4_NA.xlsx", row.names=FALSE)
-# Full data
+
+
+
+
+
+### Statistical summaries
+# Reliable data
 sub = data.clean %>% 
-  filter(GLT!="?" & GLT!="IN" & GLT!="FT" & GLT!="T0") %>% 
+  filter(IdadeError == "None" & BirthError == "None") %>% 
   group_by(GLT) %>% 
   filter(all(!is.na(IdadeOK))) %>% 
   ungroup()
-sub %>% summarise(n_GLT=n_distinct(GLT))
-
-## Statistical summaries
+sub %>% 
+  group_by(Group, Region) %>% 
+  summarise(n_GLT=n_distinct(GLT)) %>% 
+  print(n=300) %>% 
+  filter(n_GLT>3)
 # Weight
 hist(capt.data$BWeight)
 x = n %>% 
