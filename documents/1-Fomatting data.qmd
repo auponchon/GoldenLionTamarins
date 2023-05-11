@@ -323,9 +323,10 @@ title_file<-paste("Continuity_field_effort_",
                     MaxYear=max(Year),
                     Duration=max(Year)-min(Year),
                     N=n_distinct(DateObs), 
+                    UMMPs=unique(UMMPs)[1],
                     .groups = "drop") %>% 
      dplyr::arrange(desc(N)) %>% 
-    left_join(loc)
+    left_join(loc) %>% 
     
      write.csv2(here::here("data","NewlyCreatedData","Nb_obs_gp.csv"),
                 row.names=F)
