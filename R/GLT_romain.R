@@ -5,7 +5,8 @@
 ##### Libraries
 load.lib = c("dplyr","tibble", "data.table",
              "tidyr", "xlsx", "zoo", "readxl",
-             "readr", "ggplot2", "lubridate")
+             "readr", "ggplot2", "lubridate",
+             "plyr")
 sapply(load.lib,require,character=TRUE)
 
 ##### Data
@@ -602,12 +603,13 @@ idade.checks = idade.checks %>%
 
 
 ## Jointure
-data.clean = data.clean %>% 
+data_clean_v2 = data.clean %>% 
   left_join(select(n,c(rowid,BirthOK,IdadeOK))) %>% 
   left_join(select(rf.Idade,c(rowid,error_type))) %>% 
   rename(IdadeError = error_type) %>% 
   mutate(IdadeError = ifelse(is.na(IdadeError), "None", IdadeError)) %>% 
   mutate(IdadeError = ifelse(GLT %in% "?" | GLT %in% "IN" | GLT %in% "FT" | GLT %in% "T0", "UnknownGLT", IdadeError))
+# save(data_clean_v2, file="D:/monas/Git/repo/glt/GoldenLionTamarins/data/NewlyCreatedData/data_clean_v2.RData")
 # Check remaining NAs
 sub = data.clean %>% 
   filter(GLT!="?" & GLT!="IN" & GLT!="FT" & GLT!="T0") %>% 
@@ -622,31 +624,115 @@ sub = data.clean %>%
 
 
 ### Statistical summaries
-sub = data.clean %>%
-  filter(GLT!="?" & GLT!="IN" & GLT!="FT" & GLT!="T0") %>% 
+# Load dataset
+load("D:/monas/Git/repo/glt/GoldenLionTamarins/data/NewlyCreatedData/data_clean_v2.RData")
+sub = data_clean_v2 %>% 
   group_by(Group) %>% 
-  filter(all(!is.na(IdadeOK))) %>% 
-  filter(!is.na(Group)) %>% 
-  ungroup() # Groups with all individuals with known age categories
-sub = sub %>% 
-  group_by(Group) %>% 
+  filter(!is.na(Group)) %>%
   mutate(Monit_Years = diff(range(Year))) %>% 
   mutate(Monit_1stYear = min(Year), 
          Monit_LastYear = max(Year)) %>%
   mutate(Monit_Period = paste0(unique(c(Monit_1stYear, Monit_LastYear)), collapse = '-')) %>%
   ungroup()
-ggplot(data = sub, aes(x=Group,y=Year)) +
-  geom_boxplot()
-  
+
+## Summary statistics
+# Number of monitored Region/Groups/GLT per period
 sub %>% 
-  group_by(Group, Region) %>% 
-  summarise(n_GLT=n_distinct(GLT)) %>% 
-  print(n=300) %>% 
-  filter(n_GLT>3)
-# Weight
-hist(capt.data$BWeight)
-x = n %>% 
-  group_by(GLT, IdadeOK) %>% 
-  summarise(MWeight = mean(Weight))
-ggplot(filter(x, !is.na(MWeight)), aes(x = MWeight, fill = IdadeOK, colour = IdadeOK)) + 
-  geom_histogram(alpha=0.7, position="identity")
+  group_by(Monit_Period) %>% 
+  summarise(n_reg=n_distinct(Region),
+            n_grp=n_distinct(Group),
+            n_GLT=n_distinct(GLT)) %>% 
+  print(n=100)
+
+# Number of NA and not-NA rows
+sub %>% 
+  group_by(Monit_Period, Group, GLT) %>% 
+  summarise(na=sum(is.na(IdadeOK)), not_na=sum(!is.na(IdadeOK)))
+
+# Number of NA and not-NA GLT by group/region
+sub %>% 
+  group_by(Monit_Period, Group) %>% 
+  summarise(tot_GLT = n_distinct(GLT),
+            notNA_GLT=n_distinct(GLT[all(!is.na(IdadeOK) & !is.na(SexOK))]),
+            NA_GLT=n_distinct(GLT[any(is.na(IdadeOK) | is.na(SexOK))]),
+            prop=notNA_GLT*100/tot_GLT)
+sub %>% 
+  group_by(Region, Group, Monit_Period) %>% 
+  summarise(tot_GLT = n_distinct(GLT),
+            notNA_GLT=n_distinct(GLT[all(!is.na(IdadeOK) & !is.na(SexOK))]),
+            NA_GLT=n_distinct(GLT[any(is.na(IdadeOK) | is.na(SexOK))])) %>% 
+  arrange(Region, Monit_Period) %>% 
+  print(n=400)
+
+# Plot monitored periods
+# By region
+g <- sub[order(sub$Monit_1stYear,sub$Region),]
+g$Region <- factor(g$Region, levels=unique(g$Region))
+ggplot(g, aes(x = Monit_1stYear, y = Region)) +
+  geom_segment(aes(xend = Monit_LastYear, yend = Region), colour = "orange") +
+  geom_point(size = 2, colour="darkorange") +
+  geom_point(aes(x = Monit_LastYear), size = 2, colour="darkorange") +
+  theme_bw() +
+  theme(legend.position = "none",
+        text = element_text(size=7))
+# By group
+# Work on a subset (a number of regions)
+sub_region = sub %>% 
+  group_by(Region) %>% 
+  arrange(Region, Monit_1stYear) %>% 
+  group_split() # Split the dataset by Region
+g = ldply(sub_region[c(1:13)], data.frame) 
+g <- g[order(g$Monit_1stYear,g$Group),]
+g$Group <- factor(g$Group, levels=unique(g$Group))
+ggplot(g, aes(x = Monit_1stYear, y = Group)) +
+  geom_segment(aes(xend = Monit_LastYear, yend = Group), colour = "orange") +
+  geom_point(size = 2, colour="darkorange") +
+  geom_point(aes(x = Monit_LastYear), size = 2, colour="darkorange") +
+  theme_bw() +
+  theme(legend.position = "none") +
+  facet_grid(Region ~ ., scales = "free_y", space = "free_y", switch = "y") +
+  theme(strip.placement = "outside")
+# Work on a subset (named regions)
+g = sub %>% 
+  filter(Region == "Iguapé" | Region =="Igarapé")
+g <- g[order(g$Monit_1stYear,g$Group),]
+g$Group <- factor(g$Group, levels=unique(g$Group))
+ggplot(g, aes(x = Monit_1stYear, y = Group)) +
+  geom_segment(aes(xend = Monit_LastYear, yend = Group), colour = "orange") +
+  geom_point(size = 2, colour="darkorange") +
+  geom_point(aes(x = Monit_LastYear), size = 2, colour="darkorange") +
+  theme_bw() +
+  theme(legend.position = "none") +
+  facet_grid(Region ~ ., scales = "free_y", space = "free_y", switch = "y") +
+  theme(strip.placement = "outside")
+
+# Regions monitored over a selected period of time
+sub %>% 
+  filter(Monit_1stYear <= 2002 & Monit_LastYear >= 2019) %>% 
+  group_by(Region) %>% 
+  summarise(n_grp = n_distinct(Group), 
+            tot_GLT = n_distinct(GLT),
+            notNA_GLT=n_distinct(GLT[all(!is.na(IdadeOK) & !is.na(SexOK))]),
+            NA_GLT=n_distinct(GLT[any(is.na(IdadeOK) | is.na(SexOK))]),
+            prop=notNA_GLT*100/tot_GLT)
+
+# Groups within  region monitored the same amount of time
+sub %>% 
+  group_by(Region) %>% 
+  summarise(n_grp = n_distinct(Group), 
+            n_grp_1stDate = n_distinct(Group[Monit_1stYear <=2002 ]),
+            n_grp_LastDate = n_distinct(Group[Monit_LastYear >=2017 ])) %>% 
+  mutate(AllGrpMon = ifelse(n_grp_1stDate==n_grp & n_grp_LastDate==n_grp, "OK", "Not_OK")) %>% 
+  print(n=80)
+
+# Select regions with groups monitored the same amount of time
+sub2 = sub %>% 
+  filter(Monit_1stYear <= 2003) %>%
+  group_by(Region, Group, Monit_Period) %>% 
+  summarise(tot_GLT = n_distinct(GLT),
+            notNA_GLT=n_distinct(GLT[all(!is.na(IdadeOK) & !is.na(SexOK))]),
+            NA_GLT=n_distinct(GLT[any(is.na(IdadeOK) | is.na(SexOK))]),
+            prop=notNA_GLT*100/tot_GLT) %>% 
+  ungroup()
+  
+
