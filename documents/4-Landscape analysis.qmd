@@ -55,8 +55,8 @@ size<-NULL
 #projection for Brazil
 proj<-"+proj=utm +zone=23 +south +ellps=GRS80 +towgs84=0,0,0,0,0,0,0 +units=m +no_defs +type=crs"
 
- coverStack<-purrr::map(rast,create_raster_stack,.progress=T)
- save(coverStack, file=here::here("data","NewlyCreatedData","Cover_rasters.RData"))
+ #coverStack<-purrr::map(rast,create_raster_stack,.progress=T)
+ #save(coverStack, file=here::here("data","NewlyCreatedData","Cover_rasters.RData"))
 
  load(here::here("data","NewlyCreatedData","Cover_rasters.RData"))
 
@@ -162,6 +162,8 @@ group.reg<-data.clean %>%
 reg<-sort(unique(group.reg$UMMPs))
 
 totsizearea<-NULL
+totshapearea<-NULL
+totperimarea<-NULL
 
 for (p in 1:length(reg)){
   
