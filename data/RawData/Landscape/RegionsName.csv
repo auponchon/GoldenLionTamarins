@@ -2,7 +2,7 @@
 PDA;Plataforma - Est (3); Estação;Silva Jardim;778805;7502074;PDA
 Afetiva;Plataforma grupo Afetiva;AF;Silva Jardim;760295;7494955;Afetiva
 Rebio PDA;Plataforma - AF;AFT;Silva Jardim;777270;7505718;Rebio Poço das Antas
-Fazenda Afetiva;Plataforma - AF2;AF2;Silva Jardim;760539;7494754;Afetiva
+Fazenda Afetiva;Plataforma - AF2;AFII;Silva Jardim;760539;7494754;Afetiva
  Fazenda Afetiva;Plataforma - AF3;AF3;Silva Jardim;760304;7494942;Afetiva
 Boa Esperanca;Plataforma grupo AF8;AF8;Silva Jardim;761195;7494295;Nova Esperanca AF8
 Vendaval;Plataforma grupo André Lima;AL1;Silva Jardim;761012;7492463;Vendaval
@@ -110,7 +110,7 @@ Igarape;Plataforma grupo Riverbanks (2);RI2;Silva Jardim;776785;7508569;Igarape
 Sitio Moria;Plataforma - RM;RM;Silva Jardim;765895;7497228;Sitio Moriá
 Rio Vermelho;Plataforma grupo Reintro;RT;Rio Bonito;748524;7485332;Rio Vermelho
 Rio Vermelho;Plataforma grupo Rio Vermelho;RV;Rio Bonito;748422;7485075;Rio Vermelho
-Rio Vermelho;Plataforma - RV/JB;RV/JB;Rio Bonito;748153;7485267;Rio Vermelho
+Rio Vermelho;Plataforma - RV/JB;JB;Rio Bonito;748153;7485267;Rio Vermelho
 Rio Vermelho;Plataforma grupo Rio Vermelho (2);RV2;Rio Bonito;748197;7485314;Rio Vermelho
 Rio Vermelho;Plataforma grupo Rio Vermelho (3);RV3;Rio Bonito;748253;7485183;Rio Vermelho
 Rebio Uniao;Plataforma grupo Sede;SD;Rio das Ostras;804126;7517008;Uniao
@@ -130,7 +130,7 @@ Sta Helena I;Plataforma - SS (2);SS;Silva Jardim;773002;7506643;Sta Helena I
 Rio Vermelho;Plataforma grupo Stockholm;ST;Rio Bonito;750338;7484551;Rio Vermelho
 Rio Vermelho;Plataforma grupo Stockholm (2);ST2;Rio Bonito;750111;7484283;Rio Vermelho
 Santa Helena II;Plataforma grupo Tamarins;TM;Silva Jardim;767827;7498235;Santa Helena II
-Tamarins;Plataforma grupo Tamarins2;TM2;Silva Jardim;767988;7498391;Tamarins
+Tamarins;Plataforma grupo Tamarins2;TMII;Silva Jardim;767988;7498391;Tamarins
 Rio Vermelho;Plataforma grupo Triplets;TR;Rio Bonito;749499;7484456;Rio Vermelho
 Rio Vermelho;Plataforma grupo TR13;TR13;Rio Bonito;748820;7484460;Rio Vermelho
 Rio Vermelho;Plataforma grupo Triplets (2);TR2;Rio Bonito;748980;7484450;Rio Vermelho

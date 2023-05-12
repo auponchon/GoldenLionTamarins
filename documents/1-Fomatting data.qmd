@@ -198,9 +198,10 @@ ind<-data.clean %>%
   dplyr::filter(GLT!=Tattoo) %>% 
   dplyr::arrange(GLT,DateObs)
 
+
 #check duplicates with groups and regions
 group<-data.clean %>% 
-  dplyr::filter(Disp==0 & Death==0 & Solo ==0) %>% 
+  dplyr::filter(Disp!=1 & Death==0 & Solo ==0) %>% 
   dplyr::group_by(Group) %>% 
   dplyr::select(Group,Region) %>% 
   dplyr::distinct() %>% 
@@ -304,14 +305,29 @@ title_file<-paste("Continuity_field_effort_",
    
    #Nombre d'observations par groupe
    
+   loc<-read.table(here::here("data","rawData","Landscape","RegionsName.csv"),
+                header=T,sep=";") %>% 
+  dplyr::rename(Long=CENTROIDE.X.UTM.SAD69.23S,
+                Lat=CENTROIDE.Y.UTM.SAD69.23S,
+                Group=Abreviation) %>% 
+  dplyr::select(-Platform,-City) %>% 
+  dplyr::filter_all(any_vars(!is.na(.)))
+   
+   
+   
+   
   gpobs<- data.clean %>%  
   dplyr::filter(!GLT %in% bad & Disp!=1 & Death==0 & Solo==0) %>% 
   group_by(Group) %>% 
    dplyr::summarize(MinYear=min(Year),
                     MaxYear=max(Year),
+                    Duration=max(Year)-min(Year),
                     N=n_distinct(DateObs), 
+                    UMMPs=unique(UMMPs)[1],
                     .groups = "drop") %>% 
      dplyr::arrange(desc(N)) %>% 
+    left_join(loc) %>% 
+    
      write.csv2(here::here("data","NewlyCreatedData","Nb_obs_gp.csv"),
                 row.names=F)
      
@@ -406,9 +422,10 @@ disp<-rbind(disp,miss)
 }
 
 emigr<-disp %>% 
-  dplyr::filter(id>1) %>% 
+  group_by(GLT) %>% 
+  dplyr::slice(max(id)) %>% 
   as.data.frame(.) %>% 
-  write.xlsx(.,file=here::here("data","NewlyCreatedData","All_dispersal_events.xlsx"),
+  write.xlsx(.,file=here::here("data","NewlyCreatedData","All_dispersal_events_filtered.xlsx"),
              sheetName = "Sheet1",
              col.names=T,
              row.names=F)

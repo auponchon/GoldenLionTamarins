@@ -1,12 +1,18 @@
 extract_true_region_names<-function(){
 
 library(sf)
+  source(here::here("R","merge_ummp.R"))
   
 #import polygons with right regions names
-land<-sf::read_sf(here::here("data","RawData","Landscape","Shapefiles Landscape AMLD", "SIG-LGCI_UMMP-13.shp")) %>% 
-  dplyr::select(Name,Id,UMMPs,geometry) %>% 
-  revalue_true_regions()
-
+  ummp<-return_complete_ummp()
+  
+  ummp$UMMPs<-plyr::revalue(ummp$UMMPs, c("Imbaú I" = "Imbau I",
+                                          "Imbaú II" = "Imbau II",
+                                          "Imbaú III" = "Imbau III",
+                                          "Poço das Antas" = "Poco das Antas",
+                                          "União I" = "Uniao I",
+                                          "União II" = "Uniao II"))
+  
 #import spatial locations of groups
 loc<-read.table(here::here("data","rawData","Landscape","RegionsName.csv"),
                 header=T,
@@ -20,7 +26,7 @@ loc<-read.table(here::here("data","rawData","Landscape","RegionsName.csv"),
   sf::st_set_crs(31983) 
 
 
-group_regions<-st_join(loc,land) %>% 
+group_regions<-st_join(loc,ummp) %>% 
   dplyr::select(Group,Farm,Id,UMMPs) %>% 
   st_drop_geometry()
 

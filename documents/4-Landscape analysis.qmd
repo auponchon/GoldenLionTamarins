@@ -16,6 +16,7 @@ library(sf)
 library(landscapemetrics)
 source(here::here("R","progress_bar.R"))
 source(here::here("R","create_raster.R"))
+source(here::here("R","merge_ummp.R"))
 #import landscape files
 
 #land cover for each each
@@ -27,10 +28,7 @@ land<-sf::read_sf(here::here("data","RawData","Landscape","Shapefiles Landscape 
 
 
 #conservation units (patches)
-ummp<-sf::read_sf(here::here("data","RawData","Landscape","Shapefiles Landscape AMLD",
-                             "SIG-LGCI_UMMP-13.shp")) %>% 
-  dplyr::select(Id,UMMPs,geometry) %>% 
-  dplyr::mutate(UMMPs = as.factor(UMMPs)) 
+ummp<-return_complete_ummp()
   
 ummp$UMMPs<-plyr::revalue(ummp$UMMPs, c("Imbaú I" = "Imbau I",
                          "Imbaú II" = "Imbau II",
@@ -57,9 +55,10 @@ size<-NULL
 #projection for Brazil
 proj<-"+proj=utm +zone=23 +south +ellps=GRS80 +towgs84=0,0,0,0,0,0,0 +units=m +no_defs +type=crs"
 
-# coverStack<-purrr::map(rast,create_raster_stack,.progress=T)
-# save(coverStack, file=here::here("data","NewlyCreatedData","Cover_rasters.RData"))
+ coverStack<-purrr::map(rast,create_raster_stack,.progress=T)
+ save(coverStack, file=here::here("data","NewlyCreatedData","Cover_rasters.RData"))
 
+ load(here::here("data","NewlyCreatedData","Cover_rasters.RData"))
 
 #create an initial raster for size area
 rastsize<-create_raster_stack(rast[1])
@@ -67,11 +66,11 @@ rastsize<-create_raster_stack(rast[1])
 #create an initial raster for patches
 patches<-create_raster_stack(rast[1])
 
-ummp<-sf::read_sf(here::here("data","RawData","Landscape","Shapefiles Landscape AMLD", "SIG-LGCI_UMMP-13.shp")) %>% 
-  dplyr::select(Id,UMMPs,geometry) %>% 
-  dplyr::mutate()
+#create an initial raster for patch perimeter
+rastperim<-create_raster_stack(rast[1])
 
-land<-sf::read_sf(here::here("data","RawData","Landscape","Shapefiles Landscape AMLD", "SIG-EDUC Redescobrindo 2021 - Fragmentos de Vegetação.shp")) 
+#create an initial raster for patch shape
+rastshape<-create_raster_stack(rast[1])
 
 
 for (i in 1:length(rast)){
@@ -92,18 +91,27 @@ names(zzz)<-paste("Patches",parse_number(rast[i]),sep="")
 patches<-stack(zzz,patches)
 
 
-#ll<-get_patches(rast1,class=1)
+#SIZE AREA
 xx<-spatialize_lsm(cover1, what = "lsm_p_area")
 rr<-xx$layer_1$lsm_p_area
 names(rr)<-paste("Area",parse_number(rast[i]),sep="")
-
-#show_lsm(rast1, what = "lsm_p_area", class=1,labels = TRUE)
  rastsize<-stack(rr,rastsize)
  
-yy<-extract_lsm(cover1,loc,class=1)  %>% 
-  dplyr:: mutate(Year=paste("cover",readr::parse_number(rast[i]),sep=""))
+ #PERIMETER
+pp<-spatialize_lsm(cover1, what = "lsm_p_perim")
+pp<-pp$layer_1$lsm_p_perim
+names(pp)<-paste("Perimetre",parse_number(rast[i]),sep="")
+ rastperim<-stack(pp,rastperim)
+
+#SHAPE
+sh<-spatialize_lsm(cover1, what = "lsm_p_shape")
+sh<-sh$layer_1$lsm_p_shape
+names(sh)<-paste("Shape",parse_number(rast[i]),sep="")
+ rastshape<-stack(sh,rastshape)
  
-  size<-rbind(size,yy)
+# yy<-extract_lsm(cover1,loc)  %>% 
+#    dplyr:: mutate(Year=paste("cover",readr::parse_number(rast[i]),sep=""))
+  # size<-rbind(size,yy)
  
 }
 
@@ -126,10 +134,12 @@ yy<-extract_lsm(cover1,loc,class=1)  %>%
 save(size,file=here::here("data","NewlyCreatedData","SizeArea_table.RData"))
 save(rastsize,file=here::here("data","NewlyCreatedData","Raster_size.RData"))
 save(patches,file=here::here("data","NewlyCreatedData","Raster_patches.RData"))
+save(rastperim,file=here::here("data","NewlyCreatedData","Raster_perim.RData"))
+save(rastshape,file=here::here("data","NewlyCreatedData","Raster_shape.RData"))
 
 ```
 
-# GIF of cover
+# GIF of habitat cover and size area
 
 ```{r}
 
@@ -139,6 +149,8 @@ library(gifski)
 load(here::here("data","NewlyCreatedData","clean_raw_data_long.RData"))
 load(here::here("data","NewlyCreatedData","Cover_rasters.RData"))
 load(here::here("data","NewlyCreatedData","Raster_size.RData"))
+load(here::here("data","NewlyCreatedData","Raster_perim.RData"))
+load(here::here("data","NewlyCreatedData","Raster_shape.RData"))
 
 
 #get regions with groups
@@ -147,7 +159,7 @@ group.reg<-data.clean %>%
   distinct_at(vars(Year,Group,UMMPs), keep_all=F)
 
 
-reg<-unique(group.reg$UMMPs)
+reg<-sort(unique(group.reg$UMMPs))
 
 totsizearea<-NULL
 
@@ -158,12 +170,13 @@ for (p in 1:length(reg)){
 pda<- ummp %>% 
    dplyr::filter(UMMPs==reg[p])
 
-if(nrow(pda)>0){
 habitatcrop<- purrr::map(coverStack,crop,pda)
 habcropstack<-stack(habitatcrop)
 
 
 sizecrop<-crop(rastsize,pda)
+perimcrop<-crop(rastperim,pda)
+shapecrop<-crop(rastshape,pda)
 
 habarea<-terra::extract(habcropstack,loc) %>% 
   as.data.frame(.) %>% 
@@ -221,6 +234,24 @@ sizerast<- sizecrop %>%
             .id = 'year') %>% 
   dplyr::mutate(Year=as.numeric(year) + 1989)
 
+shaperast<- shapecrop %>% 
+  as.list(.) %>% 
+  purrr::map_dfr(., 
+  ~setNames(as.data.frame(as(., "SpatialPixelsDataFrame")),
+            c('value', 'x', 'y')), 
+            .id = 'year') %>% 
+  dplyr::mutate(Year=as.numeric(year) + 1989)
+
+
+perimrast<- perimcrop %>% 
+  as.list(.) %>% 
+  purrr::map_dfr(., 
+  ~setNames(as.data.frame(as(., "SpatialPixelsDataFrame")),
+            c('value', 'x', 'y')), 
+            .id = 'year') %>% 
+  dplyr::mutate(Year=as.numeric(year) + 1989)
+
+
 #get coordinates in a dataframe
 groupy<-sizearea %>% 
    mutate(long = unlist(map(sizearea$geometry,1)),
@@ -229,62 +260,115 @@ groupy<-sizearea %>%
   dplyr::filter(UMMPs==reg[p])
 
 
-# gghab <- ggplot(habrast, aes(x = x, y = y)) +
-#   geom_tile(aes(fill = value)) +
-#   scale_fill_viridis_c()  +
-#    geom_point(data=groupy, aes(x=long,y=lat,color=Group),shape=17,size=4,
-#               show.legend=F)  
-# print(gghab)
-# 
-# gganimhab <- gghab + 
-#   transition_time(as.numeric(Year)) +
-#    labs(subtitle = "Year: {round(frame_time,digits=0)}") 
-#    
-# print(c("animate habitat ", p))
-# animate(gganimhab, height = 1000, width =2000,nframes=32,res=250,
-#         renderer = gifski_renderer())
-# anim_save(filename = here::here("outputs", "GIF cover",
-#                                 paste("GIF_cover_",reg[p],".gif")))
-          
-          
-# ggsize <- ggplot(sizerast, aes(x = x, y = y)) +
-#   geom_tile(aes(fill = value)) +
-#   scale_fill_viridis_c()  +
-#    geom_point(data=groupy, aes(x=long,y=lat,color=Group),shape=17,size=4,
-#               show.legend=F)  
-# print(ggsize)
-# 
-# gganimsize <- ggsize + 
-#   transition_time(as.numeric(Year)) +
-#    labs(subtitle = "Year: {round(frame_time,digits=0)}") 
-# 
-#  print(c("animate size ", p))  
-# 
-# animate(gganimsize, height = 1000, width =2000,nframes=32,res=250,
-#         renderer = gifski_renderer())
-# anim_save(filename = here::here("outputs","GIF cover",paste0("GIF_size_",reg[p],
-#                                        ".gif")))
+gghab <- ggplot(habrast, aes(x = x, y = y)) +
+  geom_tile(aes(fill = value)) +
+  scale_fill_viridis_c()  +
+   geom_point(data=groupy, aes(x=long,y=lat,color=Group),shape=17,size=4,
+              show.legend=F)
+print(gghab)
+
+gganimhab <- gghab +
+  transition_time(as.numeric(Year)) +
+   labs(subtitle = "Year: {round(frame_time,digits=0)}")
+
+print(c("animate habitat ", p))
+gganimate::animate(gganimhab, height = 1000, width =2000,nframes=32,res=250,
+        renderer = gifski_renderer())
+anim_save(filename = here::here("outputs", "GIF cover",
+                                paste("GIF_cover_",reg[p],".gif")))
+
+
+ggsize <- ggplot(sizerast, aes(x = x, y = y)) +
+  geom_tile(aes(fill = value)) +
+  scale_fill_viridis_c()  +
+   geom_point(data=groupy, aes(x=long,y=lat,color=Group),shape=17,size=4,
+              show.legend=F)
+print(ggsize)
+
+gganimsize <- ggsize +
+  transition_time(as.numeric(Year)) +
+   labs(subtitle = "Year: {round(frame_time,digits=0)}")
+
+ print(c("animate size ", p))
+
+gganimate::animate(gganimsize, height = 1000, width =2000,nframes=32,res=250,
+        renderer = gifski_renderer())
+anim_save(filename = here::here("outputs","GIF cover",paste0("GIF_size_",reg[p],
+                                       ".gif")))
+
+
+ggshape <- ggplot(shaperast, aes(x = x, y = y)) +
+  geom_tile(aes(fill = value)) +
+  scale_fill_viridis_c()  +
+   geom_point(data=groupy, aes(x=long,y=lat,color=Group),shape=17,size=4,
+              show.legend=F)
+print(ggshape)
+
+gganimshape <- ggshape +
+  transition_time(as.numeric(Year)) +
+   labs(subtitle = "Year: {round(frame_time,digits=0)}")
+
+ print(c("animate shape ", p))
+
+gganimate::animate(gganimshape, height = 1000, width =2000,nframes=32,res=250,
+        renderer = gifski_renderer())
+anim_save(filename = here::here("outputs","GIF cover",paste0("GIF_shape_",reg[p],
+                                       ".gif")))
+
+
+ggperim <- ggplot(perimrast, aes(x = x, y = y)) +
+  geom_tile(aes(fill = value)) +
+  scale_fill_viridis_c()  +
+   geom_point(data=groupy, aes(x=long,y=lat,color=Group),shape=17,size=4,
+              show.legend=F)
+print(ggperim)
+
+gganimperim <- ggperim +
+  transition_time(as.numeric(Year)) +
+   labs(subtitle = "Year: {round(frame_time,digits=0)}")
+
+ print(c("animate perimeter ", p))
+
+gganimate::animate(gganimperim, height = 1000, width =2000,nframes=32,res=250,
+        renderer = gifski_renderer())
+anim_save(filename = here::here("outputs","GIF cover",paste0("GIF_perimetre_",reg[p],
+                                       ".gif")))
+
+
 
 }
-}
-
-# 
-# ggg<-ggplot(sizerast,aes(x=Year,y=Habitat,group=Group)) +
-#   geom_line(aes(color=Group),show.legend = F) 
-#   print(ggg)
 ```
 
-# Evolution of size over time
+# Evolution of size area of patches over time
 
 ```{r}
 
+reg<-sort(unique(totsizearea$UMMPs))
+
+totsizearea<-totsizearea %>% 
+  dplyr::filter(Group!="MF" & Group !="JR" & Group != "PH2")
+
+for (k in 1:length(reg)){
 
 xx<-totsizearea %>% 
-  dplyr::filter(Group!="MF" & Group !="JR" & Group != "PH2") %>% 
-  dplyr::filter(UMMPs=="Imbau I")
+  dplyr::filter(UMMPs==reg[k])
 
 ggg<-ggplot(xx,aes(x=Year,y=Size,group=Group)) +
   geom_line(aes(color=Group)) +
-  facet_wrap(.~Group)
+  facet_wrap(.~Group) +
+  scale_colour_viridis_d(option="turbo")
   print(ggg)
+  
+   setTxtProgressBar(progress_bar(length(reg)),k)  
+   
+  tiff(here::here("outputs","Size Area",paste0("Size_",reg[k],".tif")),
+       res=300,
+       width=2000,
+       height=1500,
+       units="px",
+       compression="lzw")
+  print(ggg)
+  dev.off()
+  
+  }
 ```

@@ -14,6 +14,7 @@ library(here)
 library(tidyverse)
 library(sf)
 library(ggspatial)
+library(ggrepel)
 
 source(here::here("R","progress_bar.R"))
 
@@ -107,23 +108,12 @@ fieldgg<-ggplot()+
           aes(colour=GLT),
           size=0.2) +  
   geom_sf(data=spdisp,
-          aes(colour=GLT),
-          size=0.5) +   
-
-  #facet_wrap(.~Year,nrow=4)+
-
-  # st_jitter(spdisp,factor=0.1,
-
-  #           aes(colour=GLT))+
-
-   # coord_sf(xlim = c(longmnr,longmxr),
-   # 
-   #          ylim=c(latmnr, latmxr),
-   # 
-   #          expand = FALSE) +
-
-  #    scale_colour_manual() +
-
+          aes(colour=Group),
+          size=0.5) +  
+  # geom_sf_text(data=spdisp,
+  #              mapping=aes(label = Group),
+  #              nudge_x=100,
+  #              nudge_y=50) +
    annotation_scale(location = "br",
                     width_hint = 0.3,
                     pad_x = unit(0.3, "cm"),
