@@ -236,14 +236,15 @@ sum.up<-data.clean %>%
 dat<-data.clean %>% 
   dplyr::filter(Disp=="0" & Death=="0" & Solo=="0") %>% 
   dplyr::filter(!GLT %in% bad) %>% 
-  dplyr::arrange(DateObs,Group) %>% 
-  dplyr::select(DateObs,Region,Group, GLT, Sex ) %>% 
-  dplyr::distinct() %>% 
-  pivot_wider(names_from=DateObs,
+  dplyr::mutate(Date=floor_date(as.Date(DateObs), 'year')) %>% 
+  dplyr::arrange(Date,Group) %>% 
+  dplyr::select(Date,Region,Group, GLT, Sex ) %>% 
+ # dplyr::distinct() %>% 
+  pivot_wider(names_from=Date,
               names_prefix="Obs",
-              values_from=Region) %>% 
-  write.table(., file=here::here("Data","NewlyCreatedData","data_wide.xslx"),
-              quote=F,row.names=F ,sep=";")
+              values_from=Group) #%>% 
+  # write.table(., file=here::here("Data","NewlyCreatedData","data_wide.xslx"),
+  #             quote=F,row.names=F ,sep=";")
 
 ```
 

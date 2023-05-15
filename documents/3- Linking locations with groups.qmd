@@ -33,7 +33,7 @@ loc<-read.table(here::here("data","rawData","Landscape","RegionsName.csv"),
   
 
 #Join groups and locations for individual observations
-excl<-c("AF","JG", "JR","MF","PA")
+excl<-c("AF","JG", "PA")
 
 
 spatdata<-data.clean %>% 
@@ -45,9 +45,21 @@ spatdata<-data.clean %>%
   dplyr::arrange(GLT,Group,DateObs) %>% 
   dplyr::mutate(GLT=as.factor(GLT)) %>% 
   dplyr::group_by(GLT)%>% 
-  dplyr::filter(!GLT %in% bad & Disp==0 & Death==0 & Solo==0) %>% 
+  dplyr::filter(!GLT %in% bad & Disp!=1 & Death==0 & Solo==0) %>% 
 sf::st_as_sf(., coords = c("Long","Lat")) %>% 
   sf::st_set_crs(31983) 
+
+
+loc.groups<-spatdata %>% 
+  group_by(Group) %>% 
+  distinct(UMMPs,geometry) %>% 
+  write_sf(.,
+         here::here("data","NewlyCreatedData","Dispersal lines",
+                    "group_locs_filtered.shp"),
+                    delete_dsn = T,
+                    delete_layer=T)
+
+
 
 land<-sf::read_sf(here::here("data","RawData","Landscape","Shapefiles Landscape AMLD", "SIG-EDUC Redescobrindo 2021 - Fragmentos de Vegetação.shp")) 
 
