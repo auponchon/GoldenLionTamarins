@@ -2,6 +2,8 @@
 revalue_region<-function(data){
   
   data$Group[which(data$Region=="Faz. Vendaval")]<-"AL1"
+  data$Group[which(data$Group=="JR" & data$Year>2010)]<-"JR.1"
+ 
 
 data$Region<-plyr::revalue(as.factor(data$Region), 
 c("2 Irmãos" =	"Faz. 2 Irmaos",
@@ -216,8 +218,8 @@ c("2 Irmãos" =	"Faz. 2 Irmaos",
                      data$Year>=2014 & 
                      data$Year<2020 & 
                      !is.na(data$Group))]<-"AL"
+  data$Group[which(data$Group=="MF" & data$Region=="Faz. Patis")]<-"MF.1"
  
-  
   
   data$Disp[which(data$GLT=="MK10" & data$Year > 2003 & data$Group=="ML")]<-1
   data$Disp[which(data$GLT=="PA1" & data$Year > 2005 & data$Group=="PA")]<-1

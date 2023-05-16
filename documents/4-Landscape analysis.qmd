@@ -55,8 +55,8 @@ size<-NULL
 #projection for Brazil
 proj<-"+proj=utm +zone=23 +south +ellps=GRS80 +towgs84=0,0,0,0,0,0,0 +units=m +no_defs +type=crs"
 
- coverStack<-purrr::map(rast,create_raster_stack,.progress=T)
- save(coverStack, file=here::here("data","NewlyCreatedData","Cover_rasters.RData"))
+ #coverStack<-purrr::map(rast,create_raster_stack,.progress=T)
+ #save(coverStack, file=here::here("data","NewlyCreatedData","Cover_rasters.RData"))
 
  load(here::here("data","NewlyCreatedData","Cover_rasters.RData"))
 
@@ -162,6 +162,8 @@ group.reg<-data.clean %>%
 reg<-sort(unique(group.reg$UMMPs))
 
 totsizearea<-NULL
+totshape<-NULL
+totperim<-NULL
 
 for (p in 1:length(reg)){
   
@@ -217,6 +219,49 @@ sizearea<-terra::extract(sizecrop,loc) %>%
 
 totsizearea<-rbind(totsizearea,sizearea)
 
+
+#perimeter length
+perimarea<-terra::extract(perimcrop,loc) %>% 
+  as.data.frame(.) %>% 
+   cbind(loc) %>% 
+#  dplyr::filter(Farm=="Rebio PDA" | Farm=="PDA") %>% 
+  left_join (group.reg, by="Group") %>% 
+  pivot_longer(cols=1:32,
+               names_to="Cover_year",
+               values_to="Perimetre") %>% 
+  dplyr::mutate(Year=parse_number(Cover_year),
+                Fragment.Region=as.factor(Fragment.Region),
+                Group=as.factor(Group),
+   #             Patch= as.factor(brasil_coverage_1990),
+                UMMPs=as.factor(UMMPs)) %>% 
+# dplyr::filter(UMMPs=="Poco das Antas") %>%    #Aldeia II,  Rio Vermelho
+  dplyr::arrange(Group,Year) %>% 
+  drop_na() %>% 
+  distinct()
+
+totperim<-rbind(totperim,perimarea)
+
+#perimeter length
+shapearea<-terra::extract(shapecrop,loc) %>% 
+  as.data.frame(.) %>% 
+   cbind(loc) %>% 
+#  dplyr::filter(Farm=="Rebio PDA" | Farm=="PDA") %>% 
+  left_join (group.reg, by="Group") %>% 
+  pivot_longer(cols=1:32,
+               names_to="Cover_year",
+               values_to="Shape") %>% 
+  dplyr::mutate(Year=parse_number(Cover_year),
+                Fragment.Region=as.factor(Fragment.Region),
+                Group=as.factor(Group),
+   #             Patch= as.factor(brasil_coverage_1990),
+                UMMPs=as.factor(UMMPs)) %>% 
+# dplyr::filter(UMMPs=="Poco das Antas") %>%    #Aldeia II,  Rio Vermelho
+  dplyr::arrange(Group,Year) %>% 
+  drop_na() %>% 
+  distinct()
+
+totshape<-rbind(totshape,shapearea)
+
 #convert raster stack to dataframe
 habrast<- purrr::map_dfr(
   habitatcrop, 
@@ -260,83 +305,84 @@ groupy<-sizearea %>%
   dplyr::filter(UMMPs==reg[p])
 
 
-gghab <- ggplot(habrast, aes(x = x, y = y)) +
-  geom_tile(aes(fill = value)) +
-  scale_fill_viridis_c()  +
-   geom_point(data=groupy, aes(x=long,y=lat,color=Group),shape=17,size=4,
-              show.legend=F)
-print(gghab)
-
-gganimhab <- gghab +
-  transition_time(as.numeric(Year)) +
-   labs(subtitle = "Year: {round(frame_time,digits=0)}")
-
-print(c("animate habitat ", p))
-gganimate::animate(gganimhab, height = 1000, width =2000,nframes=32,res=250,
-        renderer = gifski_renderer())
-anim_save(filename = here::here("outputs", "GIF cover",
-                                paste("GIF_cover_",reg[p],".gif")))
-
-
-ggsize <- ggplot(sizerast, aes(x = x, y = y)) +
-  geom_tile(aes(fill = value)) +
-  scale_fill_viridis_c()  +
-   geom_point(data=groupy, aes(x=long,y=lat,color=Group),shape=17,size=4,
-              show.legend=F)
-print(ggsize)
-
-gganimsize <- ggsize +
-  transition_time(as.numeric(Year)) +
-   labs(subtitle = "Year: {round(frame_time,digits=0)}")
-
- print(c("animate size ", p))
-
-gganimate::animate(gganimsize, height = 1000, width =2000,nframes=32,res=250,
-        renderer = gifski_renderer())
-anim_save(filename = here::here("outputs","GIF cover",paste0("GIF_size_",reg[p],
-                                       ".gif")))
+# gghab <- ggplot(habrast, aes(x = x, y = y)) +
+#   geom_tile(aes(fill = value)) +
+#   scale_fill_viridis_c()  +
+#    geom_point(data=groupy, aes(x=long,y=lat,color=Group),shape=17,size=4,
+#               show.legend=F)
+# print(gghab)
+# 
+# gganimhab <- gghab +
+#   transition_time(as.numeric(Year)) +
+#    labs(subtitle = "Year: {round(frame_time,digits=0)}")
+# 
+# print(c("animate habitat ", p))
+# gganimate::animate(gganimhab, height = 1000, width =2000,nframes=32,res=250,
+#         renderer = gifski_renderer())
+# anim_save(filename = here::here("outputs", "GIF cover",
+#                                 paste("GIF_cover_",reg[p],".gif")))
 
 
-ggshape <- ggplot(shaperast, aes(x = x, y = y)) +
-  geom_tile(aes(fill = value)) +
-  scale_fill_viridis_c()  +
-   geom_point(data=groupy, aes(x=long,y=lat,color=Group),shape=17,size=4,
-              show.legend=F)
-print(ggshape)
-
-gganimshape <- ggshape +
-  transition_time(as.numeric(Year)) +
-   labs(subtitle = "Year: {round(frame_time,digits=0)}")
-
- print(c("animate shape ", p))
-
-gganimate::animate(gganimshape, height = 1000, width =2000,nframes=32,res=250,
-        renderer = gifski_renderer())
-anim_save(filename = here::here("outputs","GIF cover",paste0("GIF_shape_",reg[p],
-                                       ".gif")))
-
-
-ggperim <- ggplot(perimrast, aes(x = x, y = y)) +
-  geom_tile(aes(fill = value)) +
-  scale_fill_viridis_c()  +
-   geom_point(data=groupy, aes(x=long,y=lat,color=Group),shape=17,size=4,
-              show.legend=F)
-print(ggperim)
-
-gganimperim <- ggperim +
-  transition_time(as.numeric(Year)) +
-   labs(subtitle = "Year: {round(frame_time,digits=0)}")
-
- print(c("animate perimeter ", p))
-
-gganimate::animate(gganimperim, height = 1000, width =2000,nframes=32,res=250,
-        renderer = gifski_renderer())
-anim_save(filename = here::here("outputs","GIF cover",paste0("GIF_perimetre_",reg[p],
-                                       ".gif")))
+# ggsize <- ggplot(sizerast, aes(x = x, y = y)) +
+#   geom_tile(aes(fill = value)) +
+#   scale_fill_viridis_c()  +
+#    geom_point(data=groupy, aes(x=long,y=lat,color=Group),shape=17,size=4,
+#               show.legend=F)
+# print(ggsize)
+# 
+# gganimsize <- ggsize +
+#   transition_time(as.numeric(Year)) +
+#    labs(subtitle = "Year: {round(frame_time,digits=0)}")
+# 
+#  print(c("animate size ", p))
+# 
+# gganimate::animate(gganimsize, height = 1000, width =2000,nframes=32,res=250,
+#         renderer = gifski_renderer())
+# anim_save(filename = here::here("outputs","GIF cover",paste0("GIF_size_",reg[p],
+#                                        ".gif")))
 
 
+# ggshape <- ggplot(shaperast, aes(x = x, y = y)) +
+#   geom_tile(aes(fill = value)) +
+#   scale_fill_viridis_c()  +
+#    geom_point(data=groupy, aes(x=long,y=lat,color=Group),shape=17,size=4,
+#               show.legend=F)
+# print(ggshape)
+# 
+# gganimshape <- ggshape +
+#   transition_time(as.numeric(Year)) +
+#    labs(subtitle = "Year: {round(frame_time,digits=0)}")
+# 
+#  print(c("animate shape ", p))
+# 
+# gganimate::animate(gganimshape, height = 1000, width =2000,nframes=32,res=250,
+#         renderer = gifski_renderer())
+# anim_save(filename = here::here("outputs","GIF cover",paste0("GIF_shape_",reg[p],
+#                                        ".gif")))
 
+
+# ggperim <- ggplot(perimrast, aes(x = x, y = y)) +
+#   geom_tile(aes(fill = value)) +
+#   scale_fill_viridis_c()  +
+#    geom_point(data=groupy, aes(x=long,y=lat,color=Group),shape=17,size=4,
+#               show.legend=F)
+# print(ggperim)
+# 
+# gganimperim <- ggperim +
+#   transition_time(as.numeric(Year)) +
+#    labs(subtitle = "Year: {round(frame_time,digits=0)}")
+# 
+#  print(c("animate perimeter ", p))
+# 
+# gganimate::animate(gganimperim, height = 1000, width =2000,nframes=32,res=250,
+#         renderer = gifski_renderer())
+# anim_save(filename = here::here("outputs","GIF cover",paste0("GIF_perimetre_",reg[p],
+#                                        ".gif")))
 }
+
+save(totsizearea,file=here::here("data","NewlyCreatedData","TotalSizeArea.RData"))
+save(totshape,file=here::here("data","NewlyCreatedData","TotalShape.RData"))
+save(totperim,file=here::here("data","NewlyCreatedData","TotalPerimetre.RData"))
 ```
 
 # Evolution of size area of patches over time
@@ -345,19 +391,45 @@ anim_save(filename = here::here("outputs","GIF cover",paste0("GIF_perimetre_",re
 
 reg<-sort(unique(totsizearea$UMMPs))
 
+#Filter landscape variable
 totsizearea<-totsizearea %>% 
   dplyr::filter(Group!="MF" & Group !="JR" & Group != "PH2")
 
+totshape<-totshape %>% 
+  dplyr::filter(Group!="MF" & Group !="JR" & Group != "PH2")
+
+totperim<-totperim %>% 
+  dplyr::filter(Group!="MF" & Group !="JR" & Group != "PH2")
+
+#get plots for each region
 for (k in 1:length(reg)){
 
+  #subset variable
 xx<-totsizearea %>% 
   dplyr::filter(UMMPs==reg[k])
+yy<-totshape %>% 
+  dplyr::filter(UMMPs==reg[k])
+zz<-totperim %>% 
+  dplyr::filter(UMMPs==reg[k])
 
-ggg<-ggplot(xx,aes(x=Year,y=Size,group=Group)) +
+#plot variable by region
+sizegg<-ggplot(xx,aes(x=Year,y=Size,group=Group)) +
   geom_line(aes(color=Group)) +
   facet_wrap(.~Group) +
   scale_colour_viridis_d(option="turbo")
-  print(ggg)
+  print(sizegg)
+  
+ perimgg<-ggplot(zz,aes(x=Year,y=Perimetre,group=Group)) +
+  geom_line(aes(color=Group)) +
+  facet_wrap(.~Group) +
+  scale_colour_viridis_d(option="turbo")
+  print(perimgg)
+  
+  shapegg<-ggplot(yy,aes(x=Year,y=Shape,group=Group)) +
+  geom_line(aes(color=Group)) +
+  facet_wrap(.~Group) +
+  scale_colour_viridis_d(option="turbo")
+  print(shapegg)
   
    setTxtProgressBar(progress_bar(length(reg)),k)  
    
@@ -367,7 +439,25 @@ ggg<-ggplot(xx,aes(x=Year,y=Size,group=Group)) +
        height=1500,
        units="px",
        compression="lzw")
-  print(ggg)
+  print(sizegg)
+  dev.off()
+  
+    tiff(here::here("outputs","Shape",paste0("Shape_",reg[k],".tif")),
+       res=300,
+       width=2000,
+       height=1500,
+       units="px",
+       compression="lzw")
+  print(shapegg)
+  dev.off()
+  
+    tiff(here::here("outputs","Perimeter",paste0("Perimeter_",reg[k],".tif")),
+       res=300,
+       width=2000,
+       height=1500,
+       units="px",
+       compression="lzw")
+  print(perimgg)
   dev.off()
   
   }
