@@ -233,7 +233,9 @@ SOLUTION : passer leur Idade en NA
 V. Regarder les GLT qui n'ont ni Idade ni BirthDate
 
 
-VI. Résumé statistique
-RETIRER LES IN, T0, FN (infants)
-- Histogramme des poids
-- Individus qui ont un sexe/stade renseigné (ou pas)
+VI. ANALYSE STATISTIQUE
+
+*** Jeu de données : groupes suivis au moins 6 ans car cela correspond à 3 générations (d'après Strier & Mendes, 2009)
+
+1) Taille du groupe
+N=9 MU, 72 groupes, 1427 GLT
