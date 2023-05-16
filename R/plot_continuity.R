@@ -44,7 +44,7 @@ plot_continuity<-function(data,freq,title_plot,title_file,W,H){
     
   }
   
-  tiff(here::here("outputs","Conservation regions",title_file),
+  tiff(here::here("outputs","Monitoring effort","Conservation regions",title_file),
        width=W,
        height=H,
        res=600,

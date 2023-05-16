@@ -1,178 +1,179 @@
 "Group";"MinYear";"MaxYear";"Duration";"N";"UMMPs";"Farm";"Long";"Lat";"Fragment.Region"
-"PT";1995;2017;22;95;"Imbau I";"Fazenda Cordeiros";758345;7497591;"cordeiros"
-"AX";2001;2022;21;91;"Imbau I";"Santa Helena II";767274;7497645;"Santa Helena II"
-"SI2";2004;2021;17;91;"Imbau I";"Santa Helena II";767886;7497685;"Santa Helena II"
-"SD";2003;2022;19;90;"Uniao I";"Rebio Uniao";804126;7517008;"Uniao"
-"AFII";2005;2022;17;88;"Imbau II";"Fazenda Afetiva";760539;7494754;"Afetiva"
-"SP";2002;2017;15;88;"Imbau II";"Afetiva";760297;7494833;"Afetiva SP"
-"AF";2003;2016;13;84;"Imbau II";"Afetiva";760295;7494955;"Afetiva"
-"RV";1998;2022;24;81;"Rio Vermelho";"Rio Vermelho";748422;7485075;"Rio Vermelho"
-"TMII";2009;2022;13;81;"Imbau I";"Tamarins";767988;7498391;"Tamarins"
-"DU";2009;2022;13;78;"Uniao I";"Rebio Uniao";806834;7517768;"Uniao"
-"LB";2009;2022;13;78;"Uniao II";"Rebio Uniao";806208;7515714;"Uniao"
-"SQ";2009;2022;13;78;"Uniao I";"Rebio Uniao";805651;7517583;"Uniao"
-"LP";1992;2022;30;75;"Uniao I";"Rebio Uniao";804385;7517170;"Uniao"
-"AX2";2001;2018;17;70;"Boa Esperanca";"Boa Esperanca";763279;7492616;"Boa Esperanca AX2"
-"BO2";2008;2020;12;67;"Poco das Antas";"Rebio PDA";777129;7505637;"Rebio Poço das Antas"
-"PDA";2007;2020;13;67;"Poco das Antas";"Rebio PDA";777622;7506214;"Rebio Poço das Antas"
-"TR";1992;2017;25;67;"Rio Vermelho";"Rio Vermelho";749499;7484456;"Rio Vermelho"
-"AL";2007;2018;11;62;"Poco das Antas";"Rebio PDA";777558;7506694;"Rebio Poço das Antas"
-"OL";1996;2011;15;62;"Imbau I";"Estreito";762176;7496524;"Andorinhas Estreito"
-"ST";1992;2009;17;54;"Rio Vermelho";"Rio Vermelho";750338;7484551;"Rio Vermelho"
-"JR";1990;2022;32;52;"Aldeia I";"Iguape";774240;7508618;"Iguape"
-"JR";1990;2022;32;52;"Aldeia I";"Sta Helena I";771330;7505536;"Sta Helena I"
-"EM";1992;2009;17;51;"Rio Vermelho";"Rio Vermelho";748483;7485742;"Rio Vermelho"
-"FU";2009;2017;8;51;"Uniao I";"Rebio Uniao";806534;7517497;"Uniao"
-"OM";1989;2007;18;46;"Aldeia I";"Coqueiros";777117;7509434;"Sao Francisco Coqueiros"
-"MA";1992;2009;17;45;"Rio Vermelho";"Rio Vermelho";749813;7485541;"Rio Vermelho"
-"PR";2000;2022;22;45;"Imbau I";"Sitio do Professor";760539;7497537;"Sitio do Professor Estreito"
-"RI";1989;2007;18;45;"Aldeia I";"Igarape";776789;7508604;"Igarape"
-"AF3";2012;2019;7;43;"Imbau II";" Fazenda Afetiva";760304;7494942;"Afetiva"
+"PT";1995;2017;22;95;"Imbau I";"Faz. Cordeiros";758345;7497591;"Faz. Cordeiros"
+"AX";2001;2022;21;91;"Imbau I";"Faz. Sta Helena 2";767274;7497645;"Faz. Sta Helena 2"
+"SI2";2004;2021;17;91;"Imbau I";"Faz. Sta Helena 2";767886;7497685;"Faz. Sta Helena 2"
+"SD";2003;2022;19;90;"Uniao I";"Rebio Uniao";804126;7517008;"Rebio Uniao"
+"AFII";2005;2022;17;88;"Imbau II";"Faz. Afetiva";760539;7494754;"Faz. Afetiva"
+"SP";2002;2017;15;88;"Imbau II";"Faz. Afetiva";760297;7494833;"Faz. Afetiva"
+"AF";2003;2016;13;84;"Imbau II";"Faz. Afetiva";760295;7494955;"Faz. Afetiva"
+"RV";1998;2022;24;81;"Rio Vermelho";"Faz. Rio Vermelho";748422;7485075;"Faz. Rio Vermelho"
+"TMII";2009;2022;13;81;"Imbau I";"Faz. Tamarins";767988;7498391;"Faz. Tamarins"
+"DU";2009;2022;13;78;"Uniao I";"Rebio Uniao";806834;7517768;"Rebio Uniao"
+"LB";2009;2022;13;78;"Uniao II";"Rebio Uniao";806208;7515714;"Rebio Uniao"
+"SQ";2009;2022;13;78;"Uniao I";"Rebio Uniao";805651;7517583;"Rebio Uniao"
+"LP";1992;2022;30;75;"Uniao I";"Rebio Uniao";804385;7517170;"Rebio Uniao"
+"AX2";2001;2018;17;70;"Boa Esperanca";"Faz. Boa Esperanca";763279;7492616;"Faz. Boa Esperanca"
+"BO2";2008;2020;12;67;"Poco das Antas";"Poco das Antas";777129;7505637;"Poco das Antas"
+"PDA";2007;2020;13;67;"Poco das Antas";"Poco das Antas";777622;7506214;"Poco das Antas"
+"TR";1992;2017;25;67;"Rio Vermelho";"Faz. Rio Vermelho";749499;7484456;"Faz. Rio Vermelho"
+"AL";2007;2018;11;62;"Poco das Antas";"Poco das Antas";777558;7506694;"Poco das Antas"
+"OL";1996;2011;15;62;"Imbau I";"Faz. Estreito";762176;7496524;"Faz. Estreito"
+"ST";1992;2009;17;54;"Rio Vermelho";"Faz. Rio Vermelho";750338;7484551;"Faz. Rio Vermelho"
+"EM";1992;2009;17;51;"Rio Vermelho";"Faz. Rio Vermelho";748483;7485742;"Faz. Rio Vermelho"
+"FU";2009;2017;8;51;"Uniao I";"Rebio Uniao";806534;7517497;"Rebio Uniao"
+"OM";1989;2007;18;46;"Aldeia I";"Faz. Coqueiros";777117;7509434;"Faz. Coqueiros"
+"MA";1992;2009;17;45;"Rio Vermelho";"Faz. Rio Vermelho";749813;7485541;"Faz. Rio Vermelho"
+"PR";2000;2022;22;45;"Imbau I";"Sitio do Professor";760539;7497537;"Sitio do Professor"
+"RI";1989;2007;18;45;"Aldeia I";"Faz. Igarape";776789;7508604;"Faz. Igarape"
+"AF3";2012;2019;7;43;"Imbau II";"Faz. Afetiva";760304;7494942;"Faz. Afetiva"
 "EB";2011;2018;7;43;NA;NA;NA;NA;NA
-"POR";2008;2014;6;42;"Poco das Antas";"Rebio PDA";777265;7504907;"Rebio Poço das Antas"
-"MF2";2007;2022;15;41;"Rio Vermelho";"Rio Vermelho";748172;7485279;"Rio Vermelho"
-"JB";2015;2022;7;39;"Rio Vermelho";"Rio Vermelho";748153;7485267;"Rio Vermelho"
-"AP";1992;2009;17;38;"Rio Vermelho";"Rio Vermelho";750310;7486225;"Rio Vermelho"
-"CLA";1990;2007;17;38;"Aldeia I";"Dois Irmaos";774415;7508292;"Dois Irmaos"
-"ML";1993;2007;14;38;"Rio Vermelho";"Rio Vermelho";750959;7486058;"Rio Vermelho"
-"SE";1989;2007;18;38;"Aldeia I";"Sao Francisco";775676;7509399;"Sao  Francisco Coqueiros"
-"EX";2011;2016;5;36;NA;NA;NA;NA;NA
-"IP";1998;2022;24;36;"Aldeia I";"Iguape";775026;7508717;"Iguape IP"
-"JD";2001;2022;21;35;"Aldeia I";"Joedi";776205;7508925;"Sitio Joedi"
-"AT";1995;2009;14;34;"Imbau I";"Andorinhas";761883;7494870;"Andorinhas Estreito"
-"SS";1990;2007;17;34;"Aldeia II";"Sta Helena I";773002;7506643;"Sta Helena I"
-"SI";2002;2010;8;33;NA;NA;NA;NA;NA
-"SK";1990;2007;17;32;NA;NA;NA;NA;NA
-"JG";2000;2009;9;31;"Imbau II";"Afetiva";760670;7494943;"Afetiva"
-"JG";2000;2009;9;31;"Imbau II";"Cabana Nova Conquista";765027;7495286;"Cabanã Nova Conquista"
+"POR";2008;2014;6;42;"Poco das Antas";"Poco das Antas";777265;7504907;"Poco das Antas"
+"MF2";2007;2022;15;41;"Rio Vermelho";"Faz. Rio Vermelho";748172;7485279;"Faz. Rio Vermelho"
+"JR";1990;2007;17;40;"Aldeia I";"Faz. Igarape";774240;7508618;"Faz. Igarape"
+"JB";2015;2022;7;39;"Rio Vermelho";"Faz. Rio Vermelho";748153;7485267;"Faz. Rio Vermelho"
+"AP";1992;2009;17;38;"Rio Vermelho";"Faz. Rio Vermelho";750310;7486225;"Faz. Rio Vermelho"
+"CLA";1990;2007;17;38;"Aldeia I";"Faz. 2 Irmaos";774415;7508292;"Faz. 2 Irmaos"
+"ML";1993;2007;14;38;"Rio Vermelho";"Faz. Rio Vermelho";750959;7486058;"Faz. Rio Vermelho"
+"SE";1989;2007;18;38;"Aldeia I";"Faz. Sao Francisco";775676;7509399;"Faz. Sao Francisco"
+"EX";2011;2016;5;36;"Boa Esperanca";"Faz. Boa Esperanca";763127;7492230;"Faz. Boa Esperanca"
+"IP";1998;2022;24;36;"Aldeia I";"Faz. Igarape";775026;7508717;"Faz. Igarape"
+"JD";2001;2022;21;35;"Aldeia I";"Sitio Joedi";776205;7508925;"Sitio Joedi"
+"AT";1995;2009;14;34;"Imbau I";"St. das Andorinhas";761883;7494870;"St. das Andorinhas"
+"SS";1990;2007;17;34;"Aldeia II";"Faz. Sta Helena";773002;7506643;"Faz. Sta Helena"
+"SI";2002;2010;8;33;"Imbau I";"Faz. Sta Helena 2";767762;7497710;"Faz. Sta Helena 2"
+"SK";1990;2007;17;32;"Aldeia I";"Faz. Iguape";775096;7508739;"Faz. Iguape"
+"JG";2000;2009;9;31;"Imbau II";"Faz. Afetiva";760670;7494943;"Faz. Afetiva"
+"JG";2000;2009;9;31;"Imbau II";"Faz. Cabana nova Conquista";765027;7495286;"Faz. Cabana nova Conquista"
 "LA";1989;2007;18;31;NA;NA;NA;NA;NA
-"RT";2004;2022;18;31;"Rio Vermelho";"Rio Vermelho";748524;7485332;"Rio Vermelho"
-"ML2";1999;2009;10;30;"Rio Vermelho";"Rio Vermelho";750198;7485898;"Rio Vermelho"
-"RC";2016;2022;6;30;NA;NA;NA;NA;NA
-"BK";1991;2007;16;29;"Aldeia II";"Vale do Cedro";771633;7504501;"Vale do Cedro Santa Helena"
-"CA2";1994;2007;13;29;"Aldeia I";"Dois Irmaos";774348;7507995;"Dois Irmaos"
-"PI";2000;2009;9;28;"Imbau I";"Pacoti";759852;7498136;"Pacoti Sete Jotas"
-"PH";2017;2022;5;27;"Imbau I";"Fazenda Afetiva";761113;7495758;"Afetiva"
-"UR";2017;2022;5;27;"Imbau II";"Fazenda Afetiva";760531;7494811;"Afetiva"
-"FP";2016;2022;6;26;"Imbau II";"Fazenda Afetiva";760222;7495014;"Afetiva"
-"LA2";1996;2007;11;26;"Aldeia II";"Santa Helena";771281;7505531;"Vale do Cedro Santa Helena"
-"PA";1999;2009;10;26;"Rio Vermelho";"Rio Vermelho";749532;7485938;"Rio Vermelho"
-"SH";2001;2022;21;26;"Aldeia II";"Santa Helena";771480;7505759;"Vale do Cedro Santa Helena"
-"FX";2000;2009;9;25;"Boa Esperanca";"Boa Esperanca";762731;7491974;"Boa Esperanca"
+"RT";2004;2022;18;31;"Rio Vermelho";"Faz. Rio Vermelho";748524;7485332;"Faz. Rio Vermelho"
+"ML2";1999;2009;10;30;"Rio Vermelho";"Faz. Rio Vermelho";750198;7485898;"Faz. Rio Vermelho"
+"RC";2016;2022;6;30;NA;"Sitio Recanto Preservar";771494;7502072;"Sitio Recanto Preservar"
+"BK";1991;2007;16;29;"Aldeia II";"Faz. Vale do Cedro";771633;7504501;"Faz. Vale do Cedro"
+"CA2";1994;2007;13;29;"Aldeia I";"Faz. 2 Irmaos";774348;7507995;"Faz. 2 Irmaos"
+"PI";2000;2009;9;28;"Imbau I";"Faz. Pacoty";759852;7498136;"Faz. Pacoty"
+"PH";2017;2022;5;27;"Imbau I";"Faz. Afetiva";761113;7495758;"Faz. Afetiva"
+"UR";2017;2022;5;27;"Imbau II";"Faz. Afetiva";760531;7494811;"Faz. Afetiva"
+"FP";2016;2022;6;26;"Imbau II";"Faz. Afetiva";760222;7495014;"Faz. Afetiva"
+"LA2";1996;2007;11;26;"Aldeia II";"Faz. Sta Helena";771281;7505531;"Faz. Sta Helena"
+"LA2";1996;2007;11;26;"Aldeia II";"Faz. Sta Helena";771281;7505531;"Faz. Sta Helena"
+"PA";1999;2009;10;26;"Rio Vermelho";"Faz. Rio Vermelho";749532;7485938;"Faz. Rio Vermelho"
+"SH";2001;2022;21;26;"Aldeia II";"Faz. Sta Helena";771480;7505759;"Faz. Sta Helena"
+"FX";2000;2009;9;25;"Boa Esperanca";"Faz. Boa Esperanca";762731;7491974;"Faz. Boa Esperanca"
 "XT";2009;2013;4;25;NA;NA;NA;NA;NA
-"MF";2006;2017;11;24;"Rio Vermelho";"Rio Vermelho";748140;7485413;"Rio Vermelho"
-"MF";2006;2017;11;24;"Rio Vermelho";"Patis";746245;7499976;"Patis"
-"PH2";2017;2022;5;23;"Aldeia I";"Igarape";776666;7508209;"Igarape"
+"PH2";2017;2022;5;23;"Aldeia I";"Faz. Igarape";776666;7508209;"Faz. Igarape"
 "BK2";1997;2007;10;22;NA;NA;NA;NA;NA
 "FG2";2013;2016;3;22;NA;NA;NA;NA;NA
-"IG";1998;2022;24;22;"Aldeia I";"Igarape";776529;7508341;"Igarape"
-"KS";1997;2007;10;22;"Aldeia I";"Sao Francisco";775105;7508815;"Sao Francisco Coqueiros"
+"IG";1998;2022;24;22;"Aldeia I";"Faz. Igarape";776529;7508341;"Faz. Igarape"
+"KS";1997;2007;10;22;"Aldeia I";"Faz. Sao Francisco";775105;7508815;"Faz. Sao Francisco"
 "LC1";1994;2007;13;22;NA;NA;NA;NA;NA
 "SID-3";2018;2022;4;22;NA;NA;NA;NA;NA
-"VC";2001;2007;6;22;"Aldeia II";"Vale do Cedro";771959;7503945;"Vale do Cedro VC"
+"VC";2001;2007;6;22;"Aldeia II";"Faz. Vale do Cedro";771959;7503945;"Faz. Vale do Cedro"
 "Z";1990;2007;17;22;NA;NA;NA;NA;NA
-"JR2";1996;2007;11;21;"Aldeia I";"Iguape";774271;7508621;"Iguape"
+"JR2";1996;2007;11;21;"Aldeia I";"Faz. Igarape";774271;7508621;"Faz. Igarape"
 "RL4";1995;2007;12;21;NA;NA;NA;NA;NA
 "RVII";2001;2022;21;21;NA;NA;NA;NA;NA
 "SA";1992;2009;17;21;NA;NA;NA;NA;NA
-"UR2";2019;2022;3;21;"Imbau II";"Fazenda Afetiva";760947;7494613;"Afetiva"
+"UR2";2019;2022;3;21;"Imbau II";"Faz. Afetiva";760947;7494613;"Faz. Afetiva"
 "Ataliba";2019;2022;3;20;"Poco das Antas";"Ataliba";769996;7498197;"Ataliba"
-"DI";2019;2022;3;20;"Aldeia I";"Dois Irmaos";773967;7507949;"Dois Irmaos"
+"DI";2019;2022;3;20;"Aldeia I";"Faz. 2 Irmaos";773967;7507949;"Faz. 2 Irmaos"
 "POR2";2013;2016;3;20;NA;NA;NA;NA;NA
-"RM";2019;2022;3;20;"Imbau I";"Sitio Moria";765895;7497228;"Sitio Moriá"
-"SK3";2019;2022;3;20;"Aldeia I";"Iguape";774386;7508572;"Iguape"
-"ST2";1999;2007;8;20;"Rio Vermelho";"Rio Vermelho";750111;7484283;"Rio Vermelho"
-"DN";2003;2009;6;19;"Rio Vermelho";"Rio Vermelho";751055;7485831;"Rio Vermelho"
+"RM";2019;2022;3;20;"Imbau I";"Sitio Moria";765895;7497228;"Sitio Moria"
+"SK3";2019;2022;3;20;"Aldeia I";"Faz. Igarape";774386;7508572;"Faz. Igarape"
+"ST2";1999;2007;8;20;"Rio Vermelho";"Faz. Rio Vermelho";750111;7484283;"Faz. Rio Vermelho"
+"DN";2003;2009;6;19;"Rio Vermelho";"Faz. Rio Vermelho";751055;7485831;"Faz. Rio Vermelho"
 "MF2/RV";2019;2022;3;19;NA;NA;NA;NA;NA
-"MN";2001;2007;6;19;"Rio Vermelho";"Rio Vermelho";748930;7485146;"Rio Vermelho"
-"WS";1995;2007;12;19;"Aldeia I";"Bom Retiro";778186;7514360;"Bom Retiro"
-"AR";2003;2009;6;18;"Rio Vermelho";"Rio Vermelho";751330;7486141;"Rio Vermelho"
+"MN";2001;2007;6;19;"Rio Vermelho";"Faz. Rio Vermelho";748930;7485146;"Faz. Rio Vermelho"
+"WS";1995;2007;12;19;"Aldeia I";"Faz. Bom Retiro";778186;7514360;"Faz. Bom Retiro"
+"AR";2003;2009;6;18;"Rio Vermelho";"Faz. Rio Vermelho";751330;7486141;"Faz. Rio Vermelho"
 "BC";1990;2006;16;18;NA;NA;NA;NA;NA
-"EM2";2001;2007;6;18;"Rio Vermelho";"Rio Vermelho";748521;7485284;"Rio Vermelho"
-"ET";2001;2007;6;18;"Imbau I";"Estreito";761935;7497135;"Sitio do Professor Estreito"
-"IG2";2003;2022;19;18;"Aldeia I";"Igarape";776133;7508572;"Sio Tertulio"
-"JD2";2001;2007;6;18;"Aldeia I";"Joedi";776174;7508634;"Joedi JD(2)"
+"EM2";2001;2007;6;18;"Rio Vermelho";"Faz. Rio Vermelho";748521;7485284;"Faz. Rio Vermelho"
+"ET";2001;2007;6;18;"Imbau I";"Faz. Estreito";761935;7497135;"Faz. Estreito"
+"IG2";2003;2022;19;18;"Aldeia I";"Faz. Igarape";776133;7508572;"Faz. Igarape"
+"JD2";2001;2007;6;18;"Aldeia I";"Sitio Joedi";776174;7508634;"Sitio Joedi"
 "LB2";2019;2022;3;18;NA;NA;NA;NA;NA
-"LX";2000;2007;7;18;"Rio Vermelho";"Rio Vermelho";750167;7483560;"Rio Vermelho"
-"QL";2019;2022;3;18;"Poco das Antas";"Sitio Quelinho";775772;7506052;"Sitio Quelinho"
-"TR13";2001;2007;6;18;"Rio Vermelho";"Rio Vermelho";748820;7484460;"Rio Vermelho"
+"LX";2000;2007;7;18;"Rio Vermelho";"Faz. Rio Vermelho";750167;7483560;"Faz. Rio Vermelho"
+"QL";2019;2022;3;18;"Poco das Antas";"Poco das Antas";775772;7506052;"Poco das Antas"
+"TR13";2001;2007;6;18;"Rio Vermelho";"Faz. Rio Vermelho";748820;7484460;"Faz. Rio Vermelho"
 "BC2";1990;2006;16;17;NA;NA;NA;NA;NA
-"CB5";2001;2007;6;17;"Rio Vermelho";"Rio Vermelho";751021;7484587;"Rio Vermelho"
+"CB5";2001;2007;6;17;"Rio Vermelho";"Faz. Rio Vermelho";751021;7484587;"Faz. Rio Vermelho"
 "ET2";2001;2007;6;17;NA;NA;NA;NA;NA
 "KN";2020;2022;2;17;NA;NA;NA;NA;NA
-"PF";2001;2007;6;17;"Aldeia II";"Santa Helena";771473;7505772;"Vale do Cedro Santa Helena"
+"PF";2001;2007;6;17;"Aldeia II";"Faz. Sta Helena";771473;7505772;"Faz. Sta Helena"
 "PR2";2001;2007;6;17;NA;NA;NA;NA;NA
 "RT1";1994;2006;12;17;NA;NA;NA;NA;NA
-"AL1";2001;2005;4;16;"Vendaval";"Vendaval";761012;7492463;"Vendaval"
+"AL1";2001;2005;4;16;"Vendaval";"Faz. Vendaval";761012;7492463;"Faz. Vendaval"
 "C.O";2014;2016;2;16;NA;NA;NA;NA;NA
-"JJ";2002;2007;5;16;"Imbau I";"Sete Jotas";763425;7500034;"Pacoti Sete Jotas"
+"JJ";2002;2007;5;16;"Imbau I";"Sitio 7 Jotas";763425;7500034;"Sitio 7 Jotas"
 "MA15";2001;2007;6;16;NA;NA;NA;NA;NA
-"PSG";2003;2022;19;16;"Rio Vermelho";"Rio Vermelho";751256;7485403;"Rio Vermelho"
+"PSG";2003;2022;19;16;"Rio Vermelho";"Faz. Rio Vermelho";751256;7485403;"Faz. Rio Vermelho"
 "RS";2000;2007;7;16;NA;NA;NA;NA;NA
-"TM";2006;2020;14;16;"Imbau I";"Santa Helena II";767827;7498235;"Santa Helena II"
+"TM";2006;2020;14;16;"Imbau I";"Faz. Sta Helena 2";767827;7498235;"Faz. Sta Helena 2"
 "BB";1996;2006;10;15;NA;NA;NA;NA;NA
 "FN";2020;2022;2;15;NA;NA;NA;NA;NA
 "PA2";2002;2014;12;15;NA;NA;NA;NA;NA
-"PV";2001;2007;6;15;NA;"Paiva";778352;7509039;"Paiva"
+"PV";2001;2007;6;15;NA;"Sitio 4 Irmaos";778352;7509039;"Sitio 4 Irmaos"
 "RL2";1995;2006;11;15;NA;NA;NA;NA;NA
-"SL";2002;2007;5;15;"Rio Vermelho";"Rio Vermelho";751779;7486067;"Rio Vermelho"
-"BR";2003;2007;4;14;"Rio Vermelho";"Rio Vermelho";751732;7486119;"Rio Vermelho"
-"FB";2021;2022;1;14;"Imbau III";"Fazenda Nova Esperança";765167;7494788;"Nova Esperança"
+"SL";2002;2007;5;15;"Rio Vermelho";"Faz. Rio Vermelho";751779;7486067;"Faz. Rio Vermelho"
+"BR";2003;2007;4;14;"Rio Vermelho";"Faz. Rio Vermelho";751732;7486119;"Faz. Rio Vermelho"
+"FB";2021;2022;1;14;"Imbau III";"Faz. Nova Esperanca";765167;7494788;"Faz. Nova Esperanca"
 "FPIII";2021;2022;1;14;NA;NA;NA;NA;NA
-"GM2";2021;2022;1;14;"Imbau III";"Fazenda Nova Esperança";764631;7494983;"Nova Esperança"
-"GM3";2021;2022;1;14;"Imbau III";"Fazenda Nova Esperança";764154;7494871;"Nova Esperança"
-"GM4";2021;2022;1;14;"Imbau III";"Fazenda Nova Esperança";763701;7494412;"Nova Esperança"
-"GM5";2021;2022;1;14;"Imbau III";"Fazenda Nova Esperança";763853;7494634;"Nova Esperança"
+"GM2";2021;2022;1;14;"Imbau III";"Faz. Nova Esperanca";764631;7494983;"Faz. Nova Esperanca"
+"GM3";2021;2022;1;14;"Imbau III";"Faz. Nova Esperanca";764154;7494871;"Faz. Nova Esperanca"
+"GM4";2021;2022;1;14;"Imbau III";"Faz. Nova Esperanca";763701;7494412;"Faz. Nova Esperanca"
+"GM5";2021;2022;1;14;"Imbau III";"Faz. Nova Esperanca";763853;7494634;"Faz. Nova Esperanca"
 "IP2";2003;2007;4;14;NA;NA;NA;NA;NA
-"IR";2004;2009;5;14;"Boa Esperanca";"Sao Joao";762256;7490526;"Sao Joao"
+"IR";2004;2009;5;14;"Boa Esperanca";"Faz. Sao Joao";762256;7490526;"Faz. Sao Joao"
 "JA";2021;2022;1;14;NA;NA;NA;NA;NA
-"MB";2003;2007;4;14;"Aldeia I";"Igarape";776475;7508663;"Igarape"
+"MB";2003;2007;4;14;"Aldeia I";"Faz. Igarape";776475;7508663;"Faz. Igarape"
 "MF3";2021;2022;1;14;NA;NA;NA;NA;NA
 "NE";2021;2022;1;14;NA;NA;NA;NA;NA
 "SQII";2021;2022;1;14;NA;NA;NA;NA;NA
 "SSII";2021;2022;1;14;NA;NA;NA;NA;NA
 "XT2";2012;2013;1;14;NA;NA;NA;NA;NA
-"BV";2007;2022;15;13;"Imbau I";"Fazenda Sta Helena 2";766851;7497596;"Santa Helena 2"
-"JG2";2001;2007;6;13;"Imbau II";"Afetiva";760287;7494952;"Afetiva"
+"BV";2007;2022;15;13;"Imbau I";"Faz. Sta Helena 2";766851;7497596;"Faz. Sta Helena 2"
+"JG2";2001;2007;6;13;"Imbau II";"Faz. Afetiva";760287;7494952;"Faz. Afetiva"
 "MM";2003;2007;4;13;NA;NA;NA;NA;NA
-"SI3";2021;2022;1;13;"Imbau I";"Fazenda Tamarins";768089;7498133;"Tamarins"
+"SI3";2021;2022;1;13;"Imbau I";"Faz. Tamarins";768089;7498133;"Faz. Tamarins"
 "TT";2001;2006;5;13;NA;NA;NA;NA;NA
+NA;2015;2018;3;13;NA;NA;NA;NA;NA
 "AS9";2003;2007;4;12;NA;NA;NA;NA;NA
 "BU";1990;2016;26;12;NA;NA;NA;NA;NA
-"GM";2005;2009;4;12;"Imbau III";"Fazenda Nova Esperança";764657;7494788;"Nova Esperança"
+"GM";2005;2009;4;12;"Imbau III";"Faz. Nova Esperanca";764657;7494788;"Faz. Nova Esperanca"
+"JR.1";2021;2022;1;12;NA;NA;NA;NA;NA
+"MF";2006;2015;9;12;"Rio Vermelho";"Faz. Rio Vermelho";748140;7485413;"Faz. Rio Vermelho"
 "MK";2003;2007;4;12;NA;NA;NA;NA;NA
-"POR3";2014;2016;2;12;"Poco das Antas";"PDA";777221;7504889;"PDA"
+"POR3";2014;2016;2;12;"Poco das Antas";"Poco das Antas";777221;7504889;"Poco das Antas"
 "RTII";2009;2022;13;12;NA;NA;NA;NA;NA
 "TM3";2021;2022;1;12;NA;NA;NA;NA;NA
 "AF19";2014;2016;2;11;NA;NA;NA;NA;NA
-"BQ";2004;2007;3;11;"Imbau I";"Cabana Nova Conquista";765538;7501583;"Cabanã Nova Conquista"
-"JQ";2021;2022;1;11;"Rio Vermelho";"Rio Vermelho";750708;7484360;"Rio Vermelho"
-"RI2";2003;2007;4;11;"Aldeia I";"Igarape";776785;7508569;"Igarape"
+"BQ";2004;2007;3;11;"Imbau I";"Faz. Cabana nova Conquista";765538;7501583;"Faz. Cabana nova Conquista"
+"JQ";2021;2022;1;11;"Rio Vermelho";"Faz. Rio Vermelho";750708;7484360;"Faz. Rio Vermelho"
+"RI2";2003;2007;4;11;"Aldeia I";"Faz. Igarape";776785;7508569;"Faz. Igarape"
 "SF";2001;2007;6;11;NA;NA;NA;NA;NA
 "SL2";2003;2005;2;11;NA;NA;NA;NA;NA
 "CH2";2021;2022;1;10;NA;NA;NA;NA;NA
-"GM7";2021;2022;1;10;"Imbau III";"Fazenda Nona Esperança";764127;7494807;"Nova Esperança"
+"GM7";2021;2022;1;10;"Imbau III";"Faz. Nova Esperanca";764127;7494807;"Faz. Nova Esperanca"
 "GM8";2021;2022;1;10;NA;NA;NA;NA;NA
 "OM2";2003;2007;4;10;NA;NA;NA;NA;NA
-"PB";2005;2009;4;10;"Boa Esperanca";"Boa Esperanca";762798;7491860;"Boa Esperanca"
+"PB";2005;2009;4;10;"Boa Esperanca";"Faz. Boa Esperanca";762798;7491860;"Faz. Boa Esperanca"
 "XP";2009;2011;2;10;NA;NA;NA;NA;NA
-"AF8";2007;2011;4;9;"Imbau III";"Boa Esperanca";761195;7494295;"Nova Esperanca AF8"
-"BI";2004;2007;3;9;NA;"Santa Barbara";775874;7507834;"Santa Barbara"
+"AF8";2007;2011;4;9;"Imbau III";"Faz. Boa Esperanca";761195;7494295;"Faz. Boa Esperanca"
+"BI";2004;2007;3;9;NA;"Faz. Sta Barbara";775874;7507834;"Faz. Sta Barbara"
 "DU2";2012;2013;1;8;NA;NA;NA;NA;NA
-"LS";2004;2007;3;8;"Aldeia II";"Santa Helena";772094;7506000;"Vale do Cedro Santa Helena"
-"LS2";2021;2022;1;8;"Aldeia II";"Santa Helena";771839;7506141;"Vale do Cedro Santa Helena"
+"LS";2004;2007;3;8;"Aldeia II";"Faz. Sta Helena";772094;7506000;"Faz. Sta Helena"
+"LS2";2021;2022;1;8;"Aldeia II";"Faz. Sta Helena";771839;7506141;"Faz. Sta Helena"
 "MD";2006;2009;3;8;NA;NA;NA;NA;NA
 "PJ";2004;2007;3;8;NA;NA;NA;NA;NA
 "RM2";2021;2022;1;8;NA;NA;NA;NA;NA
 "BI2";2004;2007;3;7;NA;NA;NA;NA;NA
 "DI2";2021;2022;1;7;NA;NA;NA;NA;NA
-"EUC2";2009;2010;1;7;"Poco das Antas";"Rebio PDA";778279;7506405;"Rebio Poço das Antas"
-"OL2";2005;2009;4;7;"Imbau III";"Boa Esperanca";764227;7494836;"Nova Esperanca OL2"
+"EUC2";2009;2010;1;7;"Poco das Antas";"Poco das Antas";778279;7506405;"Poco das Antas"
+"OL2";2005;2009;4;7;"Imbau III";"Faz. Boa Esperanca";764227;7494836;"Faz. Boa Esperanca"
 "SH2";2004;2007;3;7;NA;NA;NA;NA;NA
 "E21";2005;2007;2;6;NA;NA;NA;NA;NA
 "GM9";2021;2022;1;6;NA;NA;NA;NA;NA
-"LD";2011;2011;0;6;"Pirineus";"Sitio Boa Vista";753829;7511316;"Sitio Boa Vista"
-"PB2";2006;2009;3;6;"Boa Esperanca";"Boa Esperanca";763122;7492399;"Boa Esperanca PB2"
+"LD";2011;2011;0;6;"Pirineus";"Pirineus";753829;7511316;"Pirineus"
+"PB2";2006;2009;3;6;"Boa Esperanca";"Faz. Boa Esperanca";763122;7492399;"Faz. Boa Esperanca"
 "Sta Fe";2007;2009;2;6;NA;NA;NA;NA;NA
 "BB2";2004;2006;2;5;NA;NA;NA;NA;NA
 "GM10";2022;2022;0;5;NA;NA;NA;NA;NA
@@ -182,8 +183,8 @@
 "PF2";2004;2007;3;5;NA;NA;NA;NA;NA
 "SS3";2022;2022;0;5;NA;NA;NA;NA;NA
 "CLA2";2005;2007;2;4;NA;NA;NA;NA;NA
-"EL";2007;2009;2;4;"Imbau I";"Eliel";761336;7496899;"Sitio do Professor Estreito"
-"FA22";2018;2019;1;4;"Imbau III";"Fazenda Nova Esperança";764129;7494838;"Nova Esperança"
+"EL";2007;2009;2;4;"Imbau I";"St. do Eliel";761336;7496899;"St. do Eliel"
+"FA22";2018;2019;1;4;"Imbau III";"Faz. Nova Esperanca";764129;7494838;"Faz. Nova Esperanca"
 "Foo";2013;2013;0;4;NA;NA;NA;NA;NA
 "Fusao";2009;2009;0;4;NA;NA;NA;NA;NA
 "Jaguar";2007;2009;2;4;NA;NA;NA;NA;NA
@@ -193,7 +194,7 @@
 "AT2";2004;2005;1;3;NA;NA;NA;NA;NA
 "FA12";2016;2016;0;3;NA;NA;NA;NA;NA
 "FN2";2022;2022;0;3;NA;NA;NA;NA;NA
-"GN";2017;2019;2;3;"Poco das Antas";"PDA";777313;7505844;"PDA"
+"GN";2017;2019;2;3;"Poco das Antas";"Poco das Antas";777313;7505844;"Poco das Antas"
 "LB3";2022;2022;0;3;NA;NA;NA;NA;NA
 "LB9";2022;2022;0;3;NA;NA;NA;NA;NA
 "MB2";2007;2007;0;3;NA;NA;NA;NA;NA
@@ -211,7 +212,7 @@
 "TR12";2001;2001;0;2;NA;NA;NA;NA;NA
 "TRII";2009;2009;0;2;NA;NA;NA;NA;NA
 "AXII";2006;2006;0;1;NA;NA;NA;NA;NA
-"CB";1998;1998;0;1;"Aldeia I";"Coqueiros";777446;7509902;"Sao Francisco Coqueiros"
+"CB";1998;1998;0;1;"Aldeia I";"Faz. Coqueiros";777446;7509902;"Faz. Coqueiros"
 "CB6";2000;2000;0;1;NA;NA;NA;NA;NA
 "IG2.2";2022;2022;0;1;NA;NA;NA;NA;NA
 "JM";2022;2022;0;1;NA;NA;NA;NA;NA
@@ -227,4 +228,3 @@
 "ZM";2022;2022;0;1;NA;NA;NA;NA;NA
 "ZN";2022;2022;0;1;NA;NA;NA;NA;NA
 "soz.";1998;1998;0;1;NA;NA;NA;NA;NA
-NA;2018;2018;0;1;NA;NA;NA;NA;NA

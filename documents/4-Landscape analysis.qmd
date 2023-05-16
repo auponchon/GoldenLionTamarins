@@ -13,23 +13,25 @@ library(here)
 library(raster)
 library(tidyverse)
 library(sf)
-library(landscapemetrics)
+library(landscapemetrics) #package specific to landscape analysis
 source(here::here("R","progress_bar.R"))
 source(here::here("R","create_raster.R"))
 source(here::here("R","merge_ummp.R"))
 #import landscape files
 
-#land cover for each each
+#raster land cover for each year obtained from BioMAPS
 rast<-list.files(here::here("data","RawData","Landscape","Rasters land cover"),
                  full.names=T)
-#single forest patches
+
+#forest patches from shapefile
 land<-sf::read_sf(here::here("data","RawData","Landscape","Shapefiles Landscape AMLD", 
                              "SIG-EDUC Redescobrindo 2021 - Fragmentos de Vegetação.shp"))
 
 
-#conservation units (patches)
-ummp<-return_complete_ummp()
+#conservation units (UMMPs)
+ummp<-return_complete_ummp() #add vendaval and boa esperanza which are missing in shapefile
   
+#remove accents in names
 ummp$UMMPs<-plyr::revalue(ummp$UMMPs, c("Imbaú I" = "Imbau I",
                          "Imbaú II" = "Imbau II",
                          "Imbaú III" = "Imbau III",
@@ -37,6 +39,7 @@ ummp$UMMPs<-plyr::revalue(ummp$UMMPs, c("Imbaú I" = "Imbau I",
                          "União I" = "Uniao I",
                          "União II" = "Uniao II"))
 
+#get locations of groups and set them as shape layer
 loc<-read.table(here::here("data","rawData","Landscape","RegionsName.csv"),
                 header=T,sep=";") %>% 
   dplyr::rename(Long=CENTROIDE.X.UTM.SAD69.23S,
@@ -47,14 +50,14 @@ loc<-read.table(here::here("data","rawData","Landscape","RegionsName.csv"),
   sf::st_as_sf(., coords = c("Long","Lat")) %>% 
   sf::st_set_crs(31983)
 
-#etxent of study area in geographic coordinates
+#extent of study area in geographic coordinates
 extreg<-extent(-42.7,-41.9,-22.9,-22.3)
 size<-NULL
-
 
 #projection for Brazil
 proj<-"+proj=utm +zone=23 +south +ellps=GRS80 +towgs84=0,0,0,0,0,0,0 +units=m +no_defs +type=crs"
 
+#get all annual land cover in the same raster stack
  #coverStack<-purrr::map(rast,create_raster_stack,.progress=T)
  #save(coverStack, file=here::here("data","NewlyCreatedData","Cover_rasters.RData"))
 
@@ -63,7 +66,7 @@ proj<-"+proj=utm +zone=23 +south +ellps=GRS80 +towgs84=0,0,0,0,0,0,0 +units=m +n
 #create an initial raster for size area
 rastsize<-create_raster_stack(rast[1])
 
-#create an initial raster for patches
+#create an initial raster for patches identified with package landscapemetrics
 patches<-create_raster_stack(rast[1])
 
 #create an initial raster for patch perimeter
@@ -72,43 +75,45 @@ rastperim<-create_raster_stack(rast[1])
 #create an initial raster for patch shape
 rastshape<-create_raster_stack(rast[1])
 
-
+#loop trhough each annual land cover
 for (i in 1:length(rast)){
 # i<-2
 
 #get land cover
 cover1<-create_raster_stack(rast[i])
 
-
-#assign habitat types
 setTxtProgressBar(progress_bar(length(rast)),i)  
 
+#assign habitat types
 #check_landscape(rast1)
 #show_patches(rast1,class="all")
+
+#get a raster with patch id 
 zz<- get_patches(cover1,class=1)
 zzz<-zz$layer_1$class_1
 names(zzz)<-paste("Patches",parse_number(rast[i]),sep="")
 patches<-stack(zzz,patches)
 
 
-#SIZE AREA
+#get a raster for SIZE AREA
 xx<-spatialize_lsm(cover1, what = "lsm_p_area")
 rr<-xx$layer_1$lsm_p_area
 names(rr)<-paste("Area",parse_number(rast[i]),sep="")
  rastsize<-stack(rr,rastsize)
  
- #PERIMETER
+# get a raster for PERIMETER
 pp<-spatialize_lsm(cover1, what = "lsm_p_perim")
 pp<-pp$layer_1$lsm_p_perim
 names(pp)<-paste("Perimetre",parse_number(rast[i]),sep="")
  rastperim<-stack(pp,rastperim)
 
-#SHAPE
+#get a raster for  SHAPE
 sh<-spatialize_lsm(cover1, what = "lsm_p_shape")
 sh<-sh$layer_1$lsm_p_shape
 names(sh)<-paste("Shape",parse_number(rast[i]),sep="")
  rastshape<-stack(sh,rastshape)
  
+ #extract all possible variable that can be calculated by landscapemetric
 # yy<-extract_lsm(cover1,loc)  %>% 
 #    dplyr:: mutate(Year=paste("cover",readr::parse_number(rast[i]),sep=""))
   # size<-rbind(size,yy)
@@ -158,28 +163,30 @@ group.reg<-data.clean %>%
   ungroup() %>% 
   distinct_at(vars(Year,Group,UMMPs), keep_all=F)
 
-
 reg<-sort(unique(group.reg$UMMPs))
 
 totsizearea<-NULL
 totshape<-NULL
 totperim<-NULL
 
+#loop trhough each UMMP region
 for (p in 1:length(reg)){
   
   setTxtProgressBar(progress_bar(length(reg)),p)  
-#example for 1 specific region (crop on cover)
+
 pda<- ummp %>% 
    dplyr::filter(UMMPs==reg[p])
 
+#crop landscape to given UMMP
 habitatcrop<- purrr::map(coverStack,crop,pda)
 habcropstack<-stack(habitatcrop)
 
-
+#crop all rasters to region
 sizecrop<-crop(rastsize,pda)
 perimcrop<-crop(rastperim,pda)
 shapecrop<-crop(rastshape,pda)
 
+#extract habitat code for each group location
 habarea<-terra::extract(habcropstack,loc) %>% 
   as.data.frame(.) %>% 
    cbind(loc) %>% 
@@ -198,7 +205,7 @@ habarea<-terra::extract(habcropstack,loc) %>%
   drop_na() %>% 
   distinct()
 
-
+#extract patch size for each group location
 sizearea<-terra::extract(sizecrop,loc) %>% 
   as.data.frame(.) %>% 
    cbind(loc) %>% 

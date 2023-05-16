@@ -211,6 +211,7 @@ c("2 Irmãos" =	"Faz. 2 Irmaos",
                     data$Group=="JD2")] <- "Sitio Joedi"
 
   data$Region[which(data$Group=="JQ")] <- "Poco das Antas"  
+  data$Region[which(data$Group=="Ataliba")] <- "Ataliba"  
   
   data$Group[which(data$GLT=="PT3" & data$Year==2004)]<-NA
   data$Group[which(data$Group=="AL" & data$Year<2007)]<-"AL1"
