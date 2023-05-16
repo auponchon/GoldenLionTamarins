@@ -66,7 +66,7 @@ loc_grp <- read_delim("data/NewlyCreatedData/Nb_obs_gp.csv", delim=";", show_col
 ## Update typing errors
 data.clean = data.clean %>% 
   dplyr::mutate(SexOK = ifelse(Sex == "m", "M",
-                        ifelse(Sex == "M0" | Sex == "nonID" | Sex == "S", NA,
+                        ifelse(Sex == "M0" | Sex == "nonID" | Sex == "S" | Sex == "NA", NA,
                                Sex)))
 
 ## Correct sex errors
@@ -585,7 +585,7 @@ idade.checks = n %>%
   dplyr::select(rowid, GLT, Tattoo, Group, DateObs, ObsOrder, Weight, Birth_VR, Birth_mov, BirthOK, Idade, IdadeOK) %>% 
   dplyr::left_join(idade.checks) %>%
   dplyr::arrange(GLT, ObsOrder) %>% 
-  dplyr::filter(GLT!="?" & GLT!="IN" & GLT!="T0") %>% 
+  dplyr::filter(GLT!="?" & GLT!="IN" & GLT!="T0" & GLT!="FT") %>% 
   dplyr::filter(error_type!="Diff_Idade")
 # write.xlsx(idade.checks, "D:/monas/Git/repo/glt/GoldenLionTamarins/data/NewlyCreatedData/Checks/idade_checks_v2.xlsx", row.names=FALSE)
 
@@ -604,14 +604,6 @@ setDT(n)[corrections, "IdadeOK" := .(IdadeCorrect), on = "rowid"] # Correct the 
 idade.checks = idade.checks %>%
   subset(!(GLT %in% corrections$GLT))
 
-# Check remaining NAs
-sub = data.clean %>% 
-  dplyr::filter(GLT!="?" & GLT!="IN" & GLT!="FT" & GLT!="T0") %>% 
-  dplyr::group_by(GLT) %>% 
-  dplyr::filter(any(is.na(IdadeOK) & any(!is.na(IdadeOK)))) %>% 
-  dplyr::select(c(rowid,GLT,DateObs,ObsOrder,Birth_VR,Birth_mov,BirthOK,Weight,Idade,IdadeOK)) %>% 
-  as.data.table()
-# write.xlsx(sub, "D:/monas/Git/repo/glt/GoldenLionTamarins/data/NewlyCreatedData/Checks/idade_checks_v4_NA.xlsx", row.names=FALSE)
 
 
 ## Jointure
@@ -634,10 +626,19 @@ load("D:/monas/Git/repo/glt/GoldenLionTamarins/data/NewlyCreatedData/data_clean_
 sub = data_clean_v2 %>% 
   dplyr::group_by(Group) %>% 
   dplyr::filter(!is.na(Group)) %>%
-  dplyr::mutate(Monit_Years = diff(range(Year))) %>% 
-  dplyr::mutate(Monit_1stYear = min(Year), 
-         Monit_LastYear = max(Year)) %>%
-  dplyr::mutate(Monit_Period = paste0(unique(c(Monit_1stYear, Monit_LastYear)), collapse = '-')) %>%
+  dplyr::mutate(Monit_Years_grp = diff(range(Year))) %>% 
+  dplyr::mutate(Monit_1stYear_grp = min(Year), 
+         Monit_LastYear_grp = max(Year)) %>%
+  dplyr::mutate(Monit_Period_grp = paste0(unique(c(Monit_1stYear_grp, Monit_LastYear_grp)), collapse = '-')) %>%
+  ungroup() %>% 
+  as.data.frame()
+sub = sub %>% 
+  dplyr::group_by(UMMPs) %>% 
+  dplyr::filter(!is.na(UMMPs)) %>%
+  dplyr::mutate(Monit_Years_frag = diff(range(Year))) %>% 
+  dplyr::mutate(Monit_1stYear_frag = min(Year), 
+                Monit_LastYear_frag = max(Year)) %>%
+  dplyr::mutate(Monit_Period_frag = paste0(unique(c(Monit_1stYear_frag, Monit_LastYear_frag)), collapse = '-')) %>%
   ungroup() %>% 
   as.data.frame()
 
@@ -647,72 +648,36 @@ sub %>%
   dplyr::summarise_at(c("UMMPs","Group","GLT"), n_distinct, na.rm = TRUE)
 # By period
 sub %>%
-  dplyr::filter(Monit_1stYear < 2002 & Monit_LastYear > 2018) %>% 
+  dplyr::filter(any(Monit_1stYear_frag < 2002 & Monit_LastYear_frag > 2018)) %>% 
+  #dplyr::filter(Monit_1stYear_frag < 2002 & Monit_LastYear_frag > 2018) %>% 
   dplyr::filter(!is.na(UMMPs)) %>% 
   dplyr::summarise_at(c("UMMPs","Group","GLT"), n_distinct, na.rm = TRUE)
 sub %>% 
-  dplyr::filter(any(Monit_1stYear < 2002) & any(Monit_LastYear > 2018)) %>%
-  dplyr::filter(!is.na(UMMPs)) %>% 
-  dplyr::summarise_at(c("UMMPs","Group","GLT"), n_distinct, na.rm = TRUE)
-sub %>% 
-  dplyr::group_by(Monit_Period) %>% 
+  dplyr::group_by(Monit_Period_frag) %>% 
   dplyr::summarise(n_frag=n_distinct(UMMPs),
                    n_grp=n_distinct(Group),
                    n_GLT=n_distinct(GLT)) %>% 
   print(n=100)
-# By NAs
-sub %>% 
-  dplyr::group_by(Monit_Period, Group, GLT) %>% 
-  dplyr::summarise(na=sum(is.na(IdadeOK)), not_na=sum(!is.na(IdadeOK))) # Empty cells
-stat = sub %>% 
-  #dplyr::filter(Monit_1stYear < 2002 & Monit_LastYear > 2018) %>%
-  dplyr::filter(any(Monit_1stYear < 2002) & any(Monit_LastYear > 2018)) %>%
-  dplyr::group_by(UMMPs) %>% 
-  dplyr::filter(!is.na(UMMPs)) %>% 
-  dplyr::summarise(n=n(),
-                   n_grp = n_distinct(Group), 
-                   tot_GLT = n_distinct(GLT),
-                   not_NA_GLT=n_distinct(GLT[all(!is.na(IdadeOK) & !is.na(SexOK))]),
-                   any_NA_GLT=n_distinct(GLT[any(is.na(IdadeOK) | is.na(SexOK))]),
-                   all_NA_GLT=n_distinct(GLT[all(is.na(IdadeOK) & is.na(SexOK))]),
-                   prop_na=any_NA_GLT*100/tot_GLT)
-stat = sub %>% 
-  #dplyr::filter(Monit_1stYear < 2002 & Monit_LastYear > 2018) %>%
-  dplyr::filter(any(Monit_1stYear < 2002) & any(Monit_LastYear > 2018)) %>%
-  dplyr::group_by(UMMPs,Group) %>% 
-  dplyr::filter(!is.na(UMMPs)) %>% 
-  dplyr::summarise(n=n(),
-                   tot_GLT = n_distinct(GLT),
-                   not_NA_GLT=n_distinct(GLT[all(!is.na(IdadeOK) & !is.na(SexOK))]),
-                   any_NA_GLT=n_distinct(GLT[any(is.na(IdadeOK) | is.na(SexOK))]),
-                   all_NA_GLT=n_distinct(GLT[all(is.na(IdadeOK) & is.na(SexOK))]),
-                   prop_na=any_NA_GLT*100/tot_GLT) %>% 
-  ungroup()
-stat %>% 
-  dplyr::summarise(n_na_grp = length(Group[prop_na==100]),
-                   n_na_glt = sum(any_NA_GLT),
-                   exhaustive_grp = length(Group[prop_na==0]),
-                   exhaustive_glt = sum(not_NA_GLT))
 
 # Groups within fragments monitored the same amount of time
 sub %>% 
   dplyr::filter(!is.na(UMMPs)) %>% 
   dplyr::group_by(UMMPs) %>% 
   dplyr::summarise(n_grp = n_distinct(Group), 
-                   n_grp_1stDate = n_distinct(Group[Monit_1stYear <= 2005 ]),
-                   n_grp_LastDate = n_distinct(Group[Monit_LastYear >= 2019 ]))
+                   n_grp_1stDate = n_distinct(Group[Monit_1stYear_grp < 2002 ]),
+                   n_grp_LastDate = n_distinct(Group[Monit_LastYear_grp > 2018 ]))
 
 
 
 # Plot monitored periods
 # By fragment
-g <- sub[order(sub$Monit_1stYear,sub$UMMPs),]
+g <- sub[order(sub$Monit_1stYear_frag,sub$UMMPs),]
 g$UMMPs <- factor(g$UMMPs, levels=unique(g$UMMPs))
 g = g %>% dplyr::filter(!is.na(UMMPs))
-ggplot(g, aes(x = Monit_1stYear, y = UMMPs)) +
-  geom_segment(aes(xend = Monit_LastYear, yend = UMMPs), colour = "orange") +
+ggplot(g, aes(x = Monit_1stYear_frag, y = UMMPs)) +
+  geom_segment(aes(xend = Monit_LastYear_frag, yend = UMMPs), colour = "orange") +
   geom_point(size = 2, colour="darkorange") +
-  geom_point(aes(x = Monit_LastYear), size = 2, colour="darkorange") +
+  geom_point(aes(x = Monit_LastYear_frag), size = 2, colour="darkorange") +
   theme_bw() +
   theme(legend.position = "none",
         text = element_text(size=10))
@@ -720,15 +685,15 @@ ggplot(g, aes(x = Monit_1stYear, y = UMMPs)) +
 # Work on a subset (a number of fragments)
 sub_frag = sub %>% 
   dplyr::group_by(UMMPs) %>% 
-  dplyr::arrange(UMMPs, Monit_1stYear) %>% 
+  dplyr::arrange(UMMPs, Monit_1stYear_grp) %>% 
   group_split() # Split the dataset by UMMPs
 g = ldply(sub_frag[c(1:2)], data.frame) 
-g <- g[order(g$Monit_1stYear,g$Group),]
+g <- g[order(g$Monit_1stYear_grp,g$Group),]
 g$Group <- factor(g$Group, levels=unique(g$Group))
-ggplot(g, aes(x = Monit_1stYear, y = Group)) +
-  geom_segment(aes(xend = Monit_LastYear, yend = Group), colour = "orange") +
+ggplot(g, aes(x = Monit_1stYear_grp, y = Group)) +
+  geom_segment(aes(xend = Monit_LastYear_grp, yend = Group), colour = "orange") +
   geom_point(size = 2, colour="darkorange") +
-  geom_point(aes(x = Monit_LastYear), size = 2, colour="darkorange") +
+  geom_point(aes(x = Monit_LastYear_grp), size = 2, colour="darkorange") +
   theme_bw() +
   theme(legend.position = "none") +
   facet_grid(UMMPs ~ ., scales = "free_y", space = "free_y", switch = "y") +
@@ -736,12 +701,12 @@ ggplot(g, aes(x = Monit_1stYear, y = Group)) +
 # Work on a subset (named fragments)
 g = sub %>% 
   dplyr::filter(UMMPs == "Aldeia I" | UMMPs =="Aldeia II")
-g <- g[order(g$Monit_1stYear,g$Group),]
+g <- g[order(g$Monit_1stYear_grp,g$Group),]
 g$Group <- factor(g$Group, levels=unique(g$Group))
-ggplot(g, aes(x = Monit_1stYear, y = Group)) +
-  geom_segment(aes(xend = Monit_LastYear, yend = Group), colour = "orange") +
+ggplot(g, aes(x = Monit_1stYear_grp, y = Group)) +
+  geom_segment(aes(xend = Monit_LastYear_grp, yend = Group), colour = "orange") +
   geom_point(size = 2, colour="darkorange") +
-  geom_point(aes(x = Monit_LastYear), size = 2, colour="darkorange") +
+  geom_point(aes(x = Monit_LastYear_grp), size = 2, colour="darkorange") +
   theme_bw() +
   theme(legend.position = "none") +
   facet_grid(UMMPs ~ ., scales = "free_y", space = "free_y", switch = "y") +
@@ -749,20 +714,36 @@ ggplot(g, aes(x = Monit_1stYear, y = Group)) +
 
 
 # Subset the sample for demographic analysis
-analysis.data = sub %>% 
-  dplyr::filter(!is.na(UMMPs)) %>% 
-  dplyr::group_by(UMMPs, Group, Monit_Period, Monit_1stYear, Monit_LastYear) %>% 
-  dplyr::summarise(tot_GLT = n_distinct(GLT),
-                   not_na_GLT=n_distinct(GLT[all(!is.na(IdadeOK) & !is.na(SexOK))]),
-                   na_GLT=n_distinct(GLT[any(is.na(IdadeOK) | is.na(SexOK))]),
-                   not_na_rows = sum(!is.na(IdadeOK)), 
-                   na_rows = sum(is.na(IdadeOK))) %>% 
-  dplyr::mutate(grp_with_no_na = ifelse(na_GLT == tot_GLT, 0, 1)) %>% 
-  ungroup()
-analysis.data = analysis.data %>% 
+# Doc if_any et if_all : https://stackoverflow.com/questions/70216129/filter-rows-by-groups-where-all-values-are-na
+grp = sub %>% 
+  dplyr::filter(!is.na(UMMPs)) %>%
+  dplyr::filter(!is.na(Group)) %>% 
   dplyr::group_by(UMMPs) %>% 
-  dplyr::filter(any(Monit_1stYear < 2000) & any(Monit_LastYear > 2018)) %>% 
+  dplyr::filter(any(Monit_1stYear_frag < 2002) & any(Monit_LastYear_frag > 2018)) %>% 
   ungroup() %>% 
   as.data.table()
-colSums(analysis.data[,6:11])
+grp %>% 
+  dplyr::summarise(n=n(),
+                   n_frag=n_distinct(UMMPs),
+                   n_grp = n_distinct(Group), 
+                   tot_GLT = n_distinct(GLT))
+grp %>% 
+  dplyr::group_by(Group) %>% 
+  dplyr::summarise(tot_GLT = n_distinct(GLT),
+                   na_GLT = n_distinct(GLT[any(is.na(SexOK) | is.na(IdadeOK))])) %>% 
+  print(n=100)
+grp = grp %>% 
+  dplyr::filter(GLT!="?" & GLT!="IN" & GLT!="T0" & GLT!="FT") %>% 
+  dplyr::group_by(Group) %>% 
+  dplyr::filter(!any(is.na(SexOK)) & !any(is.na(IdadeOK))) %>% 
+  ungroup() %>% 
+  distinct(Group) %>% 
+  pull()
 
+# Subset the groups for data analysis
+analysis.data = sub %>% 
+  subset(Group %in% grp)
+analysis.data %>% 
+  dplyr::group_by(UMMPs, Monit_Period_frag) %>% 
+  dplyr::summarise(n_grp = n_distinct(Group), 
+                   tot_GLT = n_distinct(GLT))
