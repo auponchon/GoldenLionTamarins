@@ -235,7 +235,23 @@ V. Regarder les GLT qui n'ont ni Idade ni BirthDate
 
 VI. ANALYSE STATISTIQUE
 
-*** Jeu de données : groupes suivis au moins 6 ans car cela correspond à 3 générations (d'après Strier & Mendes, 2009)
+Statistiques élémentaires :
+*** SUR TOUS LES GROUPES
+12 UMMPs, 225 groupes
+Période : 1989-2022. Suivi de 1 à 33 années. Fréquence des visites : de 1 à 95 (mean = 20.98, median = 15.0). La fréquence moyenne de visite va de 0.4 visites à 7 visites/an; en moyenne, les groupes ont été visités 3.0 fois/an sur la période 
 
-1) Taille du groupe
-N=9 MU, 72 groupes, 1427 GLT
+*** SUR LES GROUPES SUIVIS AU MOINS 6 ANS (ie 3 générations; d'après Strier & Mendes, 2009)
+105 groupes. 
+Période 1989-2022. Fréquence des visites : de 11 à 95 (mean = 13.72, median 13.0). La fréquence moyenne de visite va de 0.4 visites à 6 visites/an; en moyenne, les groupes ont été visités 2.76 fois/an sur la période. 
+
+1) TAILLE DU GROUPE
+Données : groupes suivis sur une période 6 ans minimum.
+N = 105 groupes, soit 1648 GTL connus.
+Sur toute la période, taille de groupe varie de 1 à 31 (sur une année), moyenne = 7.6 (mediane = 7.0).
+Sur toute la période, taux de croissance annuel (calculé d'une année à l'autre sans considération de saison) varie de 0.08 à 10.0, moyenne = 1.21 (médiane = 1.0). 
+Sur toute la période, taux de croissance annuel (calculé d'une année à l'autre d'une saison sèche à sèche) (cf Dias et al. 2015) varie de 0.08 à 14.0, moyenne = 1.6 (médiane = 1.0).
+
+
+A FAIRE = 
+1) Recalculer les statistiques en retirant les données de capture
+2) Créer une variable GLT_Year qui couvre une année allant de Juillet à Juin
