@@ -239,14 +239,12 @@ VI. ANALYSE STATISTIQUE
 - GLT_Year = année (12 mois) d'une saison sèche à une autre (cf Dias et al. 2015). Mois de référence = mois où les groupes sont les plus stables (pas de naissance, pas d'immigration/émigration) (cf Dietz et al. 1994; Romano et al. 2018) = JUILLET
 - Exemple : toute date strictement avant Juillet 1989 = 1988, et toute date dès Juillet et jusqu'à Juin de l'année suivante = 1989
 - On ne garde que les données des fichiers d'observation
-- On ne garde que les groupes suivis au moins 6 ans (ie 3 générations; d'après Strier & Mendes, 2009)
-
-Données = groupes suivis sur une période 6 ans minimum.
+- On ne garde que les groupes suivis au moins 6 ans (à partir de l'année GLT) (ie 3 générations; d'après Strier & Mendes, 2009)
 
 
 Statistiques élémentaires :
-101 groupes, soit 1434 GLT connus.
-Période 2001-2022. Fréquence des visites : de 11 à 89 (mean = 29.33, median 20.00). La fréquence moyenne de visite va de 0.750 visites à 6.5 visites/an; en moyenne, les groupes ont été visités 2.832 fois/an sur la période. 
+102 groupes, soit 1445 GLT connus.
+Période 2001-2022. Fréquence des visites : de 9 à 89 (mean = 29.13, median 19.00). La fréquence moyenne de visite va de 0.706 visites à 5.7 visites/an; en moyenne, les groupes ont été visités 2.87 fois/an sur la période. 
 
 1) TAILLE DU GROUPE
 Sur toute la période, sur une année GLT (juillet-juin) : taille de groupe varie de 1 à 29, moyenne = 8.3 (mediane = 8.0).

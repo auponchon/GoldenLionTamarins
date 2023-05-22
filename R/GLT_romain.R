@@ -6,7 +6,8 @@
 load.lib = c("dplyr","tibble", "data.table",
              "tidyr", "xlsx", "zoo", "readxl",
              "readr", "ggplot2", "lubridate",
-             "plyr", "tidyverse")
+             "plyr", "tidyverse", "changepoint",
+             "strucchange")
 sapply(load.lib,require,character=TRUE)
 
 ##### Data
@@ -651,17 +652,17 @@ sub = data_clean_v2 %>%
   dplyr::filter(File == "Obs") %>% 
   dplyr::group_by(Group) %>% 
   dplyr::filter(!is.na(Group)) %>%
-  dplyr::mutate(Monit_Years_grp = diff(range(Year))+1) %>% 
-  dplyr::mutate(Monit_1stYear_grp = min(Year), 
-                Monit_LastYear_grp = max(Year)) %>%
+  dplyr::mutate(Monit_Years_grp = diff(range(GLT_Year1))+1) %>% 
+  dplyr::mutate(Monit_1stYear_grp = min(GLT_Year1), 
+                Monit_LastYear_grp = max(GLT_Year1)) %>%
   dplyr::mutate(Monit_Period_grp = paste0(unique(c(Monit_1stYear_grp, Monit_LastYear_grp)), collapse = '-')) %>%
   ungroup() %>% 
   as.data.table()
 sub = sub %>% 
   dplyr::group_by(UMMPs) %>% 
-  dplyr::mutate(Monit_Years_frag = diff(range(Year))+1) %>% 
-  dplyr::mutate(Monit_1stYear_frag = min(Year), 
-                Monit_LastYear_frag = max(Year)) %>%
+  dplyr::mutate(Monit_Years_frag = diff(range(GLT_Year1))+1) %>% 
+  dplyr::mutate(Monit_1stYear_frag = min(GLT_Year1), 
+                Monit_LastYear_frag = max(GLT_Year1)) %>%
   dplyr::mutate(Monit_Period_frag = paste0(unique(c(Monit_1stYear_frag, Monit_LastYear_frag)), collapse = '-')) %>%
   ungroup() %>% 
   as.data.table()
@@ -674,10 +675,10 @@ sub = sub %>%
 
 ## STATISTICAL SUMMARY
 sub %>% 
-  dplyr::select(Year, Monit_Years_grp) %>% 
+  dplyr::select(GLT_Year1, Monit_Years_grp) %>% 
   summary()
 sub %>% 
-  dplyr::summarise_at(c("UMMPs","Fragment.Region","Group"), n_distinct, na.rm = TRUE)
+  dplyr::summarise_at(c("UMMPs","Fragment.Region","Group","GLT"), n_distinct, na.rm = TRUE)
 visites_grp = sub %>% 
   dplyr::group_by(Group,Monit_Years_grp) %>% 
   dplyr::summarise(n_visites=n_distinct(DateObs),
@@ -687,8 +688,8 @@ visites_grp %>%
   summary()
 # By period
 sub %>%
-  dplyr::filter(any(Monit_1stYear_frag < 2002 & Monit_LastYear_frag > 2018)) %>% 
-  #dplyr::filter(Monit_1stYear_frag < 2002 & Monit_LastYear_frag > 2018) %>% 
+  dplyr::filter(any(Monit_1stYear_grp < 2002 & Monit_LastYear_grp > 2018)) %>% 
+  #dplyr::filter(Monit_1stYear_grp < 2002 & Monit_LastYear_grp > 2018) %>% 
   dplyr::filter(!is.na(UMMPs)) %>% 
   dplyr::summarise_at(c("UMMPs","Group","GLT"), n_distinct, na.rm = TRUE)
 sub %>% 
@@ -762,7 +763,7 @@ ggplot(g, aes(x = Monit_1stYear_grp, y = Group)) +
   theme(strip.placement = "outside")
 
 
-# Subset the sample for demographic analysis
+### Subset the sample for demographic analysis
 sub %>% 
   dplyr::filter(GLT!="?" & GLT!="IN" & GLT!="T0" & GLT!="FT") %>% 
   dplyr::summarise(n=n(),
@@ -773,12 +774,12 @@ sub %>%
 ## Group size
 # Statistical summary
 GS_year = sub %>% 
-  dplyr::group_by(Group,GLT_Year1) %>% 
+  dplyr::group_by(UMMPs,Group,GLT_Year1) %>% 
   dplyr::summarise(Year_grp_size = n_distinct(GLT)) %>% 
   dplyr::mutate(Year_growth_rate = Year_grp_size/lag(Year_grp_size)) %>% 
   ungroup()
 GS_season = sub %>%
-  dplyr::group_by(Group,GLT_Year1,season) %>% 
+  dplyr::group_by(UMMPs,Group,GLT_Year1,season) %>% 
   dplyr::arrange(Group,GLT_Year1,season) %>% 
   dplyr::summarise(Season_grp_size = n_distinct(GLT)) %>% 
   ungroup()
@@ -787,17 +788,66 @@ GS %>%
   summary()
 with(GS, tapply(Season_grp_size, season, function(x) { c(min(x), max(x), mean(x), sd(x) )} ))
 
+# Growth rate table
 growth_rate = GS_year %>% 
   dplyr::select(Group,GLT_Year1,Year_growth_rate) %>% 
   dplyr::arrange(GLT_Year1) %>% 
   pivot_wider(names_from = GLT_Year1, values_from = Year_growth_rate)
+
+# Plot growth rate
+mean_grp_size_overall = GS_year %>% 
+  dplyr::group_by(GLT_Year1) %>%
+  dplyr::summarise(mean_ind_grp = mean(Year_grp_size)) %>% 
+  ungroup() %>% 
+  as.data.frame()
+mean_grp_size_overall <- ts(mean_grp_size_overall$mean_ind_grp, start = 2001)
+plot.ts(mean_grp_size_overall, type= "b", main = "Mean group size over time", xlab = "Years", ylab = "Mean number of individuals")
+# Plot growth rate by group
 ggplot(GS_year,aes(x = GLT_Year1, y = Year_grp_size)) + 
   geom_point(aes(color=Group)) +
-  geom_line(data=GS[!is.na(GS$Year_grp_size),], aes(color=Group)) +
-  theme(legend.position = "none")
+  geom_line(data=GS[!is.na(GS$Year_grp_size),]) +
+  theme(legend.position = "none") +
+  facet_wrap(~Group)
+# Plot growth rate by group by fragment
+ggplot(GS_year,aes(x = GLT_Year1, y = Year_grp_size)) + 
+  geom_point(aes(color=Group)) +
+  geom_line(data=GS[!is.na(GS$Year_grp_size),],aes(color=Group)) +
+  theme(legend.position = "none") +
+  facet_wrap(~UMMPs)
 
 
-#® Composition
+# If you want to supply the parameters to grid.arrange
+do.call(grid.arrange, c(out, ncol=3))
+## Statistical test
+# Change point analysis
+# CF https://kevin-kotze.gitlab.io/tsm/ts-2-tut/
+# Overall dataset
+m_pelt <- GS_year %>%
+  dplyr::group_by(GLT_Year1) %>%
+  dplyr::summarise(mean_ind_grp = mean(Year_grp_size)) %>% 
+  ungroup() %>% 
+  pull(mean_ind_grp) %>%
+  cpt.mean(., penalty = "SIC", method = "PELT") # PELT algorithm for a change point test
+plot(m_pelt, type = "l", cpt.col = "blue", xlab = "Index", cpt.width = 4)
+GS %>%
+  dplyr::group_by(GLT_Year1) %>%
+  dplyr::summarise(mean_ind_grp = mean(Year_grp_size)) %>% 
+  ungroup() %>% 
+  slice(cpts(m_pelt)) # find the date for the change point
+# Change point by fragment
+# https://cran.r-project.org/web/packages/ggchangepoint/vignettes/introduction.html
+mean_grp_size_frag <- GS_year %>%
+  dplyr::group_by(UMMPs,Group,GLT_Year1) %>%
+  dplyr::summarise(mean_ind_grp = mean(Year_grp_size)) %>%
+  ungroup() %>% 
+  as.data.frame()
+GS %>%
+  dplyr::group_by(Group,GLT_Year1) %>% 
+  slice(cpts(m_pelt)) # find the date for the change point
+
+
+
+# Composition
 analysis.data %>% 
   dplyr::group_by(Group,GLT) %>% 
   dplyr::summarise(n_rows = n(),
