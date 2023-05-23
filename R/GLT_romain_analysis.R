@@ -7,7 +7,7 @@ load.lib = c("dplyr","tibble", "data.table",
              "tidyr", "xlsx", "zoo", "readxl",
              "readr", "ggplot2", "lubridate",
              "plyr", "tidyverse", "changepoint",
-             "strucchange", "sp", "raster", "geodata")
+             "strucchange", "sp", "raster")
 sapply(load.lib,require,character=TRUE)
 
 
