@@ -238,16 +238,32 @@ VI. ANALYSE STATISTIQUE
 *** Préparation des données :
 - GLT_Year = année (12 mois) d'une saison sèche à une autre (cf Dias et al. 2015). Mois de référence = mois où les groupes sont les plus stables (pas de naissance, pas d'immigration/émigration) (cf Dietz et al. 1994; Romano et al. 2018) = JUILLET
 - Exemple : toute date strictement avant Juillet 1989 = 1988, et toute date dès Juillet et jusqu'à Juin de l'année suivante = 1989
+
+*** Subset
 - On ne garde que les données des fichiers d'observation
 - On ne garde que les groupes suivis au moins 6 ans (à partir de l'année GLT) (ie 3 générations; d'après Strier & Mendes, 2009)
+- On retire les groupes NA
 
 
 Statistiques élémentaires :
-102 groupes, soit 1445 GLT connus.
-Période 2001-2022. Fréquence des visites : de 9 à 89 (mean = 29.13, median 19.00). La fréquence moyenne de visite va de 0.706 visites à 5.7 visites/an; en moyenne, les groupes ont été visités 2.87 fois/an sur la période. 
+106 groupes, soit 1453 GLT connus répartis dans 11 MUs (UMMPs).
+Période 2001-2022. Fréquence des visites : de 3 à 89 (mean = 28.36, median 17.00). La fréquence moyenne de visite va de 0.17 visites à 5.7 visites/an; en moyenne, les groupes ont été visités 2.31 fois/an sur la période. 
 
-1) TAILLE DU GROUPE
-Sur toute la période, sur une année GLT (juillet-juin) : taille de groupe varie de 1 à 29, moyenne = 8.3 (mediane = 8.0).
-Sur toute la période, sur une année GLT (juillet-juin) : taux de croissance annuel varie de 0.077 à 5.0, moyenne = 1.07 (médiane = 1.0). 
-Sur toute la période, taille du groupe en saison sèche varie de 1 à 29 (moyenne = 7.9), en saison humide de 1 à 22 (moyenne = 7.8).
+1) TAILLE DU GROUPE ET CROISSANCE
+Sur toute la période, la taille annuelle de groupe varie de 1 à 29 GLTs, moyenne = 8.0 (mediane = 7.0).
+La valeur maximale de taille moyenne de groupe est atteinte en 2013 (moyenne = 9.73 +- 4.07).
+La valeur minimale de taille moyenne de groupe est atteinte en 2022 (moyenne = 6.36 +- 3.16).
+Sur toute la période, la MU qui a la valeur moyenne de taille de groupe la plus faible est Poco das Antas (mean +- SD = 7.10 +- 2.89).
+Sur toute la période, la MU qui a la valeur moyenne de taille de groupe la plus forte est Uniao II (mean +- SD = 10.6 +- 1.60).
+Sur toute la période, la taille du groupe en saison sèche varie de 1 à 29 (mean +- SD = 7.85 +- 3.92), en saison humide de 1 à 22 (moyenne = 7.75 +- 3.63).
 
+
+Sur toute la période, le taux de croissance annuel varie de 0.077 à 5.0 par groupe, moyenne = 1.05 (médiane = 1.0). 
+La valeur maximale de taux moyen de croissance annuelle par groupe est atteinte en 2012 (mean +- SD = 1.23 +- 0.292).
+La valeur minimale de taux moyen de croissance annuelle par groupe est atteinte en 2014 (mean +- SD = 0.939 +- 0.261).
+Sur toute la période, les taux moyens de croissance annuelle par groupe ont été inférieurs à 1 pendant 7 années : 2014, 2005, 2022, 2017, 2008, 2011, 2016 ; supérieurs à 1 les autres années.
+Sur toute la période, les taux moyens de croissance annuelle par groupe sont inférieurs à Poco das Antas (mean +- SD = 0.987 +- 0.362) et à Aldeia II (mean +- SD = 0.990 +- 0.187) ; supérieurs ailleurs. Max = Imbau III (mean +- SD = 1.18 +- 0.270).
+
+
+Sur l'ensemble de la période, la taille moyenne annuelle par groupe change significativement en 2017.
+Pour voir les changements par UMMPs : cf script (cp_frag).
