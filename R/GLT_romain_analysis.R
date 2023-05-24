@@ -7,27 +7,15 @@ load.lib = c("dplyr","tibble", "data.table",
              "tidyr", "xlsx", "zoo", "readxl",
              "readr", "ggplot2", "lubridate",
              "plyr", "tidyverse", "changepoint",
-             "strucchange", "sp", "raster")
+             "sp", "raster", "here", "sf", "fitbitViz",
+             "terra")
 sapply(load.lib,require,character=TRUE)
 
 
-### DATA
-## GLT dataset
-load("D:/monas/Git/repo/glt/GoldenLionTamarins/data/NewlyCreatedData/data_clean_v2.RData")
-## Monitored groups
-Nb_obs_gp = read_delim("data/NewlyCreatedData/Nb_obs_gp.csv", delim=";", show_col_types = FALSE)
-Nb_obs_gp %>%
-  dplyr::summarise(across(c("UMMPs","Farm","Fragment.Region"), ~ n_distinct(.x, na.rm = TRUE)))
-Nb_obs_gp %>%
-  dplyr::group_by(UMMPs,Fragment.Region) %>%
-  dplyr::summarise(n_grp = n_distinct(Group)) %>%
-  print(n=50)
-# Join
-data_clean_v2 = data_clean_v2 %>%
-  left_join(select(Nb_obs_gp,c(Group,UMMPs,Farm,Lat,Long,Fragment.Region)))
-## Worldclim
-worldclim = getData("worldclim",var="bio",res=10)
+#### DATA
 
+### GLT dataset
+load("D:/monas/Git/repo/glt/GoldenLionTamarins/data/NewlyCreatedData/data_clean_v2.RData")
 
 ## Create variables
 # Create "GLT Year"
@@ -39,26 +27,103 @@ data_clean_v2$Ref_GLT_Year = as.Date(data_clean_v2$Ref_GLT_Year, format="%d/%m/%
 data_clean_v2 = data_clean_v2 %>% 
   dplyr::mutate(GLT_Year1 = ifelse(DateObs >= Ref_GLT_Year, Year, Year-1)) %>% 
   dplyr::mutate(GLT_Year2 = ifelse(DateObs >= Ref_GLT_Year, paste(Year, Year+1, sep="-"), paste(Year-1, Year, sep="-")))
+
+
+### Monitored groups
+Nb_obs_gp = read_delim("D:/monas/Git/repo/glt/GoldenLionTamarins/data/NewlyCreatedData/Nb_obs_gp.csv", delim=";", show_col_types = FALSE)
+Nb_obs_gp %>%
+  dplyr::summarise(across(c("UMMPs","Farm","Fragment.Region"), ~ n_distinct(.x, na.rm = TRUE)))
+Nb_obs_gp %>%
+  dplyr::group_by(UMMPs,Fragment.Region) %>%
+  dplyr::summarise(n_grp = n_distinct(Group)) %>%
+  print(n=50)
+# Join
+data_clean_v2 = data_clean_v2 %>%
+  dplyr::left_join(dplyr::select(Nb_obs_gp,c(Group,UMMPs,Farm,Lat,Long,Fragment.Region)))
+
+
+# ### Worldclim
+# # UMMPs
+# source("R/merge_ummp.R")
+# ummp = return_complete_ummp()
+# ummp_bb = extend_AOI_buffer(
+#   ummp,
+#   buffer_in_meters = 7000
+# ) # Extract bounding box with buffer
+# ummp_bb = ummp_bb[[2]]
+# 
+# # Crop rasters with study area bounding box
+# files = list.files("C:/Users/monas/OneDrive/Bureau/GLT/data/wc2.1_cruts4.06_5m_prec_2000_2021", 
+#                            pattern = "*.tif$", full.names = TRUE) # read the rasters
+# files = lapply(files, terra::rast) # convert as terra::rasters
+# crop.list = list()
+# for(i in 1:length(files)){
+#   crop.list[[i]] = terra::crop(files[[i]], ummp_bb, mask=F)
+# } # crop with a mask
+# lapply(crop.list, function (x) writeRaster(x, filename=paste0("C:/Users/monas/OneDrive/Bureau/GLT/output","/precipitation/",names(x)))) # write rasters
+# 
+# # Calculate mean by raster
+# files = as.list(list.files("C:/Users/monas/OneDrive/Bureau/GLT/output/precipitation", 
+#                            pattern = "*.tif$", full.names = TRUE)) #create list of raster file paths
+# outlist <- list() #create empty list to store outputs from loop
+# for (i in 1:length(files)) { # for each raster in rasterlist
+#   r <- raster(files[[i]]) # read element i of rasterlist into R
+#   val <- getValues(r) # get raster values
+#   m <- mean(val,na.rm=T) # remove NAs and compute mean
+#   outlist[[i]] <- c(files[[i]],m) # store raster path with mean
+# }
+# rainfall <- data.frame(do.call(rbind,outlist)) #convert list to data frame
+# colnames(rainfall) <- c("raster_path","mean_rainfall")
+# rainfall[,1] <- gsub("C:/Users/monas/OneDrive/Bureau/GLT/output/precipitation/wc2.1_5m_prec_", "", rainfall[,1])
+# rainfall[,1] <- gsub(".tif", "", rainfall[,1])
+# rainfall$Date = as.Date(paste(rainfall$raster_path, "-01", sep=""))
+# rainfall$Year = as.numeric(format(rainfall$Date, format="%Y"))
+# rainfall$mean_rainfall = as.numeric(rainfall$mean_rainfall)
+# 
+# # Calculate cumulative rainfall
+# rainfall = rainfall %>% 
+#   dplyr::mutate(Ref_GLT_Year = paste("01","07",Year, sep="/")) %>% 
+#   dplyr::ungroup()
+# rainfall$Ref_GLT_Year = as.Date(rainfall$Ref_GLT_Year, format="%d/%m/%Y")
+# rainfall = rainfall %>% 
+#   dplyr::mutate(GLT_Year1 = ifelse(Date >= Ref_GLT_Year, Year, Year-1)) %>% 
+#   dplyr::mutate(GLT_Year2 = ifelse(Date >= Ref_GLT_Year, paste(Year, Year+1, sep="-"), paste(Year-1, Year, sep="-")))
+# cumul_rainfall = rainfall %>% 
+#   dplyr::group_by(GLT_Year1) %>% 
+#   dplyr::mutate(cum_mean_cell_rainfall = cumsum(mean_rainfall)) %>% 
+#   dplyr::filter(cum_mean_cell_rainfall == max(cum_mean_cell_rainfall)) %>% 
+#   dplyr::select(GLT_Year1, GLT_Year2, cum_mean_cell_rainfall) %>% 
+#   dplyr::filter(GLT_Year1 != 1999 & GLT_Year1 != 2021)
+# save(cumul_rainfall, file="D:/monas/Git/repo/glt/GoldenLionTamarins/data/NewlyCreatedData/cumul_rainfall.RData")
+load("D:/monas/Git/repo/glt/GoldenLionTamarins/data/NewlyCreatedData/cumul_rainfall.RData")
+
+
+### Fragment parameters
+load("D:/monas/Git/repo/glt/GoldenLionTamarins/data/NewlyCreatedData/TotalPerimetre.RData")
+load("D:/monas/Git/repo/glt/GoldenLionTamarins/data/NewlyCreatedData/TotalShape.RData")
+load("D:/monas/Git/repo/glt/GoldenLionTamarins/data/NewlyCreatedData/TotalSizeArea.RData")
+
+
+### SUBSET DATA
 # Create monitoring periods
-data_clean_v2 = data_clean_v2 %>% 
+sub = data_clean_v2 %>% 
   dplyr::group_by(Group) %>% 
+  dplyr::filter(GLT_Year1 > 1999 & GLT_Year1 < 2021) %>% 
   dplyr::mutate(Monit_Years_grp = diff(range(GLT_Year1))+1) %>% 
   dplyr::mutate(Monit_1stYear_grp = min(GLT_Year1), 
                 Monit_LastYear_grp = max(GLT_Year1)) %>%
   dplyr::mutate(Monit_Period_grp = paste0(unique(c(Monit_1stYear_grp, Monit_LastYear_grp)), collapse = '-')) %>%
   ungroup() %>% 
-  as.data.table()
-data_clean_v2 = data_clean_v2 %>% 
+  as.data.table() # By group
+sub = sub %>% 
   dplyr::group_by(UMMPs) %>% 
   dplyr::mutate(Monit_Years_frag = diff(range(GLT_Year1))+1) %>% 
   dplyr::mutate(Monit_1stYear_frag = min(GLT_Year1), 
                 Monit_LastYear_frag = max(GLT_Year1)) %>%
   dplyr::mutate(Monit_Period_frag = paste0(unique(c(Monit_1stYear_frag, Monit_LastYear_frag)), collapse = '-')) %>%
   ungroup() %>% 
-  as.data.table()
-
-### SUBSET DATA
-sub = data_clean_v2 %>%
+  as.data.table() # By UMMPs
+sub = sub %>% 
   dplyr::filter(File == "Obs") %>%
   dplyr::group_by(Group, Monit_Years_grp) %>% 
   dplyr::filter(Monit_Years_grp >= 6) %>% 
@@ -71,8 +136,6 @@ sub = data_clean_v2 %>%
 sub %>% 
   dplyr::select(GLT_Year1, Monit_Years_grp) %>% 
   summary()
-sub %>% 
-  dplyr::summarise_at(c("UMMPs","Fragment.Region","Group","GLT"), n_distinct, na.rm = TRUE)
 sub %>% 
   dplyr::filter(GLT!="?" & GLT!="IN" & GLT!="T0" & GLT!="FT") %>% 
   dplyr::summarise(n=n(),
@@ -110,7 +173,6 @@ sub %>%
 # By fragment
 g <- sub[order(sub$Monit_1stYear_frag,sub$UMMPs),]
 g$UMMPs <- factor(g$UMMPs, levels=unique(g$UMMPs))
-g = g %>% dplyr::filter(!is.na(UMMPs))
 ggplot(g, aes(x = Monit_1stYear_frag, y = UMMPs)) +
   geom_segment(aes(xend = Monit_LastYear_frag, yend = UMMPs), colour = "orange") +
   geom_point(size = 2, colour="darkorange") +
@@ -180,6 +242,11 @@ GS_season %>%
   summary()
 # Statistical summaries
 GS_year %>% 
+  dplyr::group_by(GLT_Year1) %>% 
+  dplyr::summarise_at("Year_grp_size",list(min=min, max=max, mean=mean, sd=sd)) %>% 
+  dplyr::arrange(mean) %>% 
+  print(n=30)
+GS_year %>% 
   dplyr::group_by(UMMPs) %>% 
   dplyr::summarise_at("Year_grp_size",list(min=min, max=max, mean=mean, sd=sd)) %>% 
   dplyr::arrange(mean) %>% 
@@ -187,6 +254,12 @@ GS_year %>%
 GS_season %>% 
   dplyr::group_by(season) %>% 
   dplyr::summarise_at("Season_grp_size",list(min=min, max=max, mean=mean, sd=sd)) %>% 
+  dplyr::arrange(mean) %>% 
+  print(n=30)
+GS_year %>% 
+  dplyr::filter(!is.na(Year_growth_rate)) %>% 
+  dplyr::group_by(GLT_Year1) %>% 
+  dplyr::summarise_at("Year_growth_rate",list(min=min, max=max, mean=mean, sd=sd)) %>% 
   dplyr::arrange(mean) %>% 
   print(n=30)
 GS_year %>% 
