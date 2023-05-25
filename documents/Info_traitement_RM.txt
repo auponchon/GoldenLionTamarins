@@ -256,27 +256,51 @@ Attention : les années GLT 1999 et 2021 sont calculées sur quelques mois seule
 - On ne garde que les données des fichiers d'observation
 - On ne garde que les années de suivi entre 2000 et 2020
 - On ne garde que les groupes suivis au moins 6 ans (à partir de l'année GLT) (ie 3 générations; d'après Strier & Mendes, 2009)
-- On retire les groupes NA
+- On retire les groupes NA et les UMMPs NA
 
 
 Statistiques élémentaires :
-96 groupes, soit 1355 GLT connus répartis dans 11 MUs (UMMPs).
-Période 2001-2020. Fréquence des visites : de 7 à 82 (mean = 27.22, median 17.00). La fréquence moyenne de visite va de 0.33 visites à 5.7 visites/an; en moyenne, les groupes ont été visités 2.75 fois/an sur la période. 
+73 groupes, soit 1175 GLT connus répartis dans 10 MUs (UMMPs).
+Période 2001-2020. 
+Fréquence des visites : de 7 à 82 (mean +- SD = 30.4 +- 21.7). 
+Fréquence moyenne de visite va de 0.33 visites à 5.7 visites/an (mean +- SD = 2.86 +-  1.34).
 
-1) TAILLE DU GROUPE ET CROISSANCE
-Sur toute la période, la taille annuelle de groupe varie de 1 à 29 GLTs, moyenne = 8.242 (mediane = 8.0).
-La valeur maximale de taille moyenne de groupe est atteinte en 2013 (moyenne = 9.73 +- 4.07).
-La valeur minimale de taille moyenne de groupe est atteinte en 2005 (moyenne = 7.43 +- 3.50) et en 2018 (moyenne = 7.43 +- 4.83).
+- Plot number of visits
+- Plot mean annual visits
+
+I. TAILLE ET CROISSANCE DES GROUPES
+1) STATISTIQUES PAR GROUPE
+Sur toute la période, la taille annuelle de groupe varie de 1 à 29 GLTs (mean +- SD = 8.57 +- 4.01).
+La valeur maximale de taille moyenne de groupe est atteinte en 2012 (mean +- SD = 9.89 +- 3.26).
+La valeur minimale de taille moyenne de groupe est atteinte en 2019 (mean +- SD = 7.47 +- 4.45).
 Sur toute la période, la MU qui a la valeur moyenne de taille de groupe la plus faible est Poco das Antas (mean +- SD = 7.10 +- 2.89).
 Sur toute la période, la MU qui a la valeur moyenne de taille de groupe la plus forte est Uniao II (mean +- SD = 10.5 +- 1.73).
-Sur toute la période, la taille du groupe en saison sèche varie de 1 à 29 (mean +- SD = 8.11 +- 3.92), en saison humide de 1 à 22 (moyenne = 7.95 +- 3.63).
+Sur toute la période, la taille du groupe en saison sèche varie de 1 à 29 (mean +- SD = 8.36 +- 4.02), en saison humide de 1 à 22 (mean +- SD = 8.24 +- 3.71).
 
+- Plot taille du groupe dans le temps
+- Plot taille du groupe selon les MUs
+- Boxplot taille du groupe selon les saisons
 
-Sur toute la période, le taux de croissance annuel varie de 0.077 à 5.0 par groupe, moyenne = 1.05 (médiane = 1.0). 
-La valeur maximale de taux moyen de croissance annuelle par groupe est atteinte en 2012 (mean +- SD = 1.23 +- 0.292).
-La valeur minimale de taux moyen de croissance annuelle par groupe est atteinte en 2014 (mean +- SD = 0.939 +- 0.261).
-Sur toute la période, les taux moyens de croissance annuelle par groupe ont été inférieurs à 1 pendant 7 années : 2014, 2005, 2018, 2019, 2008, 2011, 2016 ; supérieurs à 1 les autres années.
+Sur toute la période, le taux de croissance annuel varie de 0.077 à 5.0 par groupe (mean +- SD = 1.06 +- 0.377).
+La valeur maximale de taux moyen de croissance annuelle par groupe est atteinte en 2012 (mean +- SD = 1.22 +- 0.304).
+La valeur minimale de taux moyen de croissance annuelle par groupe est atteinte en 2005 (mean +- SD = 0.938 +- 0.162).
+Sur toute la période, les taux moyens de croissance annuelle par groupe ont été inférieurs à 1 pendant 7 années : 2005 ; 2018 ; 2014 ; 2019 ; 2008 ; 2011 ; 2016 ; supérieurs à 1 les autres années.
 Sur toute la période, les taux moyens de croissance annuelle par groupe sont inférieurs à Aldeia I (mean +- SD = 0.974 +- 0.261), à Poco das Antas (mean +- SD = 0.987 +- 0.362) et à Aldeia II (mean +- SD = 0.988 +- 0.188) ; supérieurs ailleurs. Max = Imbau III (mean +- SD = 1.18 +- 0.270).
 
+2) STATISTIQUES DES FRAGMENTS
+*** Fragment parameters
+Shape : mean +- SD = 6.112994 +- 6.105539 (min = 1.128205, max = 22.00264)
+Size: mean +- SD = 3740.340176 +- 6986.491969 (min = 8.37, max = 27099.54)
+Perimetre : mean +- SD = 206757.176471 +- 382802.154924 (min = 1320.00, max = 1434000.00)
+Rainfall : mean +- SD = 1272 +- 155 (min = 1025, max = 1515).
 
+3) ANALYSE STATISTIQUE
+* Matrice de corrélation :
+                       Year_grp_size       Size      Shape  Perimetre cum_mean_cell_rainfall
+Year_grp_size             1.00000000  0.1437999  0.1866682  0.1574904             0.01475683
+Size                      0.14379989  1.0000000  0.9473642  0.9946090            -0.28433683
+Shape                     0.18666820  0.9473642  1.0000000  0.9685676            -0.23633474
+Perimetre                 0.15749037  0.9946090  0.9685676  1.0000000            -0.27699164
+cum_mean_cell_rainfall    0.01475683 -0.2843368 -0.2363347 -0.2769916             1.00000000
 
+Fortes corrélations entre paramètres de fragments : garder SIZE.

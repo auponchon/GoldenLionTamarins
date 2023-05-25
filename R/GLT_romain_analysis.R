@@ -7,8 +7,9 @@ load.lib = c("dplyr","tibble", "data.table",
              "tidyr", "xlsx", "zoo", "readxl",
              "readr", "ggplot2", "lubridate",
              "plyr", "tidyverse", "changepoint",
-             "sp", "raster", "here", "sf", "fitbitViz",
-             "terra")
+             "sp", "raster", "here", "sf", 
+             "fitbitViz", "terra", "psych",
+             "ggpubr", "cowplot", "lme4")
 sapply(load.lib,require,character=TRUE)
 
 
@@ -53,7 +54,7 @@ data_clean_v2 = data_clean_v2 %>%
 # ummp_bb = ummp_bb[[2]]
 # 
 # # Crop rasters with study area bounding box
-# files = list.files("C:/Users/monas/OneDrive/Bureau/GLT/data/wc2.1_cruts4.06_5m_prec_2000_2021", 
+# files = list.files("C:/Users/monas/OneDrive/Bureau/GLT/data/wc2.1_cruts4.06_5m_prec_2000_2021",
 #                            pattern = "*.tif$", full.names = TRUE) # read the rasters
 # files = lapply(files, terra::rast) # convert as terra::rasters
 # crop.list = list()
@@ -63,7 +64,7 @@ data_clean_v2 = data_clean_v2 %>%
 # lapply(crop.list, function (x) writeRaster(x, filename=paste0("C:/Users/monas/OneDrive/Bureau/GLT/output","/precipitation/",names(x)))) # write rasters
 # 
 # # Calculate mean by raster
-# files = as.list(list.files("C:/Users/monas/OneDrive/Bureau/GLT/output/precipitation", 
+# files = as.list(list.files("C:/Users/monas/OneDrive/Bureau/GLT/output/precipitation",
 #                            pattern = "*.tif$", full.names = TRUE)) #create list of raster file paths
 # outlist <- list() #create empty list to store outputs from loop
 # for (i in 1:length(files)) { # for each raster in rasterlist
@@ -81,27 +82,54 @@ data_clean_v2 = data_clean_v2 %>%
 # rainfall$mean_rainfall = as.numeric(rainfall$mean_rainfall)
 # 
 # # Calculate cumulative rainfall
-# rainfall = rainfall %>% 
-#   dplyr::mutate(Ref_GLT_Year = paste("01","07",Year, sep="/")) %>% 
+# rainfall = rainfall %>%
+#   dplyr::mutate(Ref_GLT_Year = paste("01","07",Year, sep="/")) %>%
 #   dplyr::ungroup()
 # rainfall$Ref_GLT_Year = as.Date(rainfall$Ref_GLT_Year, format="%d/%m/%Y")
-# rainfall = rainfall %>% 
-#   dplyr::mutate(GLT_Year1 = ifelse(Date >= Ref_GLT_Year, Year, Year-1)) %>% 
+# rainfall = rainfall %>%
+#   dplyr::mutate(GLT_Year1 = ifelse(Date >= Ref_GLT_Year, Year, Year-1)) %>%
 #   dplyr::mutate(GLT_Year2 = ifelse(Date >= Ref_GLT_Year, paste(Year, Year+1, sep="-"), paste(Year-1, Year, sep="-")))
-# cumul_rainfall = rainfall %>% 
-#   dplyr::group_by(GLT_Year1) %>% 
-#   dplyr::mutate(cum_mean_cell_rainfall = cumsum(mean_rainfall)) %>% 
-#   dplyr::filter(cum_mean_cell_rainfall == max(cum_mean_cell_rainfall)) %>% 
-#   dplyr::select(GLT_Year1, GLT_Year2, cum_mean_cell_rainfall) %>% 
-#   dplyr::filter(GLT_Year1 != 1999 & GLT_Year1 != 2021)
+# cumul_rainfall = rainfall %>%
+#   dplyr::group_by(GLT_Year1) %>%
+#   dplyr::mutate(cum_mean_cell_rainfall = cumsum(mean_rainfall)) %>%
+#   dplyr::filter(cum_mean_cell_rainfall == max(cum_mean_cell_rainfall)) %>%
+#   dplyr::select(GLT_Year1, GLT_Year2, cum_mean_cell_rainfall) %>%
+#   dplyr::filter(GLT_Year1 != 1999 & GLT_Year1 != 2021) %>% 
+#   dplyr::ungroup()
 # save(cumul_rainfall, file="D:/monas/Git/repo/glt/GoldenLionTamarins/data/NewlyCreatedData/cumul_rainfall.RData")
 load("D:/monas/Git/repo/glt/GoldenLionTamarins/data/NewlyCreatedData/cumul_rainfall.RData")
+cumul_rainfall %>% 
+  dplyr::arrange(cum_mean_cell_rainfall) %>% 
+  print(n=30)
+cumul_rainfall %>% 
+  dplyr::summarise_at("cum_mean_cell_rainfall",list(min=min, max=max, mean=mean, sd=sd))
+ggplot(cumul_rainfall, aes(x=cumul_rainfall$cum_mean_cell_rainfall))+
+  geom_histogram(aes(y = ..density..), fill='lightgray', col='darkgrey') +
+  geom_density(lwd = 1, colour = 4,
+               fill = 4, alpha = 0.25) +
+  xlab("Mean cumulative rainfall") + 
+  ylab("Density") +
+  theme(legend.title = element_blank())
+plot <- ts(cumul_rainfall$cum_mean_cell_rainfall, start = 2000)
+plot.ts(plot, type= "b", main = "Mean rainfall over time", xlab = "Years", ylab = "Mean rainfall (in mm)")
+
 
 
 ### Fragment parameters
 load("D:/monas/Git/repo/glt/GoldenLionTamarins/data/NewlyCreatedData/TotalPerimetre.RData")
 load("D:/monas/Git/repo/glt/GoldenLionTamarins/data/NewlyCreatedData/TotalShape.RData")
 load("D:/monas/Git/repo/glt/GoldenLionTamarins/data/NewlyCreatedData/TotalSizeArea.RData")
+plot = totsizearea %>% 
+  dplyr::group_by(Year) %>%
+  dplyr::summarise(mean = mean(Size)) %>% 
+  ungroup() %>% 
+  as.data.frame()
+plot <- ts(plot$mean, start = 1990)
+plot.ts(plot, type= "b", main = "Mean fragment size over time", xlab = "Years", ylab = "Mean fragment size")
+ggplot(totsizearea,aes(x = UMMPs, y = Size)) +
+  geom_boxplot() +
+  xlab("UMMPs") + 
+  ylab("Fragment size")
 
 
 ### SUBSET DATA
@@ -109,6 +137,7 @@ load("D:/monas/Git/repo/glt/GoldenLionTamarins/data/NewlyCreatedData/TotalSizeAr
 sub = data_clean_v2 %>% 
   dplyr::group_by(Group) %>% 
   dplyr::filter(GLT_Year1 > 1999 & GLT_Year1 < 2021) %>% 
+  dplyr::filter(!is.na(UMMPs)) %>% 
   dplyr::mutate(Monit_Years_grp = diff(range(GLT_Year1))+1) %>% 
   dplyr::mutate(Monit_1stYear_grp = min(GLT_Year1), 
                 Monit_LastYear_grp = max(GLT_Year1)) %>%
@@ -133,6 +162,8 @@ sub = sub %>%
 
 
 ### STATISTICAL SUMMARY
+
+## Group sample
 sub %>% 
   dplyr::select(GLT_Year1, Monit_Years_grp) %>% 
   summary()
@@ -146,15 +177,38 @@ visites_grp = sub %>%
   dplyr::group_by(Group,Monit_Years_grp) %>% 
   dplyr::summarise(n_visites=n_distinct(DateObs),
                    mean_obs_year = n_visites/Monit_Years_grp) %>% 
-  distinct(Group,n_visites,mean_obs_year)
+  distinct(Group,n_visites,mean_obs_year) %>% 
+  ungroup()
 visites_grp %>% 
-  summary()
+  dplyr::select(n_visites, mean_obs_year) %>%
+  psych::describe(quant=c(.25,.75)) %>%
+  as_tibble(rownames="rowname")  %>%
+  print()
+
+# Distribution plot
+ggplot(visites_grp, aes(x=Monit_Years_grp))+
+  geom_histogram(aes(y = ..density..), fill='lightgray', col='darkgrey') +
+  geom_density(lwd = 1, colour = 4,
+               fill = 4, alpha = 0.25) +
+  xlab("Monitoring period (in years)") + 
+  ylab("Density") +
+  theme(legend.title = element_blank())
+ggplot(visites_grp, aes(x=n_visites))+
+  geom_histogram(aes(y = ..density..), fill='lightgray', col='darkgrey') +
+  geom_density(lwd = 1, colour = 4,
+               fill = 4, alpha = 0.25) +
+  xlab("Frequency of visits") + 
+  ylab("Density") +
+  theme(legend.title = element_blank())
+ggplot(visites_grp, aes(x=mean_obs_year))+
+  geom_histogram(aes(y = ..density..), fill='lightgray', col='darkgrey') +
+  geom_density(lwd = 1, colour = 4,
+               fill = 4, alpha = 0.25) +
+  xlab("Mean number of annual visits") + 
+  ylab("Density") +
+  theme(legend.title = element_blank())
+
 # By period
-sub %>%
-  dplyr::filter(any(Monit_1stYear_grp < 2002 & Monit_LastYear_grp > 2018)) %>% 
-  #dplyr::filter(Monit_1stYear_grp < 2002 & Monit_LastYear_grp > 2018) %>% 
-  dplyr::filter(!is.na(UMMPs)) %>% 
-  dplyr::summarise_at(c("UMMPs","Group","GLT"), n_distinct, na.rm = TRUE)
 sub %>% 
   dplyr::group_by(Monit_Years_grp) %>% 
   dplyr::summarise(n_frag=n_distinct(UMMPs),
@@ -169,8 +223,7 @@ sub %>%
                    n_grp_1stDate = n_distinct(Group[Monit_1stYear_grp < 2002 ]),
                    n_grp_LastDate = n_distinct(Group[Monit_LastYear_grp > 2018 ]))
 
-# Plot monitored periods
-# By fragment
+# Plot monitoring periods by fragment
 g <- sub[order(sub$Monit_1stYear_frag,sub$UMMPs),]
 g$UMMPs <- factor(g$UMMPs, levels=unique(g$UMMPs))
 ggplot(g, aes(x = Monit_1stYear_frag, y = UMMPs)) +
@@ -180,7 +233,7 @@ ggplot(g, aes(x = Monit_1stYear_frag, y = UMMPs)) +
   theme_bw() +
   theme(legend.position = "none",
         text = element_text(size=10))
-# By group
+# Plot monitoring periods by fragment
 g = sub %>% 
   dplyr::group_by(Group) %>% 
   dplyr::filter(Monit_Years_grp >= 6)
@@ -223,23 +276,81 @@ ggplot(g, aes(x = Monit_1stYear_grp, y = Group)) +
 
 
 ### GROUP SIZE
-# Group size and growth rate statistical summaries
-# Annual group size and growth rate  
+# Compute annual group size and growth rate  
 GS_year = sub %>% 
   dplyr::group_by(UMMPs,Group,GLT_Year1) %>% 
   dplyr::summarise(Year_grp_size = n_distinct(GLT)) %>% 
   dplyr::mutate(Year_growth_rate = Year_grp_size/lag(Year_grp_size)) %>% 
   ungroup()
 GS_year %>% 
-  summary()
+  dplyr::select(Year_grp_size, Year_growth_rate) %>% 
+  psych::describe(quant=c(.25,.75)) %>%
+  as_tibble(rownames="rowname")  %>%
+  print()
+ggplot(GS_year, aes(x=Year_grp_size))+
+  geom_histogram(aes(y = ..density..), fill='lightgray', col='darkgrey') +
+  geom_density(lwd = 1, colour = 4,
+               fill = 4, alpha = 0.25) +
+  xlab("Annual group size") + 
+  ylab("Density") +
+  theme(legend.title = element_blank())
+ggplot(GS_year, aes(x=Year_growth_rate))+
+  geom_histogram(aes(y = ..density..), fill='lightgray', col='darkgrey') +
+  geom_density(lwd = 1, colour = 4,
+               fill = 4, alpha = 0.25) +
+  xlab("Annual growth rate") + 
+  ylab("Density") +
+  theme(legend.title = element_blank())
+
+## Join habitat parameters
+GS_year = GS_year %>% 
+  dplyr::rename(Year=GLT_Year1) %>% 
+  dplyr::left_join(dplyr::select(totperim,c(Group,Year,Perimetre))) %>% 
+  dplyr::rename(GLT_Year1=Year) %>% 
+  dplyr::distinct(Group,GLT_Year1,Year_grp_size,Perimetre, .keep_all =TRUE)
+GS_year = GS_year %>% 
+  dplyr::rename(Year=GLT_Year1) %>% 
+  dplyr::left_join(dplyr::select(totshape,c(Group,Year,Shape))) %>% 
+  dplyr::rename(GLT_Year1=Year) %>% 
+  dplyr::distinct(Group,GLT_Year1,Year_grp_size,Perimetre, .keep_all =TRUE)
+GS_year = GS_year %>% 
+  dplyr::rename(Year=GLT_Year1) %>% 
+  dplyr::left_join(dplyr::select(totsizearea,c(Group,Year,Size))) %>% 
+  dplyr::rename(GLT_Year1=Year) %>% 
+  dplyr::distinct(Group,GLT_Year1,Year_grp_size,Perimetre, .keep_all =TRUE)
+GS_year = GS_year %>% 
+  dplyr::left_join(dplyr::select(cumul_rainfall,c(GLT_Year1,cum_mean_cell_rainfall)))
+GS_year = GS_year %>% 
+  dplyr::distinct(GLT_Year1, Group, .keep_all = TRUE)
+GS_year = GS_year%>%                                        
+  dplyr::group_by(GLT_Year1,Shape,Size) %>%
+  dplyr::mutate(id_frag = cur_group_id()) %>% 
+  ungroup() %>% 
+  as.data.frame() # Create ID by group
+mean_GS_frag_year = GS_year %>% 
+  dplyr::group_by(GLT_Year1,id_frag) %>% 
+  dplyr::mutate(mean_annual_grp_size = mean(Year_grp_size)) %>% 
+  ungroup() %>% 
+  dplyr::distinct(id_frag, .keep_all = TRUE) %>% 
+  dplyr::select(id_frag,UMMPs,GLT_Year1,Shape,Size,Perimetre,mean_annual_grp_size,cum_mean_cell_rainfall)
+
 # Seasonal group size and growth rate 
 GS_season = sub %>%
   dplyr::group_by(UMMPs,Group,GLT_Year1,season) %>% 
   dplyr::arrange(Group,GLT_Year1,season) %>% 
   dplyr::summarise(Season_grp_size = n_distinct(GLT)) %>% 
-  ungroup()
+  dplyr::mutate(Season_growth_rate = Season_grp_size/lag(Season_grp_size)) %>% 
+  dplyr::ungroup()
 GS_season %>% 
-  summary()
+  dplyr::select(Season_grp_size, Season_growth_rate) %>% 
+  psych::describe(quant=c(.25,.75)) %>%
+  as_tibble(rownames="rowname")  %>%
+  print()
+ggplot(GS_season,aes(x = season, y = Season_grp_size)) +
+  geom_boxplot() +
+  xlab("Season") + 
+  ylab("Group size")
+
 # Statistical summaries
 GS_year %>% 
   dplyr::group_by(GLT_Year1) %>% 
@@ -276,47 +387,93 @@ growth_rate = GS_year %>%
   pivot_wider(names_from = GLT_Year1, values_from = Year_growth_rate)
 
 # Plot group size/growth rate evolution
-plot_GS = GS_year %>% 
+plot = GS_year %>% 
   dplyr::group_by(GLT_Year1) %>%
   dplyr::summarise(mean = mean(Year_grp_size)) %>% 
   ungroup() %>% 
   as.data.frame()
-plot_GS <- ts(plot_GS$mean, start = 2001)
-plot.ts(plot_GS, type= "b", main = "Mean group size over time", xlab = "Years", ylab = "Mean number of individuals")
-plot_GS = GS_year %>% 
+plot <- ts(plot$mean, start = 2001)
+plot.ts(plot, type= "b", main = "Mean group size over time", xlab = "Years", ylab = "Mean number of individuals")
+plot = GS_year %>% 
   dplyr::filter(!is.na(Year_growth_rate)) %>% 
   dplyr::group_by(GLT_Year1) %>%
   dplyr::summarise(mean = mean(Year_growth_rate)) %>% 
   ungroup() %>% 
   as.data.frame()
-plot_GS <- ts(plot_GS$mean, start = 2002)
-plot.ts(plot_GS, type= "b", main = "Mean group growth rate over time", xlab = "Years", ylab = "Mean growth rate")
+plot <- ts(plot$mean, start = 2002)
+plot.ts(plot, type= "b", main = "Mean group growth rate over time", xlab = "Years", ylab = "Mean growth rate")
 
-# Plot group size/grath rate evolution (facet)
-ggplot(GS_year,aes(x = GLT_Year1, y = Year_grp_size)) + 
-  geom_point(aes(color=Group)) +
-  geom_line(data=GS_year[!is.na(GS_year$Year_grp_size),]) +
-  theme(legend.position = "none") +
-  facet_wrap(~Group)
 # Plot group size/grath rate evolution by fragment
+ggplot(GS_year,aes(x = UMMPs, y = Year_grp_size)) +
+  geom_boxplot(outlier.shape = NA) +
+  geom_jitter(colour = "black", size=0.25) +
+  xlab("UMMPs") + 
+  ylab("Group size") +
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))
+ggplot(GS_year,aes(x = UMMPs, y = Year_growth_rate)) +
+  geom_boxplot(outlier.shape = NA) +
+  geom_jitter(colour = "black", size=0.25) +
+  xlab("UMMPs") + 
+  ylab("Annual growth rate") +
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))
 ggplot(GS_year,aes(x = GLT_Year1, y = Year_grp_size)) + 
   geom_point(aes(color=Group)) +
   geom_line(data=GS_year[!is.na(GS_year$Year_grp_size),],aes(color=Group)) +
   theme(legend.position = "none") +
   facet_wrap(~UMMPs)
-plot_GS = GS_year %>% 
-  dplyr::group_by(UMMPs,GLT_Year1) %>%
+plot = GS_year %>% 
+  dplyr::group_by(GLT_Year1,UMMPs) %>%
   dplyr::summarise(mean = mean(Year_grp_size)) %>% 
   ungroup() %>% 
   as.data.frame()
-ggplot(plot_GS,aes(x = GLT_Year1, y = mean)) + 
-  geom_line(data=plot_GS[!is.na(plot_GS$mean),]) +
+ggplot(plot,aes(x = GLT_Year1, y = mean)) + 
+  geom_line(data=plot[!is.na(plot$mean),]) +
+  geom_point() +
   theme(legend.position = "none") +
-  facet_wrap(~UMMPs)
+  facet_wrap(~UMMPs, ncol=3) +
+  xlab("Year") + 
+  ylab("Mean group size")
+plot = GS_year %>% 
+  dplyr::group_by(GLT_Year1,UMMPs) %>%
+  dplyr::summarise(mean = mean(Year_growth_rate)) %>% 
+  ungroup() %>% 
+  as.data.frame()
+ggplot(plot,aes(x = GLT_Year1, y = mean)) + 
+  geom_line(data=plot[!is.na(plot$mean),]) +
+  geom_point() +
+  theme(legend.position = "none") +
+  facet_wrap(~UMMPs, ncol=3) +
+  xlab("Year") + 
+  ylab("Mean growth rate")
 
 
-## Statistical test
-# Change point analysis
+# Habitat parameters
+mean_GS_frag_year %>% 
+  dplyr::select(Shape, Size, Perimetre) %>% 
+  psych::describe(quant=c(.25,.75)) %>%
+  as_tibble(rownames="rowname")  %>%
+  as.data.frame() %>% 
+  format(scientific=FALSE)
+
+
+
+### STATISTICAL ANALYSIS 
+## Model
+# Exploration/colinearities
+summary(GS_year)
+GS_year %>% 
+  dplyr::select(Year_grp_size, Size, Shape, Perimetre, cum_mean_cell_rainfall) %>% 
+  cor()
+x11()
+par(mfrow=c(2,2))
+plot(Year_grp_size~Size+Shape+Perimetre+cum_mean_cell_rainfall, data=GS_year)
+# Type of relationship between variables
+# Model selection
+# Over-dispersion
+# Model simplification
+# Interpretation
+
+## Change point analysis
 # CF https://kevin-kotze.gitlab.io/tsm/ts-2-tut/
 # Overall dataset
 GS_mean <- GS_year %>%
@@ -329,8 +486,6 @@ m_pelt = GS_mean %>%
 plot(m_pelt, type = "l", cpt.col = "blue", xlab = "Index", cpt.width = 4)
 GS_mean %>%
   slice(cpts(m_pelt)) # find the date for the change point
-
-
 # Change point by fragment
 cp_frag <-NULL
 GS_frag = GS_year %>% 
@@ -340,7 +495,7 @@ GS_frag = GS_year %>%
 GS_frag = GS_frag %>% 
   group_split(UMMPs)
 m_pelt = GS_frag %>% 
-  map(~ select(., mean_size)) %>% 
+  map(~ dplyr::select(., mean_size)) %>% 
   map(~ pull(., mean_size)) %>% 
   map(~ cpt.mean(., penalty="SIC", method="PELT"))
 values = map(m_pelt,"cpts")
