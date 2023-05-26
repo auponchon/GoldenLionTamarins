@@ -9,7 +9,8 @@ load.lib = c("dplyr","tibble", "data.table",
              "plyr", "tidyverse", "changepoint",
              "sp", "raster", "here", "sf", 
              "fitbitViz", "terra", "psych",
-             "ggpubr", "cowplot", "lme4")
+             "ggpubr", "cowplot", "lme4", "MASS",
+             "glmmTMB", "broom.mixed", "emmeans")
 sapply(load.lib,require,character=TRUE)
 
 
@@ -143,7 +144,7 @@ sub = data_clean_v2 %>%
                 Monit_LastYear_grp = max(GLT_Year1)) %>%
   dplyr::mutate(Monit_Period_grp = paste0(unique(c(Monit_1stYear_grp, Monit_LastYear_grp)), collapse = '-')) %>%
   ungroup() %>% 
-  as.data.table() # By group
+  as.data.frame() # By group
 sub = sub %>% 
   dplyr::group_by(UMMPs) %>% 
   dplyr::mutate(Monit_Years_frag = diff(range(GLT_Year1))+1) %>% 
@@ -151,14 +152,14 @@ sub = sub %>%
                 Monit_LastYear_frag = max(GLT_Year1)) %>%
   dplyr::mutate(Monit_Period_frag = paste0(unique(c(Monit_1stYear_frag, Monit_LastYear_frag)), collapse = '-')) %>%
   ungroup() %>% 
-  as.data.table() # By UMMPs
+  as.data.frame() # By UMMPs
 sub = sub %>% 
   dplyr::filter(File == "Obs") %>%
   dplyr::group_by(Group, Monit_Years_grp) %>% 
   dplyr::filter(Monit_Years_grp >= 6) %>% 
   dplyr::filter(!is.na(Group)) %>%
   ungroup() %>% 
-  as.data.table()
+  as.data.frame()
 
 
 ### STATISTICAL SUMMARY
@@ -281,7 +282,8 @@ GS_year = sub %>%
   dplyr::group_by(UMMPs,Group,GLT_Year1) %>% 
   dplyr::summarise(Year_grp_size = n_distinct(GLT)) %>% 
   dplyr::mutate(Year_growth_rate = Year_grp_size/lag(Year_grp_size)) %>% 
-  ungroup()
+  ungroup() %>% 
+  as.data.frame()
 GS_year %>% 
   dplyr::select(Year_grp_size, Year_growth_rate) %>% 
   psych::describe(quant=c(.25,.75)) %>%
@@ -306,18 +308,10 @@ ggplot(GS_year, aes(x=Year_growth_rate))+
 GS_year = GS_year %>% 
   dplyr::rename(Year=GLT_Year1) %>% 
   dplyr::left_join(dplyr::select(totperim,c(Group,Year,Perimetre))) %>% 
-  dplyr::rename(GLT_Year1=Year) %>% 
-  dplyr::distinct(Group,GLT_Year1,Year_grp_size,Perimetre, .keep_all =TRUE)
-GS_year = GS_year %>% 
-  dplyr::rename(Year=GLT_Year1) %>% 
   dplyr::left_join(dplyr::select(totshape,c(Group,Year,Shape))) %>% 
+  dplyr::left_join(dplyr::select(totsizearea,c(Group,Year,Size))) %>%
   dplyr::rename(GLT_Year1=Year) %>% 
-  dplyr::distinct(Group,GLT_Year1,Year_grp_size,Perimetre, .keep_all =TRUE)
-GS_year = GS_year %>% 
-  dplyr::rename(Year=GLT_Year1) %>% 
-  dplyr::left_join(dplyr::select(totsizearea,c(Group,Year,Size))) %>% 
-  dplyr::rename(GLT_Year1=Year) %>% 
-  dplyr::distinct(Group,GLT_Year1,Year_grp_size,Perimetre, .keep_all =TRUE)
+  dplyr::distinct(Group,GLT_Year1,Year_grp_size,Perimetre,Shape,Size, .keep_all =TRUE)
 GS_year = GS_year %>% 
   dplyr::left_join(dplyr::select(cumul_rainfall,c(GLT_Year1,cum_mean_cell_rainfall)))
 GS_year = GS_year %>% 
@@ -455,23 +449,106 @@ mean_GS_frag_year %>%
   as.data.frame() %>% 
   format(scientific=FALSE)
 
-
+# Compute a weight to take the monitoring effort into account
+sub = sub %>% 
+  dplyr::left_join(dplyr::select(GS_year,c(id_frag,GLT_Year1,Group))) %>% 
+  dplyr::group_by(id_frag) %>% 
+  dplyr::mutate(weight = n_distinct(GLT)/n_distinct(Group)) %>% 
+  dplyr::ungroup()
+GS_year = GS_year%>% 
+  dplyr::left_join(dplyr::select(sub, c(id_frag,GLT_Year1,Group,weight))) %>% 
+  distinct(.keep_all=TRUE)
+# save(GS_year, file="D:/monas/Git/repo/glt/GoldenLionTamarins/data/NewlyCreatedData/GS_year.RData")
+load("D:/monas/Git/repo/glt/GoldenLionTamarins/data/NewlyCreatedData/GS_year.RData")
 
 ### STATISTICAL ANALYSIS 
 ## Model
 # Exploration/colinearities
 summary(GS_year)
+# Correlation matrix
 GS_year %>% 
   dplyr::select(Year_grp_size, Size, Shape, Perimetre, cum_mean_cell_rainfall) %>% 
   cor()
 x11()
 par(mfrow=c(2,2))
 plot(Year_grp_size~Size+Shape+Perimetre+cum_mean_cell_rainfall, data=GS_year)
-# Type of relationship between variables
-# Model selection
-# Over-dispersion
-# Model simplification
-# Interpretation
+
+
+# Distribution
+mean(GS_year$Year_grp_size)
+set.seed(1234) # simulate data
+theoretic_count <-rpois(621,8.57) # Number of obs, mean
+tc_df <-data.frame(theoretic_count)
+ggplot(GS_year,aes(Year_grp_size))+
+  geom_bar(fill="#1E90FF")+
+  geom_bar(data=tc_df, aes(theoretic_count,fill="#1E90FF", alpha=0.5))+
+  theme_classic()+
+  theme(legend.position="none") # Plot distribution with poisson theoretical distribution
+
+# Diagnosis of best fitting distribution
+# CF https://r.qcbs.ca/workshop07/book-fr/choisir-la-distribution-des-erreurs.html
+# Combining explicative variables
+GS_year <- within(GS_year, {
+  combinaison <- interaction(Size, cum_mean_cell_rainfall, GLT_Year1)
+  combinaison <- reorder(combinaison, Year_grp_size, mean)
+})
+grpVars <- tapply(GS_year$Year_grp_size, GS_year$combinaison, var)
+grpMeans <- tapply(GS_year$Year_grp_size, GS_year$combinaison, mean)
+# Quasi-Poisson
+lm1 <- lm(grpVars ~ grpMeans - 1)
+phi.fit <- coef(lm1)
+# Binomial negative
+lm2 <- lm(grpVars ~ I(grpMeans^2) + offset(grpMeans) - 1)
+k.fit <- 1/coef(lm2)
+# Plot
+plot(grpVars ~ grpMeans, xlab = "Group means", ylab = "Group variances")
+abline(a = 0, b = 1, lty = 2)
+text(17, 20, "Poisson")
+curve(phi.fit * x, col = 2, add = TRUE)
+text(17, 40, bquote(paste("QuasiPoisson: ", sigma^2 == .(round(phi.fit,
+                                                        1)) * mu)), col = 2)
+curve(x * (1 + x/k.fit), col = 4, add = TRUE)
+text(17, 50, paste("Negative Binomial: k = ", round(k.fit, 1), sep = ""),
+     col = 4)
+
+
+# Model adjustment
+glmm1 = lme4::glmer(Year_grp_size~Size+cum_mean_cell_rainfall+GLT_Year1+(1|Group)+(1|UMMPs), 
+              family=poisson(link="log"), data=GS_year, weights=weight)
+summary(glmm1)
+# Over-dispersion (deviance/df.resid)
+25205.9/615
+
+
+# Model correction
+# CF https://bbolker.github.io/mixedmodels-misc/glmmFAQ.html#glmmtmb
+
+# Alternative distribution = quasipoisson
+# Using MASS::glmmPQL
+glmm2 = MASS::glmmPQL(Year_grp_size~Size+cum_mean_cell_rainfall+GLT_Year1, random=list(Group = ~1, UMMPs = ~1),
+                 family=quasipoisson(link="log"), data=GS_year, weights=weight)
+summary(glmm2)
+
+## Alternative distribution = negative binomial
+glmm2 = glmmTMB::glmmTMB(Year_grp_size~Size+cum_mean_cell_rainfall+GLT_Year1+(1|Group)+(1|UMMPs),
+                         family="nbinom2",data=GS_year, weights=weight,
+                         control=glmmTMBControl(optimizer=optim,optArgs=list(method="BFGS")))
+summary(glmm2)
+
+
+## Variable selection
+glmm_up = update(glmm2,~.-Size)
+summary(glmm_up)
+glmm_up = update(glmm_up,~.-cum_mean_cell_rainfall)
+summary(glmm_up)
+exp(-0.005908)
+
+# Plot
+
+# Post hoc test
+emmeans(glmm_up, ~ GLT_Year1, at = list(GLT_Year1 = c(2000:2020))) # compute the adjusted means holding Year_grp_size at its average, and at each of the specified years
+
+
 
 ## Change point analysis
 # CF https://kevin-kotze.gitlab.io/tsm/ts-2-tut/
@@ -503,10 +580,7 @@ for (i in 1:length(values)) {
   temp<-values[[i]]
   cp_frag<-rbind(cp_frag,GS_frag[[i]][temp,])
 }
-par(mfrow = c(3,3))
 plot(m_pelt[[9]], type = "l", cpt.col = "blue", xlab = "Index", cpt.width = 4)
-
-
 
 
 

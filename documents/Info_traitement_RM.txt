@@ -252,6 +252,10 @@ Traitements :
 4) On calcule la précipitation annuelle cumulée sur une année GLT (et non civile)
 Attention : les années GLT 1999 et 2021 sont calculées sur quelques mois seulement (car on n'a pas les données de 1999 et de 2022 pour les calculer)
 
+*** Calcul du poids
+Variable "weight" qui permet de prendre en compte l'inégalité de l'effort d'échantillonnage
+w = nombre de GLTs/nombre de groupes par fragment par an
+
 *** Subset
 - On ne garde que les données des fichiers d'observation
 - On ne garde que les années de suivi entre 2000 et 2020
@@ -295,6 +299,9 @@ Perimetre : mean +- SD = 206757.176471 +- 382802.154924 (min = 1320.00, max = 14
 Rainfall : mean +- SD = 1272 +- 155 (min = 1025, max = 1515).
 
 3) ANALYSE STATISTIQUE
+Paramètres d'habitat x Taille du groupe/Growth rate
+* Dispersion
+Dispersion de Year_grp_size = Poisson (cf plot)
 * Matrice de corrélation :
                        Year_grp_size       Size      Shape  Perimetre cum_mean_cell_rainfall
 Year_grp_size             1.00000000  0.1437999  0.1866682  0.1574904             0.01475683
@@ -304,3 +311,38 @@ Perimetre                 0.15749037  0.9946090  0.9685676  1.0000000           
 cum_mean_cell_rainfall    0.01475683 -0.2843368 -0.2363347 -0.2769916             1.00000000
 
 Fortes corrélations entre paramètres de fragments : garder SIZE.
+
+
+* Modèle GLMM
+Modèle : variable réponse = taille annuelle du groupe ; effets fixes = Size, Rainfall / effets aléatoires = Année, Groupe, UMMP
+Modèle 1 : sur-dispersion
+Modèle 2 : distribution binomiale négative (utilisation de glmmTMB())
+Sélection des variables les plus significatives : retrait de Size, retrait de Rainfall
+Modèle final =  
+
+ Family: nbinom2  ( log )
+Formula:          Year_grp_size ~ GLT_Year1 + (1 | Group) + (1 | UMMPs)
+Data: GS_year
+Weights: weight
+
+     AIC      BIC   logLik deviance df.resid 
+ 25225.7  25247.9 -12607.9  25215.7      616 
+
+Random effects:
+
+Conditional model:
+ Groups Name        Variance Std.Dev.
+ Group  (Intercept) 0.16060  0.4008  
+ UMMPs  (Intercept) 0.03096  0.1759  
+Number of obs: 621, groups:  Group, 73; UMMPs, 10
+
+Dispersion parameter for nbinom2 family (): 5.13e+08 
+
+Conditional model:
+             Estimate Std. Error z value Pr(>|z|)    
+(Intercept) 13.937662   2.513622   5.545 2.94e-08 ***
+GLT_Year1   -0.005908   0.001251  -4.722 2.34e-06 ***
+---
+Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
+
+-> Taille du groupe diminue significativement avec l'année (p-value < 0.001). La taille du groupe diminue en moyenne d'un individu par année.
