@@ -299,50 +299,86 @@ Perimetre : mean +- SD = 206757.176471 +- 382802.154924 (min = 1320.00, max = 14
 Rainfall : mean +- SD = 1272 +- 155 (min = 1025, max = 1515).
 
 3) ANALYSE STATISTIQUE
-Paramètres d'habitat x Taille du groupe/Growth rate
-* Dispersion
-Dispersion de Year_grp_size = Poisson (cf plot)
+
 * Matrice de corrélation :
-                       Year_grp_size       Size      Shape  Perimetre cum_mean_cell_rainfall
-Year_grp_size             1.00000000  0.1437999  0.1866682  0.1574904             0.01475683
-Size                      0.14379989  1.0000000  0.9473642  0.9946090            -0.28433683
-Shape                     0.18666820  0.9473642  1.0000000  0.9685676            -0.23633474
-Perimetre                 0.15749037  0.9946090  0.9685676  1.0000000            -0.27699164
-cum_mean_cell_rainfall    0.01475683 -0.2843368 -0.2363347 -0.2769916             1.00000000
+                       Year_grp_size       Size      Shape  Perimetre cum_mean_cell_rainfall   GLT_Year1
+Year_grp_size             1.00000000  0.1437999  0.1866682  0.1574904             0.01475683  0.01631024
+Size                      0.14379989  1.0000000  0.9473642  0.9946090            -0.28433683  0.37572382
+Shape                     0.18666820  0.9473642  1.0000000  0.9685676            -0.23633474  0.24294718
+Perimetre                 0.15749037  0.9946090  0.9685676  1.0000000            -0.27699164  0.32715731
+cum_mean_cell_rainfall    0.01475683 -0.2843368 -0.2363347 -0.2769916             1.00000000 -0.29545389
+GLT_Year1                 0.01631024  0.3757238  0.2429472  0.3271573            -0.29545389  1.00000000
 
-Fortes corrélations entre paramètres de fragments : garder SIZE.
 
+A) Group Size 
+
+* Echantillon
+N = 10 UMMPs, 73 groupes, de 2001 à 2020
+
+* Ditribution
+Distribution de Year_grp_size = distribution binomiale négative (utilisation de glmmTMB()) (cf overdispersion Poisson)
+
+* Normaliser les variables
+Scaling by subtracting the mean so that it is centered at 0, and then dividing by the standard deviation
+Standard scaling, also known as Standardization of values, we scale the data values such that the overall statistical summary of every variable has a mean value of zero and an unit variance value (https://www.digitalocean.com/community/tutorials/normalize-data-in-r).
 
 * Modèle GLMM
-Modèle : variable réponse = taille annuelle du groupe ; effets fixes = Size, Rainfall / effets aléatoires = Année, Groupe, UMMP
-Modèle 1 : sur-dispersion
-Modèle 2 : distribution binomiale négative (utilisation de glmmTMB())
+A.1) Not-Nested Model : Group Size ~ Size + Rainfall + (1|Year) + (1|Group) + (1|UMMPs)
+AIC : 25092.5 mais erreur ("False convergence")
+A.2) Nested Model : Group Size ~ Size + Rainfall + (1|Year) + (1|UMMPs/Group)
+AIC : 25092.5
+
+NB : pas de puissance inférentielle suffisante pour tester l'interaction de l'année et de la taille du fragment (pas assez de données)
+
+B) Growth Rate ~ Paramètres d'habitat + Année
+
+* Echantillon
+N = 10 UMMPs, 73 groupes, de 2002 à 2020
+
+* Ditribution
+Distribution de Year_growth_rate = lognormale
+
+* Normaliser les variables
+Scaling by subtracting the mean so that it is centered at 0, and then dividing by the standard deviation
+Standard scaling, also known as Standardization of values, we scale the data values such that the overall statistical summary of every variable has a mean value of zero and an unit variance value (https://www.digitalocean.com/community/tutorials/normalize-data-in-r).
+
+* Modèle LMM avec fonction lmer (package lmerTest)
+Modèle : variable réponse = taux de croissance annuel du groupe ; effets fixes = Size, Rainfall / effets aléatoires = Année, Groupe, UMMP
+
+* Nouveau modèle, sélection des variables
 Sélection des variables les plus significatives : retrait de Size, retrait de Rainfall
 Modèle final =  
 
- Family: nbinom2  ( log )
-Formula:          Year_grp_size ~ GLT_Year1 + (1 | Group) + (1 | UMMPs)
-Data: GS_year
-Weights: weight
+Linear mixed model fit by REML. t-tests use Satterthwaite's method ['lmerModLmerTest']
+Formula: log(Year_growth_rate) ~ GLT_Year1 + (1 | Group) + (1 | UMMPs)
+   Data: GS_year2
 
-     AIC      BIC   logLik deviance df.resid 
- 25225.7  25247.9 -12607.9  25215.7      616 
+REML criterion at convergence: 439.4
+
+Scaled residuals: 
+    Min      1Q  Median      3Q     Max 
+-6.9580 -0.2080  0.0066  0.3443  4.8482 
 
 Random effects:
+ Groups   Name        Variance Std.Dev.
+ Group    (Intercept) 0.0000   0.00000 
+ UMMPs    (Intercept) 0.0014   0.03742 
+ Residual             0.1263   0.35536 
+Number of obs: 548, groups:  Group, 73; UMMPs, 10
 
-Conditional model:
- Groups Name        Variance Std.Dev.
- Group  (Intercept) 0.16060  0.4008  
- UMMPs  (Intercept) 0.03096  0.1759  
-Number of obs: 621, groups:  Group, 73; UMMPs, 10
-
-Dispersion parameter for nbinom2 family (): 5.13e+08 
-
-Conditional model:
-             Estimate Std. Error z value Pr(>|z|)    
-(Intercept) 13.937662   2.513622   5.545 2.94e-08 ***
-GLT_Year1   -0.005908   0.001251  -4.722 2.34e-06 ***
+Fixed effects:
+              Estimate Std. Error         df t value Pr(>|t|)    
+(Intercept)  21.181441   5.805474 139.481021   3.649 0.000372 ***
+GLT_Year1    -0.010545   0.002889 139.847999  -3.650 0.000370 ***
 ---
 Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
 
--> Taille du groupe diminue significativement avec l'année (p-value < 0.001). La taille du groupe diminue en moyenne d'un individu par année.
+Correlation of Fixed Effects:
+          (Intr)
+GLT_Year1 -1.000
+optimizer (nloptwrap) convergence code: 0 (OK)
+boundary (singular) fit: see help('isSingular')
+
+
+* Plot, interpretation
+-> Taux de croissance diminue significativement avec l'année (p-value < 0.001).
