@@ -236,7 +236,7 @@ V. Regarder les GLT qui n'ont ni Idade ni BirthDate
 VI. ANALYSE STATISTIQUE
 
 *** Données :
-- Données d'observation des groupes de GLT de 2001 à 2021
+- Données d'observation des groupes de GLT
 - Données mensuelles de précipitations de Worldclim (résolution 5 minutes ~85 km2) (Fick & Hijmans, 2017). CF : https://www.worldclim.org/data/monthlywth.html 
 
 *** Préparation des données :
@@ -254,7 +254,7 @@ Attention : les années GLT 1999 et 2021 sont calculées sur quelques mois seule
 
 *** Calcul du poids
 Variable "weight" qui permet de prendre en compte l'inégalité de l'effort d'échantillonnage
-w = nombre de GLTs/nombre de groupes par fragment par an
+w = nombre de groupes par fragment par an
 
 *** Subset
 - On ne garde que les données des fichiers d'observation
@@ -264,121 +264,76 @@ w = nombre de GLTs/nombre de groupes par fragment par an
 
 
 Statistiques élémentaires :
-73 groupes, soit 1175 GLT connus répartis dans 10 MUs (UMMPs).
+72 groupes, soit 1175 GLT connus répartis dans 10 MUs (UMMPs).
 Période 2001-2020. 
-Fréquence des visites : de 7 à 82 (mean +- SD = 30.4 +- 21.7). 
-Fréquence moyenne de visite va de 0.33 visites à 5.7 visites/an (mean +- SD = 2.86 +-  1.34).
+Fréquence des visites : de 7 à 82 (mean +- SD = 30.7 +- 21.7). 
+Fréquence moyenne de visite va de 0.35 visites à 5.7 visites/an (mean +- SD = 2.99 +- 1.37).
 
 - Plot number of visits
 - Plot mean annual visits
 
 I. TAILLE ET CROISSANCE DES GROUPES
 1) STATISTIQUES PAR GROUPE
-Sur toute la période, la taille annuelle de groupe varie de 1 à 29 GLTs (mean +- SD = 8.57 +- 4.01).
-La valeur maximale de taille moyenne de groupe est atteinte en 2012 (mean +- SD = 9.89 +- 3.26).
-La valeur minimale de taille moyenne de groupe est atteinte en 2019 (mean +- SD = 7.47 +- 4.45).
-Sur toute la période, la MU qui a la valeur moyenne de taille de groupe la plus faible est Poco das Antas (mean +- SD = 7.10 +- 2.89).
-Sur toute la période, la MU qui a la valeur moyenne de taille de groupe la plus forte est Uniao II (mean +- SD = 10.5 +- 1.73).
-Sur toute la période, la taille du groupe en saison sèche varie de 1 à 29 (mean +- SD = 8.36 +- 4.02), en saison humide de 1 à 22 (mean +- SD = 8.24 +- 3.71).
+CF script
 
 - Plot taille du groupe dans le temps
 - Plot taille du groupe selon les MUs
 - Boxplot taille du groupe selon les saisons
 
-Sur toute la période, le taux de croissance annuel varie de 0.077 à 5.0 par groupe (mean +- SD = 1.06 +- 0.377).
-La valeur maximale de taux moyen de croissance annuelle par groupe est atteinte en 2012 (mean +- SD = 1.22 +- 0.304).
-La valeur minimale de taux moyen de croissance annuelle par groupe est atteinte en 2005 (mean +- SD = 0.938 +- 0.162).
-Sur toute la période, les taux moyens de croissance annuelle par groupe ont été inférieurs à 1 pendant 7 années : 2005 ; 2018 ; 2014 ; 2019 ; 2008 ; 2011 ; 2016 ; supérieurs à 1 les autres années.
-Sur toute la période, les taux moyens de croissance annuelle par groupe sont inférieurs à Aldeia I (mean +- SD = 0.974 +- 0.261), à Poco das Antas (mean +- SD = 0.987 +- 0.362) et à Aldeia II (mean +- SD = 0.988 +- 0.188) ; supérieurs ailleurs. Max = Imbau III (mean +- SD = 1.18 +- 0.270).
-
 2) STATISTIQUES DES FRAGMENTS
 *** Fragment parameters
-Shape : mean +- SD = 6.112994 +- 6.105539 (min = 1.128205, max = 22.00264)
-Size: mean +- SD = 3740.340176 +- 6986.491969 (min = 8.37, max = 27099.54)
-Perimetre : mean +- SD = 206757.176471 +- 382802.154924 (min = 1320.00, max = 1434000.00)
-Rainfall : mean +- SD = 1272 +- 155 (min = 1025, max = 1515).
+CF script
 
 3) ANALYSE STATISTIQUE
 
 * Matrice de corrélation :
-                       Year_grp_size       Size      Shape  Perimetre cum_mean_cell_rainfall   GLT_Year1
-Year_grp_size             1.00000000  0.1437999  0.1866682  0.1574904             0.01475683  0.01631024
-Size                      0.14379989  1.0000000  0.9473642  0.9946090            -0.28433683  0.37572382
-Shape                     0.18666820  0.9473642  1.0000000  0.9685676            -0.23633474  0.24294718
-Perimetre                 0.15749037  0.9946090  0.9685676  1.0000000            -0.27699164  0.32715731
-cum_mean_cell_rainfall    0.01475683 -0.2843368 -0.2363347 -0.2769916             1.00000000 -0.29545389
-GLT_Year1                 0.01631024  0.3757238  0.2429472  0.3271573            -0.29545389  1.00000000
+                             Size      Shape  Perimetre cum_mean_cell_rainfall  GLT_Year1
+Size                    1.0000000  0.9472631  0.9945902             -0.2831732  0.3737796
+Shape                   0.9472631  1.0000000  0.9685681             -0.2345899  0.2399304
+Perimetre               0.9945902  0.9685681  1.0000000             -0.2758024  0.3250574
+cum_mean_cell_rainfall -0.2831732 -0.2345899 -0.2758024              1.0000000 -0.2937118
+GLT_Year1               0.3737796  0.2399304  0.3250574             -0.2937118  1.0000000
 
-
-A) Group Size 
 
 * Echantillon
-N = 10 UMMPs, 73 groupes, de 2001 à 2020
 
-* Ditribution
-Distribution de Year_grp_size = distribution binomiale négative (utilisation de glmmTMB()) (cf overdispersion Poisson)
 
 * Normaliser les variables
 Scaling by subtracting the mean so that it is centered at 0, and then dividing by the standard deviation
 Standard scaling, also known as Standardization of values, we scale the data values such that the overall statistical summary of every variable has a mean value of zero and an unit variance value (https://www.digitalocean.com/community/tutorials/normalize-data-in-r).
 
+* Distribution
+
+
 * Modèle GLMM
 A.1) Not-Nested Model : Group Size ~ Size + Rainfall + (1|Year) + (1|Group) + (1|UMMPs)
-AIC : 25092.5 mais erreur ("False convergence")
+
 A.2) Nested Model : Group Size ~ Size + Rainfall + (1|Year) + (1|UMMPs/Group)
-AIC : 25092.5
+
 
 NB : pas de puissance inférentielle suffisante pour tester l'interaction de l'année et de la taille du fragment (pas assez de données)
+
+* Modèle final après sélection
 
 B) Growth Rate ~ Paramètres d'habitat + Année
 
 * Echantillon
-N = 10 UMMPs, 73 groupes, de 2002 à 2020
 
-* Ditribution
-Distribution de Year_growth_rate = lognormale
 
 * Normaliser les variables
 Scaling by subtracting the mean so that it is centered at 0, and then dividing by the standard deviation
 Standard scaling, also known as Standardization of values, we scale the data values such that the overall statistical summary of every variable has a mean value of zero and an unit variance value (https://www.digitalocean.com/community/tutorials/normalize-data-in-r).
 
-* Modèle LMM avec fonction lmer (package lmerTest)
-Modèle : variable réponse = taux de croissance annuel du groupe ; effets fixes = Size, Rainfall / effets aléatoires = Année, Groupe, UMMP
-
-* Nouveau modèle, sélection des variables
-Sélection des variables les plus significatives : retrait de Size, retrait de Rainfall
-Modèle final =  
-
-Linear mixed model fit by REML. t-tests use Satterthwaite's method ['lmerModLmerTest']
-Formula: log(Year_growth_rate) ~ GLT_Year1 + (1 | Group) + (1 | UMMPs)
-   Data: GS_year2
-
-REML criterion at convergence: 439.4
-
-Scaled residuals: 
-    Min      1Q  Median      3Q     Max 
--6.9580 -0.2080  0.0066  0.3443  4.8482 
-
-Random effects:
- Groups   Name        Variance Std.Dev.
- Group    (Intercept) 0.0000   0.00000 
- UMMPs    (Intercept) 0.0014   0.03742 
- Residual             0.1263   0.35536 
-Number of obs: 548, groups:  Group, 73; UMMPs, 10
-
-Fixed effects:
-              Estimate Std. Error         df t value Pr(>|t|)    
-(Intercept)  21.181441   5.805474 139.481021   3.649 0.000372 ***
-GLT_Year1    -0.010545   0.002889 139.847999  -3.650 0.000370 ***
----
-Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
-
-Correlation of Fixed Effects:
-          (Intr)
-GLT_Year1 -1.000
-optimizer (nloptwrap) convergence code: 0 (OK)
-boundary (singular) fit: see help('isSingular')
+* Distribution
 
 
-* Plot, interpretation
--> Taux de croissance diminue significativement avec l'année (p-value < 0.001).
+* Modèles LMM avec fonction lmer (package lmerTest)
+A.1) Not-Nested Model : Group Size ~ Size + Rainfall + (1|Year) + (1|Group) + (1|UMMPs)
+
+A.2) Nested Model : Group Size ~ Size + Rainfall + (1|Year) + (1|UMMPs/Group)
+
+
+* Modèle final =
+
+
+* Plot

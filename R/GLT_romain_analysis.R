@@ -11,7 +11,7 @@ load.lib = c("dplyr","tibble", "data.table",
              "fitbitViz", "terra", "psych",
              "ggpubr", "cowplot", "lme4", "MASS",
              "glmmTMB", "broom.mixed", "emmeans","multcomp",
-             "ggeffects", "lmerTest")
+             "ggeffects", "lmerTest", "car")
 sapply(load.lib,require,character=TRUE)
 
 
@@ -105,7 +105,7 @@ cumul_rainfall %>%
   print(n=30)
 cumul_rainfall %>% 
   dplyr::summarise_at("cum_mean_cell_rainfall",list(min=min, max=max, mean=mean, sd=sd))
-ggplot(cumul_rainfall, aes(x=cumul_rainfall$cum_mean_cell_rainfall))+
+ggplot(cumul_rainfall, aes(x=cum_mean_cell_rainfall))+
   geom_histogram(aes(y = ..density..), fill='lightgray', col='darkgrey') +
   geom_density(lwd = 1, colour = 4,
                fill = 4, alpha = 0.25) +
@@ -134,12 +134,13 @@ ggplot(totsizearea,aes(x = UMMPs, y = Size)) +
   ylab("Fragment size")
 
 
-### SUBSET DATA
+### SUBSET DATA FOR GROUP DYNAMICS ANALYSIS
 # Create monitoring periods
 sub = data_clean_v2 %>% 
+  dplyr::filter(File == "Obs") %>%
+  dplyr::filter(GLT_Year1 >= 2000 & GLT_Year1 <= 2020) %>%
   dplyr::group_by(Group) %>% 
-  dplyr::filter(GLT_Year1 > 1999 & GLT_Year1 < 2021) %>% 
-  dplyr::filter(!is.na(UMMPs)) %>% 
+  dplyr::filter(!is.na(UMMPs)) %>%
   dplyr::mutate(Monit_Years_grp = diff(range(GLT_Year1))+1) %>% 
   dplyr::mutate(Monit_1stYear_grp = min(GLT_Year1), 
                 Monit_LastYear_grp = max(GLT_Year1)) %>%
@@ -154,8 +155,8 @@ sub = sub %>%
   dplyr::mutate(Monit_Period_frag = paste0(unique(c(Monit_1stYear_frag, Monit_LastYear_frag)), collapse = '-')) %>%
   ungroup() %>% 
   as.data.frame() # By UMMPs
+# Subset data with years of monitoring
 sub = sub %>% 
-  dplyr::filter(File == "Obs") %>%
   dplyr::group_by(Group, Monit_Years_grp) %>% 
   dplyr::filter(Monit_Years_grp >= 6) %>% 
   dplyr::filter(!is.na(Group)) %>%
@@ -441,7 +442,6 @@ ggplot(plot,aes(x = GLT_Year1, y = mean)) +
   xlab("Year") + 
   ylab("Mean growth rate")
 
-
 # Habitat parameters
 mean_GS_frag_year %>% 
   dplyr::select(Shape, Size, Perimetre) %>% 
@@ -454,7 +454,7 @@ mean_GS_frag_year %>%
 sub = sub %>% 
   dplyr::left_join(dplyr::select(GS_year,c(id_frag,GLT_Year1,Group))) %>% 
   dplyr::group_by(id_frag) %>% 
-  dplyr::mutate(weight = n_distinct(GLT)/n_distinct(Group)) %>% 
+  dplyr::mutate(weight = n_distinct(Group)) %>% 
   dplyr::ungroup()
 GS_year = GS_year%>% 
   dplyr::left_join(dplyr::select(sub, c(id_frag,GLT_Year1,Group,weight))) %>% 
@@ -464,14 +464,17 @@ GS_year = GS_year%>%
 
 ### STATISTICAL ANALYSIS 
 load("D:/monas/Git/repo/glt/GoldenLionTamarins/data/NewlyCreatedData/GS_year.RData")
-## Model
-# Exploration/colinearities
 summary(GS_year)
 GS_year %>% 
   dplyr::summarise(across(c("UMMPs","Group"), ~ n_distinct(.x, na.rm = TRUE)))
+GS_year = GS_year %>% 
+  dplyr::group_by(UMMPs,Group) %>% 
+  dplyr::mutate(Size_evol = Size/lag(Size)) %>% 
+  dplyr::ungroup() # Fragment size growth rate
+
 # Correlation matrix
 GS_year %>% 
-  dplyr::select(Year_grp_size, Size, Shape, Perimetre, cum_mean_cell_rainfall, GLT_Year1) %>% 
+  dplyr::select(Size, Shape, Perimetre, cum_mean_cell_rainfall, GLT_Year1) %>% 
   cor()
 par(mfrow=c(2,3))
 plot(Year_grp_size~Size+Shape+Perimetre+cum_mean_cell_rainfall+GLT_Year1, data=GS_year)
@@ -482,26 +485,27 @@ plot(Year_grp_size~Size+Shape+Perimetre+cum_mean_cell_rainfall+GLT_Year1, data=G
 # For alternative plotting: https://r.qcbs.ca/workshop07/book-fr/choisir-la-distribution-des-erreurs.html
 # Pick the distribution for which the largest number of observations falls between the dashed lines
 par(mfrow=c(3,2))
-qqp(GS_year$Year_grp_size, "norm") # QQplot normal distribution
-qqp(GS_year$Year_grp_size, "lnorm") # QQplot lognormal distribution
+car::qqp(GS_year$Year_grp_size, "norm") # QQplot normal distribution
+car::qqp(GS_year$Year_grp_size, "lnorm") # QQplot lognormal distribution
 nbinom <- fitdistr(GS_year$Year_grp_size, "Negative Binomial")
-qqp(GS_year$Year_grp_size, "nbinom", size = nbinom$estimate[[1]], mu = nbinom$estimate[[2]]) # QQplot negative binomial
+car::qqp(GS_year$Year_grp_size, "nbinom", size = nbinom$estimate[[1]], mu = nbinom$estimate[[2]]) # QQplot negative binomial
 poisson <- fitdistr(GS_year$Year_grp_size, "Poisson")
-qqp(GS_year$Year_grp_size, "pois", lambda=poisson$estimate) # QQplot Poisson
+car::qqp(GS_year$Year_grp_size, "pois", lambda=poisson$estimate) # QQplot Poisson
 gamma <- fitdistr(GS_year$Year_grp_size, "gamma")
-qqp(GS_year$Year_grp_size, "gamma", shape = gamma$estimate[[1]], rate = gamma$estimate[[2]]) # Gamma distribution
+car::qqp(GS_year$Year_grp_size, "gamma", shape = gamma$estimate[[1]], rate = gamma$estimate[[2]]) # Gamma distribution
 
 # Model adjustment
 # Rescaling
-GS_year2 = GS_year %>% 
-  dplyr::mutate_at(c("Size", "cum_mean_cell_rainfall"), ~(scale(.) %>% as.vector))
+GS_year = GS_year %>% 
+  dplyr::mutate(Size_sc = scale(Size) %>% as.vector) %>% 
+  dplyr::mutate(Rainfall_sc = scale(cum_mean_cell_rainfall) %>% as.vector)
 
-# GLMM Group size
-glmm1 = lme4::glmer(Year_grp_size~Size+cum_mean_cell_rainfall+GLT_Year1+(1|Group)+(1|UMMPs), 
-              family=poisson(link="log"), data=GS_year2, weights=weight)
+# GROUP SIZE
+glmm1 = lme4::glmer(Year_grp_size ~ Size_sc + Rainfall_sc + (1|GLT_Year1) + (1|UMMPs/Group), 
+              family=poisson(link="log"), data=GS_year, weights=weight) # Groups are nested within UMMPs
 summary(glmm1)
 # Over-dispersion (deviance/df.resid)
-25205.9/615
+21639.3/611
 # Function for over-dispersion detection
 overdisp_fun <- function(model) {
   ## number of variance parameters in an n-by-n variance-covariance matrix
@@ -524,37 +528,34 @@ overdisp_fun(glmm1)
 # CF https://bbolker.github.io/mixedmodels-misc/glmmFAQ.html#glmmtmb
 # Alternative distribution = quasipoisson
 # Using MASS::glmmPQL
-glmm2 = MASS::glmmPQL(Year_grp_size~Size+cum_mean_cell_rainfall+GLT_Year1, random=list(Group = ~1, UMMPs = ~1),
+glmm2.1 = MASS::glmmPQL(Year_grp_size~Size+cum_mean_cell_rainfall+GLT_Year1, random=list(Group = ~1, UMMPs = ~1),
                  family=quasipoisson(link="log"), data=GS_year, weights=weight)
 summary(glmm2)
 # Alternative distribution = negative binomial
-# First model
-glmm2.1 = glmmTMB::glmmTMB(Year_grp_size ~ Size + cum_mean_cell_rainfall + GLT_Year1 + (1|Group) + (1|UMMPs),
-                         family="nbinom2", data=GS_year2, weights=weight,
-                         control=glmmTMBControl(optimizer=optim,optArgs=list(method="BFGS")))
+glmm2.1 = glmmTMB::glmmTMB(Year_grp_size ~ Size_sc + Rainfall_sc + (1|GLT_Year1) + (1|UMMPs) + (1|Group),
+                           family="nbinom2", data=GS_year, weights=weight)
 summary(glmm2.1)
-# Variable selection
-glmm_up = update(glmm2.1,~.-Size)
-summary(glmm_up)
-glmm_up = update(glmm_up,~.-cum_mean_cell_rainfall)
-summary(glmm_up)
-exp(-0.005908)
-
-# Other models
-glmm2.1 = glmmTMB::glmmTMB(Year_grp_size ~ Size + cum_mean_cell_rainfall + (1|GLT_Year1) + (1|UMMPs) + (1|Group),
-                           family="nbinom2", data=GS_year2, weights=weight)
-summary(glmm2.1)
-glmm2.2 = glmmTMB::glmmTMB(Year_grp_size ~ Size + cum_mean_cell_rainfall + (1|GLT_Year1) + (1|UMMPs/Group),
-                           family="nbinom2", data=GS_year2, weights=weight,
+glmm2.2 = glmmTMB::glmmTMB(Year_grp_size ~ Size_sc + Rainfall_sc + (1|GLT_Year1) + (1|UMMPs/Group),
+                           family="nbinom2", data=GS_year, weights=weight,
                            control=glmmTMBControl(optimizer=optim,optArgs=list(method="BFGS")))
 summary(glmm2.2)
 
+# Variable selection
+glmm_up = update(glmm2.2,~.-Rainfall_sc)
+summary(glmm_up)
 
-# Scater plot
+
+# Scatter plot
 # CF : https://strengejacke.github.io/ggeffects/articles/introduction_randomeffects.html
-predict = ggpredict(glmm_up, terms="GLT_Year1 [all]", type="fixed", back.transform = TRUE)
-plot(Year_grp_size~GLT_Year1, data=GS_year, ylab="Taille annuelle du groupe", xlab="Année")
-lines(predict$x,predict$predicted)
+# With back transformation
+predict = ggpredict(glmm_up, terms="Size [all]", type="fixed", back.transform = TRUE)
+predict$Size_unscaled = (predict$x * sd(GS_year$Size)) + mean(GS_year$Size) # Unscale values
+plot(Year_grp_size~Size, data=GS_year, ylab="Taille annuelle du groupe", xlab="Taille du fragment")
+lines(predict$Size_unscaled ,predict$predicted)
+# Without transformation
+predict = ggpredict(glmm_up, terms="Size [all]", type="fixed")
+plot(log(Year_grp_size)~Size, data=GS_year2, ylab="Taille annuelle du groupe", xlab="Taille du fragment")
+lines(predict$x, log(predict$predicted))
 # Barplot
 my_sum <- GS_year %>%
   dplyr::group_by(GLT_Year1) %>%
@@ -575,39 +576,42 @@ ggplot(my_sum) +
   theme_light()
 
 
-# GLMM Growth rate
+# GROUP GROWTH RATE
 GS_year2 = GS_year %>% 
-  dplyr::filter(!is.na(Year_growth_rate)) %>% 
-  dplyr::mutate_at(c("Size", "cum_mean_cell_rainfall"), ~(scale(.) %>% as.vector))
+  dplyr::filter(!is.na(Year_growth_rate) & !is.na(Size_evol)) %>% 
 GS_year2 %>% 
   summary()
 GS_year2 %>% 
   dplyr::summarise(across(c("UMMPs","Group"), ~ n_distinct(.x, na.rm = TRUE)))
 # Distribution
-qqp(GS_year2$Year_growth_rate, "norm") # QQplot normal distribution
-qqp(GS_year2$Year_growth_rate, "lnorm") # QQplot lognormal distribution
+car::qqp(GS_year2$Year_growth_rate, "norm") # QQplot normal distribution
+car::qqp(GS_year2$Year_growth_rate, "lnorm") # QQplot lognormal distribution
 nbinom <- fitdistr(GS_year2$Year_growth_rate, "Negative Binomial")
-qqp(GS_year2$Year_growth_rate, "nbinom", size = nbinom$estimate[[1]], mu = nbinom$estimate[[2]]) # QQplot negative binomial
+car::qqp(GS_year2$Year_growth_rate, "nbinom", size = nbinom$estimate[[1]], mu = nbinom$estimate[[2]]) # QQplot negative binomial
 poisson <- fitdistr(GS_year2$Year_growth_rate, "Poisson")
-qqp(GS_year2$Year_growth_rate, "pois", lambda=poisson$estimate) # QQplot Poisson
+car::qqp(GS_year2$Year_growth_rate, "pois", lambda=poisson$estimate) # QQplot Poisson
 gamma <- fitdistr(GS_year2$Year_growth_rate, "gamma")
-qqp(GS_year2$Year_growth_rate, "gamma", shape = gamma$estimate[[1]], rate = gamma$estimate[[2]]) # Gamma distribution
+car::qqp(GS_year2$Year_growth_rate, "gamma", shape = gamma$estimate[[1]], rate = gamma$estimate[[2]]) # Gamma distribution
 
 # LMM
-lmm1 = lmerTest::lmer(log(Year_growth_rate) ~ Size + cum_mean_cell_rainfall + GLT_Year1 + (1|Group) + (1|UMMPs),
-                    data = GS_year2)
+lmm1 = lmerTest::lmer(log(Year_growth_rate) ~ Size_sc + Rainfall_sc + Size_evol + (1|GLT_Year1) + (1|Group) + (1|UMMPs),
+                    data = GS_year2, REML=FALSE)
 summary(lmm1)
+lmm2 = lmerTest::lmer(log(Year_growth_rate) ~ Size_sc + Rainfall_sc + Size_evol + (1|GLT_Year1) + (1|UMMPs/Group),
+                      data = GS_year2, REML=FALSE)
+summary(lmm2)
 # Variable selection
-lmm_up = update(lmm1,~.-cum_mean_cell_rainfall)
+lmm_up = update(lmm2,~.-Rainfall_sc)
 summary(lmm_up)
-lmm_up = update(lmm_up,~.-Size)
+lmm_up = update(lmm_up,~.-Size_evol)
 summary(lmm_up)
 
-# Scater plot
+# Scatter plot
 # CF : https://strengejacke.github.io/ggeffects/articles/introduction_randomeffects.html
-predict = ggpredict(lmm_up, terms="GLT_Year1 [all]", type="fixed", back.transform = TRUE)
-plot(Year_growth_rate~GLT_Year1, data=GS_year2, ylab="Taux de croissance annuel du groupe", xlab="Année")
-lines(predict$x,predict$predicted)
+predict = ggpredict(lmm_up, terms="Size_sc [all]", type="fixed", back.transform = TRUE)
+predict$Size= (predict$x * sd(GS_year2$Size)) + mean(GS_year2$Size) # Unscale values
+plot(Year_growth_rate~Size, data=GS_year2, ylab="Taux de croissance annuel du groupe", xlab="Taille du fragment")
+lines(predict$Size ,predict$predicted)
 # Barplot
 my_sum <- GS_year2 %>%
   dplyr::group_by(GLT_Year1) %>%
@@ -626,6 +630,78 @@ ggplot(my_sum) +
   ylab("Taux de croissance annuel moyen") +
   xlab("Année") +
   theme_light()
+
+## GROUP DENSITY
+# Data subset
+sub = data_clean_v2 %>% 
+  dplyr::filter(File == "Obs") %>%
+  dplyr::group_by(Group) %>% 
+  dplyr::filter(!is.na(UMMPs)) %>%
+  dplyr::filter(!is.na(Group)) %>%
+  dplyr::mutate(Monit_Years_grp = diff(range(GLT_Year1))+1) %>% 
+  dplyr::mutate(Monit_1stYear_grp = min(GLT_Year1), 
+                Monit_LastYear_grp = max(GLT_Year1)) %>%
+  dplyr::mutate(Monit_Period_grp = paste0(unique(c(Monit_1stYear_grp, Monit_LastYear_grp)), collapse = '-')) %>%
+  ungroup() %>% 
+  as.data.frame() # By group
+sub = sub %>% 
+  dplyr::group_by(UMMPs) %>% 
+  dplyr::mutate(Monit_Years_frag = diff(range(GLT_Year1))+1) %>% 
+  dplyr::mutate(Monit_1stYear_frag = min(GLT_Year1), 
+                Monit_LastYear_frag = max(GLT_Year1)) %>%
+  dplyr::mutate(Monit_Period_frag = paste0(unique(c(Monit_1stYear_frag, Monit_LastYear_frag)), collapse = '-')) %>%
+  ungroup() %>% 
+  as.data.frame() # By UMMPs
+GD_year = sub %>% 
+  dplyr::filter(Monit_1stYear_grp >= 2000 & Monit_LastYear_grp <= 2020) %>% 
+  dplyr::select(c(UMMPs,Group,GLT_Year1)) %>% 
+  dplyr::distinct()
+GD_year = GD_year %>% 
+  dplyr::rename(Year=GLT_Year1) %>% 
+  dplyr::left_join(dplyr::select(totperim,c(Group,Year,Perimetre))) %>% 
+  dplyr::left_join(dplyr::select(totshape,c(Group,Year,Shape))) %>% 
+  dplyr::left_join(dplyr::select(totsizearea,c(Group,Year,Size))) %>%
+  dplyr::rename(GLT_Year1=Year) %>% 
+  dplyr::distinct(Group,GLT_Year1,Perimetre,Shape,Size, .keep_all =TRUE)
+GD_year = GD_year %>% 
+  dplyr::left_join(dplyr::select(cumul_rainfall,c(GLT_Year1,cum_mean_cell_rainfall)))
+GD_year = GD_year%>%                                        
+  dplyr::group_by(GLT_Year1,Shape,Size) %>%
+  dplyr::mutate(id_frag = cur_group_id()) %>% 
+  ungroup() %>% 
+  as.data.frame()
+GD_year = GD_year %>% 
+  dplyr::group_by(id_frag) %>% 
+  dplyr::mutate(N_grp = n_distinct(Group)) %>% 
+  dplyr::mutate(Grp_density = N_grp/Size) %>% 
+  dplyr::ungroup()
+GD_year = GD_year %>% 
+  dplyr::distinct(id_frag, .keep_all = TRUE) %>% 
+  dplyr::select(c(GLT_Year1,UMMPs,id_frag,Size,N_grp,Grp_density,cum_mean_cell_rainfall))
+GD_year = GD_year %>% 
+  dplyr::mutate(Size_sc = scale(Size) %>% as.vector) %>% 
+  dplyr::mutate(Rainfall_sc = scale(cum_mean_cell_rainfall) %>% as.vector)
+GD_year %>% 
+  summary()
+# Distribution
+car::qqp(GD_year$Grp_density, "norm") # QQplot normal distribution
+car::qqp(GD_year$Grp_density, "lnorm") # QQplot lognormal distribution
+nbinom <- fitdistr(GD_year$Grp_density, "Negative Binomial")
+car::qqp(GD_year$Grp_density, "nbinom", size = nbinom$estimate[[1]], mu = nbinom$estimate[[2]]) # QQplot negative binomial
+poisson <- fitdistr(GD_year$Grp_density, "Poisson")
+car::qqp(GD_year$Grp_density, "pois", lambda=poisson$estimate) # QQplot Poisson
+gamma <- fitdistr(GD_year$Grp_density, "gamma")
+car::qqp(GD_year$Grp_density, "gamma", shape = gamma$estimate[[1]], rate = gamma$estimate[[2]]) # Gamma distribution
+# LMM
+lmm1 = lmerTest::lmer(log(Grp_density) ~ Size_sc + Rainfall_sc + (1|GLT_Year1) + (1|UMMPs),
+                      data = GD_year, REML=FALSE)
+summary(lmm1)
+# Scatter plot
+# CF : https://strengejacke.github.io/ggeffects/articles/introduction_randomeffects.html
+predict = ggpredict(lmm1, terms="Size_sc [all]", type="fixed", back.transform = TRUE)
+predict$Size= (predict$x * sd(GD_year$Size)) + mean(GD_year$Size) # Unscale values
+plot(Grp_density~Size, data=GD_year, ylab="Densité de groupes par fragment", xlab="Taille du fragment")
+lines(predict$Size ,predict$predicted)
 
 
 ## Change point analysis
