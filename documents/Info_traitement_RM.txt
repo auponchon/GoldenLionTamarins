@@ -294,46 +294,200 @@ Perimetre               0.9945902  0.9685681  1.0000000             -0.2758024  
 cum_mean_cell_rainfall -0.2831732 -0.2345899 -0.2758024              1.0000000 -0.2937118
 GLT_Year1               0.3737796  0.2399304  0.3250574             -0.2937118  1.0000000
 
-
+A) GROUP SIZE (group level)
 * Echantillon
-
+10 UMMPs, 72 groupes, 170 fragments
 
 * Normaliser les variables
 Scaling by subtracting the mean so that it is centered at 0, and then dividing by the standard deviation
 Standard scaling, also known as Standardization of values, we scale the data values such that the overall statistical summary of every variable has a mean value of zero and an unit variance value (https://www.digitalocean.com/community/tutorials/normalize-data-in-r).
 
 * Distribution
-
+Year_grp_size = negative binomial
 
 * Modèle GLMM
+Modèle Poisson sur-dispersé = passage en nbinom
 A.1) Not-Nested Model : Group Size ~ Size + Rainfall + (1|Year) + (1|Group) + (1|UMMPs)
-
+Erreur
 A.2) Nested Model : Group Size ~ Size + Rainfall + (1|Year) + (1|UMMPs/Group)
-
+Celui que l'on garde
 
 NB : pas de puissance inférentielle suffisante pour tester l'interaction de l'année et de la taille du fragment (pas assez de données)
 
-* Modèle final après sélection
+* Modèle final
 
-B) Growth Rate ~ Paramètres d'habitat + Année
+ Family: nbinom2  ( log )
+Formula:          Year_grp_size ~ Size_sc + Rainfall_sc + (1 | GLT_Year1) + (1 |  
+    UMMPs/Group)
+Data: GS_year
+Weights: weight
+
+     AIC      BIC   logLik deviance df.resid 
+ 21653.3  21684.3 -10819.7  21639.3      610 
+
+Random effects:
+
+Conditional model:
+ Groups      Name        Variance  Std.Dev.
+ GLT_Year1   (Intercept) 7.254e-03 0.085171
+ Group:UMMPs (Intercept) 1.371e-01 0.370229
+ UMMPs       (Intercept) 3.907e-06 0.001977
+Number of obs: 617, groups:  GLT_Year1, 20; Group:UMMPs, 72; UMMPs, 10
+
+Dispersion parameter for nbinom2 family (): 6.02e+07 
+
+Conditional model:
+            Estimate Std. Error z value Pr(>|z|)    
+(Intercept) 2.070247   0.048708   42.50   <2e-16 ***
+Size_sc     0.012542   0.013221    0.95    0.343    
+Rainfall_sc 0.009242   0.020755    0.45    0.656    
+---
+Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
+
+AA) GROUP SIZE (fragment level)
+Taille du groupe moyenne annuelle sur le fragment ~ Taille du fragment + Rainfall + (1|UMMPs) + (1|Year)
 
 * Echantillon
+N = 170 fragments
 
+* Distribution
+Gamma
+
+* Modèle final
+Generalized linear mixed model fit by maximum likelihood (Laplace Approximation) ['glmerMod']
+ Family: Gamma  ( inverse )
+Formula: mean_annual_grp_size ~ Size_sc + (1 | GLT_Year1) + (1 | UMMPs)
+   Data: Stat_frag_year
+Weights: n_grp
+
+     AIC      BIC   logLik deviance df.resid 
+  2521.2   2536.9  -1255.6   2511.2      165 
+
+Scaled residuals: 
+    Min      1Q  Median      3Q     Max 
+-2.6284 -0.6061 -0.1096  0.4176  3.4495 
+
+Random effects:
+ Groups    Name        Variance  Std.Dev.
+ GLT_Year1 (Intercept) 0.0003801 0.01950 
+ UMMPs     (Intercept) 0.0002977 0.01725 
+ Residual              0.1710794 0.41362 
+Number of obs: 170, groups:  GLT_Year1, 20; UMMPs, 10
+
+Fixed effects:
+             Estimate Std. Error t value Pr(>|z|)    
+(Intercept)  0.133029   0.009843   13.52   <2e-16 ***
+Size_sc     -0.003067   0.001503   -2.04   0.0413 *  
+---
+Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
+
+Correlation of Fixed Effects:
+        (Intr)
+Size_sc -0.022
+
+
+
+B) GROWTH RATE (group level)
+
+* Echantillon
+72 groupes dans 10 UMMPs
 
 * Normaliser les variables
 Scaling by subtracting the mean so that it is centered at 0, and then dividing by the standard deviation
 Standard scaling, also known as Standardization of values, we scale the data values such that the overall statistical summary of every variable has a mean value of zero and an unit variance value (https://www.digitalocean.com/community/tutorials/normalize-data-in-r).
 
 * Distribution
-
+Lognormale
 
 * Modèles LMM avec fonction lmer (package lmerTest)
 A.1) Not-Nested Model : Group Size ~ Size + Rainfall + (1|Year) + (1|Group) + (1|UMMPs)
-
 A.2) Nested Model : Group Size ~ Size + Rainfall + (1|Year) + (1|UMMPs/Group)
 
 
 * Modèle final =
+Linear mixed model fit by maximum likelihood . t-tests use Satterthwaite's method [
+lmerModLmerTest]
+Formula: logYGR ~ Size_sc + (1 | GLT_Year1) + (1 | UMMPs/Group)
+   Data: GS_year2
+Weights: weight
 
+     AIC      BIC   logLik deviance df.resid 
+   414.1    439.9   -201.0    402.1      539 
+
+Scaled residuals: 
+    Min      1Q  Median      3Q     Max 
+-5.7947 -0.3347  0.0140  0.3768  4.2847 
+
+Random effects:
+ Groups      Name        Variance  Std.Dev.
+ Group:UMMPs (Intercept) 0.000e+00 0.000000
+ GLT_Year1   (Intercept) 3.383e-03 0.058159
+ UMMPs       (Intercept) 7.802e-05 0.008833
+ Residual                6.543e-01 0.808869
+Number of obs: 545, groups:  Group:UMMPs, 72; GLT_Year1, 19; UMMPs, 10
+
+Fixed effects:
+              Estimate Std. Error         df t value Pr(>|t|)  
+(Intercept)  0.0001454  0.0208448  3.5834300   0.007   0.9948  
+Size_sc     -0.0436291  0.0148830  3.9612573  -2.931   0.0433 *
+---
+Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
+
+Correlation of Fixed Effects:
+        (Intr)
+Size_sc -0.122
+optimizer (nloptwrap) convergence code: 0 (OK)
+boundary (singular) fit: see help('isSingular')
+
+* Plot
+
+C) GROUP DENSITY (fragment level)
+
+* Echantillon : différent de l'analyse au niveau des groupes
+Données d'observation de 2000 à 2021 ; 12 UMMPS et 232 fragments (définis comme des taches discrètes à l'année)
+* Normaliser les variables
+Scaling by subtracting the mean so that it is centered at 0, and then dividing by the standard deviation
+Standard scaling, also known as Standardization of values, we scale the data values such that the overall statistical summary of every variable has a mean value of zero and an unit variance value (https://www.digitalocean.com/community/tutorials/normalize-data-in-r).
+
+* Distribution
+Lognormale
+
+* Modèles LMM avec fonction lmer (package lmerTest)
+Group Density ~ Size + Rainfall + (1|Year) + (1|UMMPs)
+
+* Modèle final = 
+
+Linear mixed model fit by maximum likelihood . t-tests use Satterthwaite's method [
+lmerModLmerTest]
+Formula: logGD ~ Size_sc + (1 | GLT_Year1) + (1 | UMMPs)
+   Data: GD_year
+Weights: n_grp
+
+     AIC      BIC   logLik deviance df.resid 
+   684.4    701.6   -337.2    674.4      227 
+
+Scaled residuals: 
+     Min       1Q   Median       3Q      Max 
+-2.11915 -0.80322 -0.09321  0.53564  2.30752 
+
+Random effects:
+ Groups    Name        Variance Std.Dev.
+ GLT_Year1 (Intercept) 0.000    0.000   
+ UMMPs     (Intercept) 1.314    1.146   
+ Residual              1.839    1.356   
+Number of obs: 232, groups:  GLT_Year1, 20; UMMPs, 12
+
+Fixed effects:
+             Estimate Std. Error        df t value Pr(>|t|)    
+(Intercept)  -5.13558    0.35285  10.63650  -14.55 2.32e-08 ***
+Size_sc      -1.16942    0.05638 224.73602  -20.74  < 2e-16 ***
+---
+Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
+
+Correlation of Fixed Effects:
+        (Intr)
+Size_sc -0.028
+optimizer (nloptwrap) convergence code: 0 (OK)
+boundary (singular) fit: see help('isSingular')
 
 * Plot

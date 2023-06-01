@@ -106,7 +106,7 @@ cumul_rainfall %>%
 cumul_rainfall %>% 
   dplyr::summarise_at("cum_mean_cell_rainfall",list(min=min, max=max, mean=mean, sd=sd))
 ggplot(cumul_rainfall, aes(x=cum_mean_cell_rainfall))+
-  geom_histogram(aes(y = ..density..), fill='lightgray', col='darkgrey') +
+  geom_histogram(aes(y = after_stat(density)), fill='lightgray', col='darkgrey') +
   geom_density(lwd = 1, colour = 4,
                fill = 4, alpha = 0.25) +
   xlab("Mean cumulative rainfall") + 
@@ -138,8 +138,8 @@ ggplot(totsizearea,aes(x = UMMPs, y = Size)) +
 # Create monitoring periods
 sub = data_clean_v2 %>% 
   dplyr::filter(File == "Obs") %>%
-  dplyr::filter(GLT_Year1 >= 2000 & GLT_Year1 <= 2020) %>%
   dplyr::group_by(Group) %>% 
+  dplyr::filter(GLT_Year1 >= 2000 & GLT_Year1 <= 2020) %>%
   dplyr::filter(!is.na(UMMPs)) %>%
   dplyr::mutate(Monit_Years_grp = diff(range(GLT_Year1))+1) %>% 
   dplyr::mutate(Monit_1stYear_grp = min(GLT_Year1), 
@@ -323,13 +323,6 @@ GS_year = GS_year%>%
   dplyr::mutate(id_frag = cur_group_id()) %>% 
   ungroup() %>% 
   as.data.frame() # Create ID by group
-mean_GS_frag_year = GS_year %>% 
-  dplyr::group_by(GLT_Year1,id_frag) %>% 
-  dplyr::mutate(mean_annual_grp_size = mean(Year_grp_size)) %>% 
-  ungroup() %>% 
-  dplyr::distinct(id_frag, .keep_all = TRUE) %>% 
-  dplyr::select(id_frag,UMMPs,GLT_Year1,Shape,Size,Perimetre,mean_annual_grp_size,cum_mean_cell_rainfall)
-
 # Seasonal group size and growth rate 
 GS_season = sub %>%
   dplyr::group_by(UMMPs,Group,GLT_Year1,season) %>% 
@@ -443,34 +436,43 @@ ggplot(plot,aes(x = GLT_Year1, y = mean)) +
   ylab("Mean growth rate")
 
 # Habitat parameters
-mean_GS_frag_year %>% 
+# Summarise by fragment
+Stat_frag_year = GS_year %>% 
+  dplyr::group_by(GLT_Year1,id_frag) %>% 
+  dplyr::mutate(mean_annual_grp_size = mean(Year_grp_size)) %>% 
+  dplyr::mutate(n_grp = n_distinct(Group),
+                density = n_grp/Size) %>% 
+  ungroup() %>% 
+  dplyr::distinct(id_frag, .keep_all = TRUE) %>% 
+  dplyr::select(id_frag,UMMPs,GLT_Year1,Shape,Size,Perimetre,
+                mean_annual_grp_size,cum_mean_cell_rainfall,
+                n_grp,density)
+Stat_frag_year %>% 
   dplyr::select(Shape, Size, Perimetre) %>% 
   psych::describe(quant=c(.25,.75)) %>%
   as_tibble(rownames="rowname")  %>%
   as.data.frame() %>% 
   format(scientific=FALSE)
 
-# Compute a weight to take the monitoring effort into account
-sub = sub %>% 
-  dplyr::left_join(dplyr::select(GS_year,c(id_frag,GLT_Year1,Group))) %>% 
-  dplyr::group_by(id_frag) %>% 
-  dplyr::mutate(weight = n_distinct(Group)) %>% 
-  dplyr::ungroup()
-GS_year = GS_year%>% 
-  dplyr::left_join(dplyr::select(sub, c(id_frag,GLT_Year1,Group,weight))) %>% 
-  distinct(.keep_all=TRUE)
+# Save data subset
 # save(GS_year, file="D:/monas/Git/repo/glt/GoldenLionTamarins/data/NewlyCreatedData/GS_year.RData")
-
+# save(Stat_frag_year, file="D:/monas/Git/repo/glt/GoldenLionTamarins/data/NewlyCreatedData/Stat_frag_year.RData")
 
 ### STATISTICAL ANALYSIS 
 load("D:/monas/Git/repo/glt/GoldenLionTamarins/data/NewlyCreatedData/GS_year.RData")
 summary(GS_year)
 GS_year %>% 
-  dplyr::summarise(across(c("UMMPs","Group"), ~ n_distinct(.x, na.rm = TRUE)))
+  dplyr::summarise(across(c("UMMPs","Group","id_frag"), ~ n_distinct(.x, na.rm = TRUE)))
 GS_year = GS_year %>% 
   dplyr::group_by(UMMPs,Group) %>% 
   dplyr::mutate(Size_evol = Size/lag(Size)) %>% 
   dplyr::ungroup() # Fragment size growth rate
+# Compute a weight to take the monitoring effort into account
+GS_year = GS_year %>% 
+  dplyr::group_by(id_frag, GLT_Year1) %>% 
+  dplyr::mutate(weight = n_distinct(Group)) %>% 
+  dplyr::ungroup()
+
 
 # Correlation matrix
 GS_year %>% 
@@ -478,8 +480,14 @@ GS_year %>%
   cor()
 par(mfrow=c(2,3))
 plot(Year_grp_size~Size+Shape+Perimetre+cum_mean_cell_rainfall+GLT_Year1, data=GS_year)
+plot(mean_annual_grp_size~Size, data=Stat_frag_year)
 
+# Rescaling
+GS_year = GS_year %>% 
+  dplyr::mutate(Size_sc = scale(Size) %>% as.vector) %>% 
+  dplyr::mutate(Rainfall_sc = scale(cum_mean_cell_rainfall) %>% as.vector)
 
+# GROUP SIZE (group level)
 # Diagnosis of best fitting distribution
 # See : https://ase.tufts.edu/bugs/guide/assets/mixed_model_guide.html
 # For alternative plotting: https://r.qcbs.ca/workshop07/book-fr/choisir-la-distribution-des-erreurs.html
@@ -493,14 +501,7 @@ poisson <- fitdistr(GS_year$Year_grp_size, "Poisson")
 car::qqp(GS_year$Year_grp_size, "pois", lambda=poisson$estimate) # QQplot Poisson
 gamma <- fitdistr(GS_year$Year_grp_size, "gamma")
 car::qqp(GS_year$Year_grp_size, "gamma", shape = gamma$estimate[[1]], rate = gamma$estimate[[2]]) # Gamma distribution
-
-# Model adjustment
-# Rescaling
-GS_year = GS_year %>% 
-  dplyr::mutate(Size_sc = scale(Size) %>% as.vector) %>% 
-  dplyr::mutate(Rainfall_sc = scale(cum_mean_cell_rainfall) %>% as.vector)
-
-# GROUP SIZE
+# Model
 glmm1 = lme4::glmer(Year_grp_size ~ Size_sc + Rainfall_sc + (1|GLT_Year1) + (1|UMMPs/Group), 
               family=poisson(link="log"), data=GS_year, weights=weight) # Groups are nested within UMMPs
 summary(glmm1)
@@ -548,14 +549,19 @@ summary(glmm_up)
 # Scatter plot
 # CF : https://strengejacke.github.io/ggeffects/articles/introduction_randomeffects.html
 # With back transformation
-predict = ggpredict(glmm_up, terms="Size [all]", type="fixed", back.transform = TRUE)
-predict$Size_unscaled = (predict$x * sd(GS_year$Size)) + mean(GS_year$Size) # Unscale values
-plot(Year_grp_size~Size, data=GS_year, ylab="Taille annuelle du groupe", xlab="Taille du fragment")
-lines(predict$Size_unscaled ,predict$predicted)
+predict = ggpredict(glmm_up, terms="Size_sc [all]", type="fixed", back.transform = TRUE)
+predict$Size = (predict$x * sd(GS_year$Size)) + mean(GS_year$Size) # Unscale values
+ggplot(data=predict, aes(x = Size, y = predicted)) +
+  geom_line() +
+  geom_line(data = predict, aes(x = Size, y = conf.low), linetype = "dashed", color = "black") +
+  geom_line(data = predict, aes(x = Size, y = conf.high), linetype = "dashed", color = "black") +
+  geom_ribbon(aes(ymin=conf.low, ymax=conf.high), alpha=0.2) +
+  geom_jitter(aes(x = Size, y = Year_growth_rate), data=GS_year2) +
+  theme_minimal()
 # Without transformation
-predict = ggpredict(glmm_up, terms="Size [all]", type="fixed")
-plot(log(Year_grp_size)~Size, data=GS_year2, ylab="Taille annuelle du groupe", xlab="Taille du fragment")
-lines(predict$x, log(predict$predicted))
+# predict = ggpredict(glmm_up, terms="Size [all]", type="fixed")
+# plot(log(Year_grp_size)~Size, data=GS_year2, ylab="Taille annuelle du groupe", xlab="Taille du fragment")
+# lines(predict$x, log(predict$predicted))
 # Barplot
 my_sum <- GS_year %>%
   dplyr::group_by(GLT_Year1) %>%
@@ -576,9 +582,35 @@ ggplot(my_sum) +
   theme_light()
 
 
-# GROUP GROWTH RATE
+
+# GROUP SIZE (fragment level)
+Stat_frag_year = Stat_frag_year %>% 
+  dplyr::mutate(Size_sc = scale(Size) %>% as.vector) %>% 
+  dplyr::mutate(Rainfall_sc = scale(cum_mean_cell_rainfall) %>% as.vector)
+# Distribution
+car::qqp(Stat_frag_year$mean_annual_grp_size, "norm") # QQplot normal distribution
+car::qqp(Stat_frag_year$mean_annual_grp_size, "lnorm") # QQplot lognormal distribution
+nbinom <- fitdistr(Stat_frag_year$mean_annual_grp_size, "Negative Binomial")
+car::qqp(Stat_frag_year$mean_annual_grp_size, "nbinom", size = nbinom$estimate[[1]], mu = nbinom$estimate[[2]]) # QQplot negative binomial
+poisson <- fitdistr(Stat_frag_year$mean_annual_grp_size, "Poisson")
+car::qqp(Stat_frag_year$mean_annual_grp_size, "pois", lambda=poisson$estimate) # QQplot Poisson
+gamma <- fitdistr(Stat_frag_year$mean_annual_grp_size, "gamma")
+car::qqp(Stat_frag_year$mean_annual_grp_size, "gamma", shape = gamma$estimate[[1]], rate = gamma$estimate[[2]]) # Gamma distribution
+# Model
+glmm1 = lme4::glmer(mean_annual_grp_size ~ Size_sc + Rainfall_sc + (1|GLT_Year1) + (1|UMMPs), 
+                    family=Gamma, data=Stat_frag_year, weights=n_grp) # Groups are nested within UMMPs
+summary(glmm1)
+# Variable selection
+glmm_up = update(glmm1,~.-Rainfall_sc)
+summary(glmm_up)
+
+# GROUP GROWTH RATE (group level)
 GS_year2 = GS_year %>% 
-  dplyr::filter(!is.na(Year_growth_rate) & !is.na(Size_evol)) %>% 
+  dplyr::filter(!is.na(Year_growth_rate)) %>% 
+  dplyr::mutate(Evolution = ifelse(Year_growth_rate < 1, "Decroit",
+                                   ifelse(Year_growth_rate == 1, "Stable",
+                                          ifelse(Year_growth_rate > 1, "Croit", NA)))) %>% 
+  dplyr::mutate(logYGR = log(Year_growth_rate))
 GS_year2 %>% 
   summary()
 GS_year2 %>% 
@@ -594,24 +626,44 @@ gamma <- fitdistr(GS_year2$Year_growth_rate, "gamma")
 car::qqp(GS_year2$Year_growth_rate, "gamma", shape = gamma$estimate[[1]], rate = gamma$estimate[[2]]) # Gamma distribution
 
 # LMM
-lmm1 = lmerTest::lmer(log(Year_growth_rate) ~ Size_sc + Rainfall_sc + Size_evol + (1|GLT_Year1) + (1|Group) + (1|UMMPs),
-                    data = GS_year2, REML=FALSE)
+lmm1 = lmerTest::lmer(logYGR ~ Size_sc + Rainfall_sc + (1|GLT_Year1) + (1|Group) + (1|UMMPs),
+                    data = GS_year2, weights=weight, REML=FALSE)
 summary(lmm1)
-lmm2 = lmerTest::lmer(log(Year_growth_rate) ~ Size_sc + Rainfall_sc + Size_evol + (1|GLT_Year1) + (1|UMMPs/Group),
-                      data = GS_year2, REML=FALSE)
+lmm2 = lmerTest::lmer(logYGR ~ Size_sc + Rainfall_sc + (1|GLT_Year1) + (1|UMMPs/Group),
+                      data = GS_year2, weights=weight, REML=FALSE)
 summary(lmm2)
 # Variable selection
 lmm_up = update(lmm2,~.-Rainfall_sc)
 summary(lmm_up)
-lmm_up = update(lmm_up,~.-Size_evol)
-summary(lmm_up)
 
 # Scatter plot
 # CF : https://strengejacke.github.io/ggeffects/articles/introduction_randomeffects.html
-predict = ggpredict(lmm_up, terms="Size_sc [all]", type="fixed", back.transform = TRUE)
-predict$Size= (predict$x * sd(GS_year2$Size)) + mean(GS_year2$Size) # Unscale values
-plot(Year_growth_rate~Size, data=GS_year2, ylab="Taux de croissance annuel du groupe", xlab="Taille du fragment")
-lines(predict$Size ,predict$predicted)
+prediction = as.data.frame(ggpredict(lmm_up, terms="Size_sc [all]", type="fixed", back.transform = TRUE))
+prediction$Size= (prediction$x * sd(GS_year2$Size)) + mean(GS_year2$Size) # Unscale values
+prediction = prediction %>% 
+  dplyr::mutate_at(c("predicted","conf.low","conf.high"), funs(exp=exp(.)))
+# Plot (log)
+ggplot(data=prediction, aes(x = Size, y = predicted)) +
+  geom_line() +
+  geom_line(data = prediction, aes(x = Size, y = conf.low), linetype = "dashed", color = "black") +
+  geom_line(data = prediction, aes(x = Size, y = conf.high), linetype = "dashed", color = "black") +
+  geom_ribbon(aes(ymin=conf.low, ymax=conf.high), alpha=0.2) +
+  geom_jitter(aes(x = Size, y = logYGR), data=GS_year2) +
+  theme_minimal() +
+  xlab("Taille du fragment") +
+  ylab("Log(Taux de croissance annuel)")
+# Plot
+ggplot(data=prediction, aes(x = Size, y = predicted_exp)) +
+  geom_line() +
+  geom_line(data = prediction, aes(x = Size, y = conf.low_exp), linetype = "dashed", color = "black") +
+  geom_line(data = prediction, aes(x = Size, y = conf.high_exp), linetype = "dashed", color = "black") +
+  geom_ribbon(aes(ymin=conf.low_exp, ymax=conf.high_exp), alpha=0.2) +
+  geom_jitter(aes(x = Size, y = Year_growth_rate, color = Evolution), data=GS_year2) +
+  scale_color_manual(values = c("brown1", "cornflowerblue", "lightpink2")) + 
+  theme_minimal() +
+  xlab("Taille du fragment") +
+  ylab("Taux de croissance annuel")
+
 # Barplot
 my_sum <- GS_year2 %>%
   dplyr::group_by(GLT_Year1) %>%
@@ -631,10 +683,13 @@ ggplot(my_sum) +
   xlab("Année") +
   theme_light()
 
+
+
 ## GROUP DENSITY
 # Data subset
-sub = data_clean_v2 %>% 
+GD_year = data_clean_v2 %>% 
   dplyr::filter(File == "Obs") %>%
+  dplyr::filter(GLT_Year1 >= 2000 & GLT_Year1 <= 2020) %>% 
   dplyr::group_by(Group) %>% 
   dplyr::filter(!is.na(UMMPs)) %>%
   dplyr::filter(!is.na(Group)) %>%
@@ -644,16 +699,7 @@ sub = data_clean_v2 %>%
   dplyr::mutate(Monit_Period_grp = paste0(unique(c(Monit_1stYear_grp, Monit_LastYear_grp)), collapse = '-')) %>%
   ungroup() %>% 
   as.data.frame() # By group
-sub = sub %>% 
-  dplyr::group_by(UMMPs) %>% 
-  dplyr::mutate(Monit_Years_frag = diff(range(GLT_Year1))+1) %>% 
-  dplyr::mutate(Monit_1stYear_frag = min(GLT_Year1), 
-                Monit_LastYear_frag = max(GLT_Year1)) %>%
-  dplyr::mutate(Monit_Period_frag = paste0(unique(c(Monit_1stYear_frag, Monit_LastYear_frag)), collapse = '-')) %>%
-  ungroup() %>% 
-  as.data.frame() # By UMMPs
 GD_year = sub %>% 
-  dplyr::filter(Monit_1stYear_grp >= 2000 & Monit_LastYear_grp <= 2020) %>% 
   dplyr::select(c(UMMPs,Group,GLT_Year1)) %>% 
   dplyr::distinct()
 GD_year = GD_year %>% 
@@ -665,22 +711,26 @@ GD_year = GD_year %>%
   dplyr::distinct(Group,GLT_Year1,Perimetre,Shape,Size, .keep_all =TRUE)
 GD_year = GD_year %>% 
   dplyr::left_join(dplyr::select(cumul_rainfall,c(GLT_Year1,cum_mean_cell_rainfall)))
-GD_year = GD_year%>%                                        
+GD_year = GD_year%>% 
+  dplyr::filter(GLT_Year1 >= 2000 & GLT_Year1 <= 2020) %>% 
   dplyr::group_by(GLT_Year1,Shape,Size) %>%
   dplyr::mutate(id_frag = cur_group_id()) %>% 
   ungroup() %>% 
   as.data.frame()
 GD_year = GD_year %>% 
   dplyr::group_by(id_frag) %>% 
-  dplyr::mutate(N_grp = n_distinct(Group)) %>% 
-  dplyr::mutate(Grp_density = N_grp/Size) %>% 
+  dplyr::mutate(n_grp = n_distinct(Group)) %>% 
+  dplyr::mutate(Grp_density = n_grp/Size) %>% 
   dplyr::ungroup()
 GD_year = GD_year %>% 
   dplyr::distinct(id_frag, .keep_all = TRUE) %>% 
-  dplyr::select(c(GLT_Year1,UMMPs,id_frag,Size,N_grp,Grp_density,cum_mean_cell_rainfall))
+  dplyr::select(c(GLT_Year1,UMMPs,id_frag,Size,n_grp,Grp_density,cum_mean_cell_rainfall))
 GD_year = GD_year %>% 
   dplyr::mutate(Size_sc = scale(Size) %>% as.vector) %>% 
-  dplyr::mutate(Rainfall_sc = scale(cum_mean_cell_rainfall) %>% as.vector)
+  dplyr::mutate(Rainfall_sc = scale(cum_mean_cell_rainfall) %>% as.vector) %>% 
+  dplyr::mutate(logGD = log(Grp_density))
+GD_year %>% 
+  dplyr::summarise(across(c("UMMPs","id_frag"), ~ n_distinct(.x, na.rm = TRUE)))
 GD_year %>% 
   summary()
 # Distribution
@@ -692,19 +742,45 @@ poisson <- fitdistr(GD_year$Grp_density, "Poisson")
 car::qqp(GD_year$Grp_density, "pois", lambda=poisson$estimate) # QQplot Poisson
 gamma <- fitdistr(GD_year$Grp_density, "gamma")
 car::qqp(GD_year$Grp_density, "gamma", shape = gamma$estimate[[1]], rate = gamma$estimate[[2]]) # Gamma distribution
-# LMM
-lmm1 = lmerTest::lmer(log(Grp_density) ~ Size_sc + Rainfall_sc + (1|GLT_Year1) + (1|UMMPs),
-                      data = GD_year, REML=FALSE)
+# GLMM
+lmm1 = lmerTest::lmer(logGD ~ Size_sc + Rainfall_sc + (1|GLT_Year1) + (1|UMMPs),
+                      data = GD_year, weights=n_grp, REML=FALSE)
 summary(lmm1)
+# Update model
+lmm_up = update(lmm1,~.-Rainfall_sc)
+summary(lmm_up)
+
 # Scatter plot
 # CF : https://strengejacke.github.io/ggeffects/articles/introduction_randomeffects.html
-predict = ggpredict(lmm1, terms="Size_sc [all]", type="fixed", back.transform = TRUE)
-predict$Size= (predict$x * sd(GD_year$Size)) + mean(GD_year$Size) # Unscale values
-plot(Grp_density~Size, data=GD_year, ylab="Densité de groupes par fragment", xlab="Taille du fragment")
-lines(predict$Size ,predict$predicted)
+prediction = as.data.frame(ggpredict(lmm_up, terms="Size_sc [all]", type="fixed", back.transform = TRUE))
+prediction$Size= (prediction$x * sd(GD_year$Size)) + mean(GD_year$Size) # Unscale values
+prediction = prediction %>% 
+  dplyr::mutate_at(c("predicted","conf.low","conf.high"), funs(exp=exp(.)))
+# Plot (log)
+ggplot(data=prediction, aes(x = Size, y = predicted)) +
+  geom_line() +
+  geom_line(data = prediction, aes(x = Size, y = conf.low), linetype = "dashed", color = "black") +
+  geom_line(data = prediction, aes(x = Size, y = conf.high), linetype = "dashed", color = "black") +
+  geom_ribbon(aes(ymin=conf.low, ymax=conf.high), alpha=0.2) +
+  geom_jitter(aes(x = Size, y = logGD), data=GD_year) +
+  theme_minimal() +
+  xlab("Taille du fragment") +
+  ylab("Log(Densité de groupes)")
+# Plot
+ggplot(data=prediction, aes(x = Size, y = predicted_exp)) +
+  geom_line() +
+  geom_line(data = prediction, aes(x = Size, y = conf.low_exp), linetype = "dashed", color = "black") +
+  geom_line(data = prediction, aes(x = Size, y = conf.high_exp), linetype = "dashed", color = "black") +
+  geom_ribbon(aes(ymin=conf.low_exp, ymax=conf.high_exp), alpha=0.2) +
+  geom_jitter(aes(x = Size, y = Grp_density), data=GD_year) +
+  theme_minimal() +
+  xlab("Taille du fragment") +
+  ylab("Densité de groupes")
 
 
-## Change point analysis
+
+
+### Change point analysis
 # CF https://kevin-kotze.gitlab.io/tsm/ts-2-tut/
 # Overall dataset
 GS_mean <- GS_year %>%
