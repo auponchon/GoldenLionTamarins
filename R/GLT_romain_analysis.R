@@ -505,6 +505,9 @@ car::qqp(GS_year$Year_grp_size, "gamma", shape = gamma$estimate[[1]], rate = gam
 glmm1 = lme4::glmer(Year_grp_size ~ Size_sc + Rainfall_sc + (1|GLT_Year1) + (1|UMMPs/Group), 
               family=poisson(link="log"), data=GS_year, weights=weight) # Groups are nested within UMMPs
 summary(glmm1)
+glmm1 = lme4::glmer(Year_grp_size ~ Size_sc + Size_evol + Rainfall_sc + (1|GLT_Year1) + (1|UMMPs/Group), 
+                    family=poisson(link="log"), data=GS_year, weights=weight, na.action = "na.omit") # Groups are nested within UMMPs
+summary(glmm1) # With size_evol
 # Over-dispersion (deviance/df.resid)
 21639.3/611
 # Function for over-dispersion detection
@@ -538,6 +541,11 @@ glmm2.1 = glmmTMB::glmmTMB(Year_grp_size ~ Size_sc + Rainfall_sc + (1|GLT_Year1)
 summary(glmm2.1)
 glmm2.2 = glmmTMB::glmmTMB(Year_grp_size ~ Size_sc + Rainfall_sc + (1|GLT_Year1) + (1|UMMPs/Group),
                            family="nbinom2", data=GS_year, weights=weight,
+                           control=glmmTMBControl(optimizer=optim,optArgs=list(method="BFGS")))
+summary(glmm2.2)
+# With size_evol
+glmm2.2 = glmmTMB::glmmTMB(Year_grp_size ~ Size_sc + Size_evol + Rainfall_sc + (1|GLT_Year1) + (1|UMMPs/Group),
+                           family="nbinom2", data=GS_year, weights=weight, na.action = "na.omit",
                            control=glmmTMBControl(optimizer=optim,optArgs=list(method="BFGS")))
 summary(glmm2.2)
 
@@ -584,6 +592,7 @@ ggplot(my_sum) +
 
 
 # GROUP SIZE (fragment level)
+load("D:/monas/Git/repo/glt/GoldenLionTamarins/data/NewlyCreatedData/Stat_frag_year.RData")
 Stat_frag_year = Stat_frag_year %>% 
   dplyr::mutate(Size_sc = scale(Size) %>% as.vector) %>% 
   dplyr::mutate(Rainfall_sc = scale(cum_mean_cell_rainfall) %>% as.vector)

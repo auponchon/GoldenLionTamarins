@@ -240,7 +240,7 @@ VI. ANALYSE STATISTIQUE
 - Données mensuelles de précipitations de Worldclim (résolution 5 minutes ~85 km2) (Fick & Hijmans, 2017). CF : https://www.worldclim.org/data/monthlywth.html 
 
 *** Préparation des données :
-- GLT_Year = année (12 mois) d'une saison sèche à une autre (cf Dias et al. 2015). Mois de référence = mois où les groupes sont les plus stables (pas de naissance, pas d'immigration/émigration) (cf Dietz et al. 1994; Romano et al. 2018) = JUILLET
+- GLT_Year = année (12 mois) d'une saison sèche à une autre (cf Dias et al. 2015). Mois de référence = mois où les groupes sont les plus stables (pas de naissance, pas d'immigration/émigration) (cf Dietz et al. 1994; Romano et al. 2019) = JUILLET
 - Exemple : toute date strictement avant Juillet 1989 = 1988, et toute date dès Juillet et jusqu'à Juin de l'année suivante = 1989
 
 *** Calcul des précipitations annuelles cumulées :
@@ -444,7 +444,7 @@ boundary (singular) fit: see help('isSingular')
 C) GROUP DENSITY (fragment level)
 
 * Echantillon : différent de l'analyse au niveau des groupes
-Données d'observation de 2000 à 2021 ; 12 UMMPS et 232 fragments (définis comme des taches discrètes à l'année)
+Données d'observation de 2000 à 2020 ; 12 UMMPS et 232 fragments (définis comme des taches discrètes à l'année)
 * Normaliser les variables
 Scaling by subtracting the mean so that it is centered at 0, and then dividing by the standard deviation
 Standard scaling, also known as Standardization of values, we scale the data values such that the overall statistical summary of every variable has a mean value of zero and an unit variance value (https://www.digitalocean.com/community/tutorials/normalize-data-in-r).
