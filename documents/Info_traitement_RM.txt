@@ -288,11 +288,11 @@ CF script
 
 * Matrice de corrélation :
                              Size      Shape  Perimetre cum_mean_cell_rainfall  GLT_Year1
-Size                    1.0000000  0.9472631  0.9945902             -0.2831732  0.3737796
-Shape                   0.9472631  1.0000000  0.9685681             -0.2345899  0.2399304
-Perimetre               0.9945902  0.9685681  1.0000000             -0.2758024  0.3250574
-cum_mean_cell_rainfall -0.2831732 -0.2345899 -0.2758024              1.0000000 -0.2937118
-GLT_Year1               0.3737796  0.2399304  0.3250574             -0.2937118  1.0000000
+Size                    1.0000000  0.9478550  0.9946517             -0.2839346  0.3702962
+Shape                   0.9478550  1.0000000  0.9688447             -0.2342521  0.2385288
+Perimetre               0.9946517  0.9688447  1.0000000             -0.2762476  0.3219143
+cum_mean_cell_rainfall -0.2839346 -0.2342521 -0.2762476              1.0000000 -0.2937118
+GLT_Year1               0.3702962  0.2385288  0.3219143             -0.2937118  1.0000000
 
 A) GROUP SIZE (group level)
 * Echantillon
@@ -443,8 +443,10 @@ boundary (singular) fit: see help('isSingular')
 
 C) GROUP DENSITY (fragment level)
 
-* Echantillon : différent de l'analyse au niveau des groupes
-Données d'observation de 2000 à 2020 ; 12 UMMPS et 232 fragments (définis comme des taches discrètes à l'année)
+* Echantillon
+On a sélectionné les fragments également présents dans l'analyse de taille de groupe et de taux de croissance (soit n=193).
+Par contre, la densité est calculée sur l'intégralité des groupes présents; pas seulement les groupes échantillonnés N années au moins.
+
 * Normaliser les variables
 Scaling by subtracting the mean so that it is centered at 0, and then dividing by the standard deviation
 Standard scaling, also known as Standardization of values, we scale the data values such that the overall statistical summary of every variable has a mean value of zero and an unit variance value (https://www.digitalocean.com/community/tutorials/normalize-data-in-r).
@@ -460,34 +462,33 @@ Group Density ~ Size + Rainfall + (1|Year) + (1|UMMPs)
 Linear mixed model fit by maximum likelihood . t-tests use Satterthwaite's method [
 lmerModLmerTest]
 Formula: logGD ~ Size_sc + (1 | GLT_Year1) + (1 | UMMPs)
-   Data: GD_year
-Weights: n_grp
+   Data: GD_frag_year
+Weights: weight
 
      AIC      BIC   logLik deviance df.resid 
-   684.4    701.6   -337.2    674.4      227 
+   454.7    471.0   -222.4    444.7      188 
 
 Scaled residuals: 
      Min       1Q   Median       3Q      Max 
--2.11915 -0.80322 -0.09321  0.53564  2.30752 
+-3.13119 -0.45979 -0.04144  0.47785  1.58572 
 
 Random effects:
  Groups    Name        Variance Std.Dev.
- GLT_Year1 (Intercept) 0.000    0.000   
- UMMPs     (Intercept) 1.314    1.146   
- Residual              1.839    1.356   
-Number of obs: 232, groups:  GLT_Year1, 20; UMMPs, 12
+ GLT_Year1 (Intercept) 0.002574 0.05074 
+ UMMPs     (Intercept) 1.747071 1.32177 
+ Residual              1.285940 1.13399 
+Number of obs: 193, groups:  GLT_Year1, 20; UMMPs, 10
 
 Fixed effects:
              Estimate Std. Error        df t value Pr(>|t|)    
-(Intercept)  -5.13558    0.35285  10.63650  -14.55 2.32e-08 ***
-Size_sc      -1.16942    0.05638 224.73602  -20.74  < 2e-16 ***
+(Intercept)  -5.12953    0.42861   9.49748  -11.97 4.84e-07 ***
+Size_sc      -0.87141    0.05329 134.73009  -16.35  < 2e-16 ***
 ---
 Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
 
 Correlation of Fixed Effects:
         (Intr)
-Size_sc -0.028
-optimizer (nloptwrap) convergence code: 0 (OK)
-boundary (singular) fit: see help('isSingular')
+Size_sc -0.010
+
 
 * Plot
