@@ -11,7 +11,8 @@ load.lib = c("dplyr","tibble", "data.table",
              "fitbitViz", "terra", "psych",
              "ggpubr", "cowplot", "lme4", "MASS",
              "glmmTMB", "broom.mixed", "emmeans","multcomp",
-             "ggeffects", "lmerTest", "car")
+             "ggeffects", "lmerTest", "car", "outliers",
+             "ggalt")
 sapply(load.lib,require,character=TRUE)
 
 
@@ -155,7 +156,9 @@ data_clean_v2 = data_clean_v2 %>%
   dplyr::mutate(weight = n_distinct(Group)) %>% 
   dplyr::ungroup()
 data_clean_v2 = data_clean_v2 %>% 
-  dplyr::mutate(Size_km2 = Size/100)
+  dplyr::mutate(Size_km2 = Size/100) %>% 
+  dplyr::mutate(Size_cat = ifelse(Size<=60, "Small",
+                                  ifelse(Size>60, "Large", NA)))
 
 ### SUBSET DATA FOR GROUP DYNAMICS ANALYSIS
 # Create monitoring periods
@@ -258,7 +261,9 @@ ggplot(g, aes(x = Monit_1stYear_frag, y = UMMPs)) +
   geom_point(aes(x = Monit_LastYear_frag), size = 2, colour="darkorange") +
   theme_bw() +
   theme(legend.position = "none",
-        text = element_text(size=10))
+        text = element_text(size=10)) +
+  xlab("Monitoring period") + 
+  ylab("Management unit")
 # Plot monitoring periods by fragment
 g = sub %>% 
   dplyr::group_by(Group) %>% 
@@ -270,7 +275,9 @@ ggplot(g, aes(x = Monit_1stYear_grp, y = Group)) +
   geom_point(size = 2, colour="darkorange") +
   geom_point(aes(x = Monit_LastYear_grp), size = 2, colour="darkorange") +
   theme_bw() +
-  theme(legend.position = "none")
+  theme(legend.position = "none") +
+  xlab("Monitoring period") + 
+  ylab("Group (monitored >= 6 years)")
 # By group and by fragment
 sub_frag = sub %>% 
   dplyr::group_by(UMMPs) %>% 
@@ -311,7 +318,7 @@ GS_year = sub %>%
   as.data.frame()
 GS_year = GS_year %>% 
   dplyr::left_join(dplyr::select(data_clean_v2,c("UMMPs","Group","GLT_Year1",
-                                                 "id_frag","Shape","Perimetre","Size","Size_km2",
+                                                 "id_frag","Shape","Perimetre","Size","Size_km2","Size_cat",
                                                  "cum_mean_cell_rainfall",
                                                  "weight"))) %>% 
   dplyr::distinct(UMMPs,Group,GLT_Year1, .keep_all = TRUE) # Join habitat parameters and keep the distinct groups/year
@@ -417,7 +424,7 @@ GS_frag_year = GS_year %>%
   ungroup()
 GS_frag_year = GS_frag_year %>% 
   dplyr::distinct(id_frag, .keep_all = TRUE) %>% 
-  dplyr::select(id_frag,UMMPs,GLT_Year1,Shape,Size,Size_km2,Perimetre,
+  dplyr::select(id_frag,UMMPs,GLT_Year1,Shape,Size,Size_km2,Size_cat,Perimetre,
                 n_glt, mean_annual_grp_size,cum_mean_cell_rainfall,
                 n_grp,density,weight)
 GS_frag_year %>% 
@@ -427,7 +434,8 @@ GS_frag_year %>%
   as.data.frame() %>% 
   format(scientific=FALSE)
 GS_frag_year %>% 
-  dplyr::summarise(prop = n_distinct(id_frag[Size<100])*100/n_distinct(id_frag))
+  dplyr::group_by(Size_cat) %>% 
+  dplyr::summarise(n=n_distinct(id_frag),prop=n*100/193)
 ggplot(aes(x=Size, y=n_glt), data=GS_frag_year) +
   geom_jitter() +
   xlab("Fragment size") +
@@ -440,13 +448,26 @@ save(GS_frag_year, file="D:/monas/Git/repo/glt/GoldenLionTamarins/data/NewlyCrea
 ### STATISTICAL ANALYSIS 
 load("D:/monas/Git/repo/glt/GoldenLionTamarins/data/NewlyCreatedData/GS_year.RData")
 summary(GS_year)
-GS_year %>% 
-  dplyr::summarise(across(c("UMMPs","Group","id_frag"), ~ n_distinct(.x, na.rm = TRUE)))
+
+# Outliers removal
+outlier(GS_year$Size)
+grubbs.test(GS_year$Size)
+GS_year = GS_year %>% 
+  dplyr::filter(Size<27099)
+
+# Mutate new variables
 GS_year = GS_year %>% 
   dplyr::group_by(UMMPs,Group) %>% 
   dplyr::mutate(Size_evol = Size_km2/lag(Size_km2)) %>% 
   dplyr::ungroup() # Fragment size growth rate
+# Rescaling
+GS_year = GS_year %>% 
+  dplyr::mutate(Size_sc = scale(Size_km2) %>% as.vector) %>% 
+  dplyr::mutate(Rainfall_sc = scale(cum_mean_cell_rainfall) %>% as.vector)
+
 # Statistical summaries
+GS_year %>% 
+  dplyr::summarise(across(c("UMMPs","Group","id_frag"), ~ n_distinct(.x, na.rm = TRUE)))
 GS_year %>% 
   dplyr::select(Year_grp_size, Year_growth_rate) %>% 
   psych::describe(quant=c(.25,.75)) %>%
@@ -486,12 +507,6 @@ GS_year %>%
   cor()
 par(mfrow=c(2,3))
 plot(Year_grp_size~Size_km2+Shape+Perimetre+cum_mean_cell_rainfall+GLT_Year1, data=GS_year)
-plot(mean_annual_grp_size~Size_km2, data=Stat_frag_year)
-
-# Rescaling
-GS_year = GS_year %>% 
-  dplyr::mutate(Size_sc = scale(Size_km2) %>% as.vector) %>% 
-  dplyr::mutate(Rainfall_sc = scale(cum_mean_cell_rainfall) %>% as.vector)
 
 # GROUP SIZE (group level)
 # Diagnosis of best fitting distribution
@@ -511,11 +526,11 @@ car::qqp(GS_year$Year_grp_size, "gamma", shape = gamma$estimate[[1]], rate = gam
 glmm1 = lme4::glmer(Year_grp_size ~ Size_sc + Rainfall_sc + (1|GLT_Year1) + (1|UMMPs/Group), 
               family=poisson(link="log"), data=GS_year, weights=weight) # Groups are nested within UMMPs
 summary(glmm1)
-glmm1 = lme4::glmer(Year_grp_size ~ Size_sc + Size_evol + Rainfall_sc + (1|GLT_Year1) + (1|UMMPs/Group), 
+glmm1 = lme4::glmer(Year_grp_size ~ Size_sc + Rainfall_sc + (1|GLT_Year1) + (1|UMMPs/Group), 
                     family=poisson(link="log"), data=GS_year, weights=weight, na.action = "na.omit") # Groups are nested within UMMPs
 summary(glmm1) # With size_evol
 # Over-dispersion (deviance/df.resid)
-20531.3/538
+23297.7/607
 # Function for over-dispersion detection
 overdisp_fun <- function(model) {
   ## number of variance parameters in an n-by-n variance-covariance matrix
@@ -556,8 +571,9 @@ glmm2.2 = glmmTMB::glmmTMB(Year_grp_size ~ Size_sc + Size_evol + Rainfall_sc + (
 summary(glmm2.2)
 
 # Variable selection
-glmm_up = update(glmm2.2,~.-Size_sc)
+glmm_up = update(glmm2.2,~.-Rainfall_sc)
 summary(glmm_up)
+
 
 
 # Scatter plot
@@ -628,14 +644,10 @@ GS_year2 = GS_year %>%
                                    ifelse(Year_growth_rate == 1, "Stable",
                                           ifelse(Year_growth_rate > 1, "Positive", NA)))) %>% 
   dplyr::mutate(logYGR = log(Year_growth_rate))
-# Rescaling
-GS_year2 = GS_year2 %>% 
-  dplyr::mutate(Size_sc = scale(Size_km2) %>% as.vector) %>% 
-  dplyr::mutate(Rainfall_sc = scale(cum_mean_cell_rainfall) %>% as.vector)
 GS_year2 %>% 
   summary()
 GS_year2 %>% 
-  dplyr::summarise(across(c("UMMPs","Group"), ~ n_distinct(.x, na.rm = TRUE)))
+  dplyr::summarise(across(c("UMMPs","Group","id_frag"), ~ n_distinct(.x, na.rm = TRUE)))
 # Distribution
 car::qqp(GS_year2$Year_growth_rate, "norm") # QQplot normal distribution
 car::qqp(GS_year2$Year_growth_rate, "lnorm") # QQplot lognormal distribution
@@ -656,6 +668,36 @@ summary(lmm2)
 # Variable selection
 lmm_up = update(lmm2,~.-Rainfall_sc)
 summary(lmm_up)
+# Comparison between large and small fragments
+my_sum <- GS_year2 %>%
+  dplyr::group_by(Size_cat) %>%
+  dplyr::summarise( 
+    n=n(),
+    mean=mean(Year_growth_rate),
+    sd=sd(Year_growth_rate),
+    min=min(Year_growth_rate),
+    max=max(Year_growth_rate)
+  ) %>%
+  dplyr::mutate( se=sd/sqrt(n))  %>%
+  dplyr::mutate( ic=se * qt((1-0.05)/2 + .5, n-1))
+ggplot(my_sum) +
+  geom_bar( aes(x=Size_cat, y=mean), stat="identity", fill="gold2", alpha=0.7) +
+  geom_errorbar( aes(x=Size_cat, ymin=mean-sd, ymax=mean+sd), width=0.4, colour="black", alpha=0.9, size=1) +
+  ylab("Taux de croissance annuel moyen") +
+  xlab("Catégorie de fragment") +
+  theme_light()
+GS_year2$Size_cat = factor(GS_year2$Size_cat, levels = c("Small","Large"))
+# Verification des hypotheses
+# Normalite
+GS_year2 %>% 
+  dplyr::select(Size_cat, Year_growth_rate) %>% 
+  dplyr::group_by(Size_cat) %>%
+  summarise_all(.funs = funs(statistic = shapiro.test(.)$statistic, 
+                             p.value = shapiro.test(.)$p.value))
+# Comme p-value < 0.05, distribution differe d'une distribution normale
+# Test
+wilcox.test(GS_year2$Year_growth_rate~GS_year2$Size_cat)
+
 
 # Scatter plot
 # CF : https://strengejacke.github.io/ggeffects/articles/introduction_randomeffects.html
@@ -684,21 +726,55 @@ ggplot(data=prediction, aes(x = Size, y = predicted_exp)) +
   theme_minimal() +
   xlab("Taille du fragment (en km²)") +
   ylab("Taux de croissance annuel (λ)")
-# Plot
-ggplot(data=prediction, aes(x = Size, y = predicted_exp)) +
-  geom_line() +
-  geom_line(data = prediction, aes(x = Size, y = conf.low_exp), linetype = "dashed", color = "black") +
-  geom_line(data = prediction, aes(x = Size, y = conf.high_exp), linetype = "dashed", color = "black") +
-  geom_ribbon(aes(ymin=conf.low_exp, ymax=conf.high_exp), alpha=0.2) +
-  geom_point(aes(x = Size_km2, y = Year_growth_rate, shape = Evolution), data=GS_year2) +
-  scale_color_manual(values = c("lightgrey", "black", "darkgrey")) + 
-  theme_minimal() +
-  xlab("Taille du fragment (en km²)") +
-  ylab("Taux de croissance annuel (λ)")
-
-# Barplot
+# Other plots
+plot = GS_year2 %>% 
+  dplyr::group_by(GLT_Year1,Size_cat) %>%
+  dplyr::summarise(mean = mean(Year_growth_rate)) %>% 
+  dplyr::mutate(Evolution = ifelse(mean < 1, "Négative",
+                                   ifelse(mean == 1, "Stable",
+                                          ifelse(mean > 1, "Positive", NA)))) %>% 
+  ungroup() %>% 
+  as.data.frame()
+ggplot(plot) + 
+  geom_rect(data=plot[1,], aes(xmin =2002, xmax = 2020, ymin = -Inf, ymax = 1), 
+            fill = "indianred1", alpha = 0.4) +
+  geom_rect(data=plot[1,], aes(xmin = 2002, xmax = 2020, ymin = 1, ymax = +Inf), 
+            fill = "palegreen", alpha = 0.4) +
+  geom_line(aes(x= GLT_Year1, y=1)) +
+  geom_line(aes(x = GLT_Year1, y = mean, linetype=Size_cat)) +
+  geom_point(aes(x = GLT_Year1, y = mean), size=2) +
+  theme(legend.position = "none") +
+  theme_light() +
+  xlab("Année") + 
+  ylab("Taux de croissance annuel moyen")
+ggplot(plot,aes(x = GLT_Year1, y = mean)) + 
+  geom_ribbon(aes(ymin=pmin(mean,1), ymax=1), fill="red", col="indianred1", alpha=0.5) +
+  geom_ribbon(aes(ymin=1, ymax=pmax(mean,1)), fill="green", col="palegreen", alpha=0.5) +
+  geom_line(aes(y=1), linetype="dashed") +
+  geom_point(size=2) +
+  theme(legend.position = "none") +
+  facet_wrap(~Size_cat, ncol=1) +
+  xlab("Année") + 
+  ylab("taux de croissance annuel moyen")
+ggplot(plot) + 
+  geom_rect(data=plot[1,], aes(xmin =2002, xmax = 2020, ymin = -Inf, ymax = 1), 
+            fill = "indianred1", alpha = 0.4) +
+  geom_rect(data=plot[1,], aes(xmin = 2002, xmax = 2020, ymin = 1, ymax = +Inf), 
+            fill = "palegreen", alpha = 0.4) +
+  geom_rect(data=plot[2,], aes(xmin =2002, xmax = 2020, ymin = -Inf, ymax = 1), 
+            fill = "indianred1", alpha = 0.4) +
+  geom_rect(data=plot[2,], aes(xmin = 2002, xmax = 2020, ymin = 1, ymax = +Inf), 
+            fill = "palegreen", alpha = 0.4) +
+  geom_line(aes(x= GLT_Year1, y=1)) +
+  geom_line(aes(x = GLT_Year1, y = mean)) +
+  geom_point(aes(x = GLT_Year1, y = mean), size=2) +
+  theme(legend.position = "none") +
+  theme_light() +
+  facet_wrap(~Size_cat, ncol=1) +
+  xlab("Année") + 
+  ylab("Taux de croissance annuel moyen")
 my_sum <- GS_year2 %>%
-  dplyr::group_by(GLT_Year1) %>%
+  dplyr::group_by(GLT_Year1,Size_cat) %>%
   dplyr::summarise( 
     n=n(),
     mean=mean(Year_growth_rate),
@@ -711,9 +787,41 @@ my_sum <- GS_year2 %>%
 ggplot(my_sum) +
   geom_bar( aes(x=GLT_Year1, y=mean), stat="identity", fill="gold2", alpha=0.7) +
   geom_errorbar( aes(x=GLT_Year1, ymin=mean-sd, ymax=mean+sd), width=0.4, colour="black", alpha=0.9, size=1) +
+  geom_line(aes(x=GLT_Year1, y=1), linetype="dashed") +
+  facet_wrap(~Size_cat, ncol=1) +
   ylab("Taux de croissance annuel moyen") +
   xlab("Année") +
   theme_light()
+plot = GS_year2 %>% 
+  dplyr::group_by(UMMPs,GLT_Year1) %>%
+  dplyr::summarise(mean = mean(Year_growth_rate)) %>% 
+  dplyr::mutate(Evolution = ifelse(mean < 1, "Négative",
+                                   ifelse(mean == 1, "Stable",
+                                          ifelse(mean > 1, "Positive", NA)))) %>% 
+  ungroup() %>% 
+  as.data.frame()
+ggplot(plot,aes(x = GLT_Year1, y = mean)) + 
+  geom_ribbon(aes(ymin=pmin(mean,1), ymax=1), fill="red", col="indianred1", alpha=0.5) +
+  geom_ribbon(aes(ymin=1, ymax=pmax(mean,1)), fill="green", col="palegreen", alpha=0.5) +
+  geom_point(size=1) +
+  theme(legend.position = "none") +
+  theme_light() +
+  facet_wrap(~UMMPs, ncol=3) +
+  xlab("Année") + 
+  ylab("Taux de croissance annuel moyen")
+ggplot(plot) + 
+  geom_rect(aes(xmin =2002, xmax = 2020, ymin = -Inf, ymax = 1), 
+            fill = "indianred1", alpha = 0.4) +
+  geom_rect(aes(xmin = 2002, xmax = 2020, ymin = 1, ymax = +Inf), 
+            fill = "palegreen", alpha = 0.4) +
+  geom_line(aes(x = GLT_Year1, y = mean)) +
+  geom_point(aes(x = GLT_Year1, y = mean), size=1) +
+  theme(legend.position = "none") +
+  theme_light() +
+  facet_wrap(~UMMPs, ncol=3) +
+  xlab("Année") + 
+  ylab("Taux de croissance annuel moyen")
+
 
 
 
@@ -727,8 +835,15 @@ GD_frag_year = GS_frag_year %>%
 GD_frag_year = GD_frag_year %>% 
   dplyr::mutate(Size_sc = scale(Size_km2) %>% as.vector) %>% 
   dplyr::mutate(Rainfall_sc = scale(cum_mean_cell_rainfall) %>% as.vector) %>% 
-  dplyr::mutate(logGD = log(Grp_density_km2)) %>% 
-  dplyr::mutate(Size_cat = ifelse(Size<100, "Petit fragment", "Large fragment"))
+  dplyr::mutate(logGD = log(Grp_density_km2))
+
+# Outliers removal
+outlier(GD_frag_year$Size)
+grubbs.test(GD_frag_year$Size)
+GD_frag_year = GD_frag_year %>% 
+  dplyr::filter(Size<27099)
+
+# Summary
 GD_frag_year %>% 
   summary()
 GD_frag_year %>% 
@@ -759,6 +874,19 @@ summary(lmm1)
 # Update model
 lmm_up = update(lmm1,~.-Rainfall_sc)
 summary(lmm_up)
+# Comparison between large and small fragments
+# Verification des hypotheses
+# Normalite
+GD_frag_year %>% 
+  dplyr::select(Size_cat, weight) %>% 
+  dplyr::group_by(Size_cat) %>%
+  summarise_all(.funs = funs(statistic = shapiro.test(.)$statistic, 
+                             p.value = shapiro.test(.)$p.value))
+# Comme p-value < 0.05, distribution differe d'une distribution normale
+# Test
+wilcox.test(GD_frag_year$weight~GD_frag_year$Size_cat)
+
+
 
 # Scatter plot
 # CF : https://strengejacke.github.io/ggeffects/articles/introduction_randomeffects.html
@@ -786,12 +914,15 @@ ggplot(data=prediction, aes(x = Size, y = predicted_exp)) +
   theme_minimal() +
   xlab("Taille du fragment (en km²)") +
   ylab("Densité (en groupes/km²)")
-# Plot group density/grp number
-sub = GD_frag_year %>% 
-  dplyr::filter(Size<100 & weight>3) %>% 
-  dplyr::slice_max(Grp_density_km2, n=10)
+# Other plots
+ggplot(GD_frag_year, aes(x=GLT_Year1, y=Grp_density_km2)) +
+  geom_jitter(size=1.6) +
+  facet_wrap(~Size_cat, ncol=1) +
+  ylab("Densité (en groupes/km²)") +
+  xlab("Année") +
+  theme_light()
 my_sum <- GD_frag_year %>%
-  dplyr::group_by(Size_cat) %>%
+  dplyr::group_by(GLT_Year1,Size_cat) %>%
   dplyr::summarise( 
     n=n(),
     mean=mean(Grp_density_km2),
@@ -801,42 +932,39 @@ my_sum <- GD_frag_year %>%
   ) %>%
   dplyr::mutate( se=sd/sqrt(n))  %>%
   dplyr::mutate( ic=se * qt((1-0.05)/2 + .5, n-1))
-ggplot(aes(x=weight, y=Grp_density_km2, color=Size_cat), data=GD_frag_year) +
-  geom_jitter(size=3, shape=1) +
-  scale_color_manual(name = "Taille du fragment",
-                     values=c('darkgrey','black'))+
+ggplot(my_sum, aes(x = GLT_Year1, y = mean)) + 
+  geom_line() +
+  geom_point(size=2) +
+  theme(legend.position = "none") +
+  theme_light() +
+  facet_wrap(~Size_cat, ncol=1) +
+  xlab("Année") + 
+  ylab("Densité moyenne (en groupes/km²)")
+ggplot(my_sum) +
+  geom_bar( aes(x=GLT_Year1, y=mean), stat="identity", fill="gold2", alpha=0.7) +
+  geom_errorbar( aes(x=GLT_Year1, ymin=mean-sd, ymax=mean+sd), width=0.4, colour="black", alpha=0.9, size=1) +
+  facet_wrap(~Size_cat, ncol=1) +
+  ylab("Densité moyenne (en groupes/km²)") +
+  xlab("Année") +
+  theme_light()
+GD_frag_year$GLT_Year1_factor = as.factor(GD_frag_year$GLT_Year1)
+ggplot(GD_frag_year, aes(x=GLT_Year1, y=Grp_density_km2)) +
+  geom_boxplot(aes(group=GLT_Year1_factor)) +
+  geom_jitter(size=1) +
+  facet_wrap(~Size_cat, ncol=1) +
+  ylab("Densité moyenne (en groupes/km²)") +
+  xlab("Année") +
+  theme_light()
+# Plot group density/grp number
+ggplot(aes(x=weight, y=logGD, fill=Size_cat), data=GD_frag_year) +
+  geom_encircle(s_shape=1.1, alpha=0.5, size=2) +
+  geom_jitter(size=3, shape=21, color="white") +
+  scale_fill_manual(name = "Taille du fragment",
+                     values=c('darkolivegreen3','lightblue'))+
   theme_minimal() +
   xlab("Nombre de groupes") +
-  ylab("Densité (en groupes/km²)")
-GD_frag_year = GD_frag_year %>% 
-  dplyr::mutate(Density_cat = ifelse(Grp_density_km2 >= 10, "≥ 10",
-                                     ifelse(Grp_density_km2 >= 5 & Grp_density_km2 < 10, "[5;10[",
-                                            ifelse(Grp_density_km2 >= 2.5 & Grp_density_km2 < 5, "[2,5;5[",
-                                                   ifelse(Grp_density_km2 >= 1 & Grp_density_km2 < 2.5, "[1;2.5[",
-                                                          ifelse(Grp_density_km2 < 1, "< 1",
-                                                                 NA))))))
-GD_frag_year$Density_cat = ordered(GD_frag_year$Density_cat, c("< 1","[1;2.5[","[2,5;5[","[5;10[","≥ 10"))
-# Boxplot
-ggplot(aes(x=Density_cat, y=weight), data=GD_frag_year) +
-  geom_boxplot()
-# Barplot
-my_sum <- GD_frag_year %>%
-  dplyr::group_by(Density_cat) %>%
-  dplyr::summarise( 
-    n=n(),
-    mean=mean(weight),
-    sd=sd(weight),
-    min=min(weight),
-    max=max(weight)
-  ) %>%
-  dplyr::mutate( se=sd/sqrt(n))  %>%
-  dplyr::mutate( ic=se * qt((1-0.05)/2 + .5, n-1))
-ggplot(my_sum) +
-  geom_bar( aes(x=Density_cat, y=mean), stat="identity", fill="gold2", alpha=0.7) +
-  geom_errorbar( aes(x=Density_cat, ymin=mean-sd, ymax=mean+sd), width=0.4, colour="black", alpha=0.9, size=1) +
-  ylab("Nombre moyen de groupes") +
-  xlab("Densité (en groupes/km²)") +
-  theme_light()
+  ylab("Log de densité (en groupes/km²)")+
+  xlim(-1, 22)
 
 
 
