@@ -157,8 +157,9 @@ data_clean_v2 = data_clean_v2 %>%
   dplyr::ungroup()
 data_clean_v2 = data_clean_v2 %>% 
   dplyr::mutate(Size_km2 = Size/100) %>% 
-  dplyr::mutate(Size_cat = ifelse(Size<=60, "Small",
-                                  ifelse(Size>60, "Large", NA)))
+  dplyr::mutate(Size_cat = ifelse(Size<=60, "Petit",
+                                  ifelse(Size>60, "Grand", NA)))
+data_clean_v2$Size_cat = factor(data_clean_v2$Size_cat, levels=c("Petit","Grand"))
 
 ### SUBSET DATA FOR GROUP DYNAMICS ANALYSIS
 # Create monitoring periods
@@ -442,8 +443,8 @@ ggplot(aes(x=Size, y=n_glt), data=GS_frag_year) +
   ylab("Number of GLTs")
 
 # Save data subset
-save(GS_year, file="D:/monas/Git/repo/glt/GoldenLionTamarins/data/NewlyCreatedData/GS_year.RData")
-save(GS_frag_year, file="D:/monas/Git/repo/glt/GoldenLionTamarins/data/NewlyCreatedData/GS_frag_year.RData")
+# save(GS_year, file="D:/monas/Git/repo/glt/GoldenLionTamarins/data/NewlyCreatedData/GS_year.RData")
+# save(GS_frag_year, file="D:/monas/Git/repo/glt/GoldenLionTamarins/data/NewlyCreatedData/GS_frag_year.RData")
 
 ### STATISTICAL ANALYSIS 
 load("D:/monas/Git/repo/glt/GoldenLionTamarins/data/NewlyCreatedData/GS_year.RData")
@@ -686,7 +687,6 @@ ggplot(my_sum) +
   ylab("Taux de croissance annuel moyen") +
   xlab("Catégorie de fragment") +
   theme_light()
-GS_year2$Size_cat = factor(GS_year2$Size_cat, levels = c("Small","Large"))
 # Verification des hypotheses
 # Normalite
 GS_year2 %>% 
@@ -727,52 +727,6 @@ ggplot(data=prediction, aes(x = Size, y = predicted_exp)) +
   xlab("Taille du fragment (en km²)") +
   ylab("Taux de croissance annuel (λ)")
 # Other plots
-plot = GS_year2 %>% 
-  dplyr::group_by(GLT_Year1,Size_cat) %>%
-  dplyr::summarise(mean = mean(Year_growth_rate)) %>% 
-  dplyr::mutate(Evolution = ifelse(mean < 1, "Négative",
-                                   ifelse(mean == 1, "Stable",
-                                          ifelse(mean > 1, "Positive", NA)))) %>% 
-  ungroup() %>% 
-  as.data.frame()
-ggplot(plot) + 
-  geom_rect(data=plot[1,], aes(xmin =2002, xmax = 2020, ymin = -Inf, ymax = 1), 
-            fill = "indianred1", alpha = 0.4) +
-  geom_rect(data=plot[1,], aes(xmin = 2002, xmax = 2020, ymin = 1, ymax = +Inf), 
-            fill = "palegreen", alpha = 0.4) +
-  geom_line(aes(x= GLT_Year1, y=1)) +
-  geom_line(aes(x = GLT_Year1, y = mean, linetype=Size_cat)) +
-  geom_point(aes(x = GLT_Year1, y = mean), size=2) +
-  theme(legend.position = "none") +
-  theme_light() +
-  xlab("Année") + 
-  ylab("Taux de croissance annuel moyen")
-ggplot(plot,aes(x = GLT_Year1, y = mean)) + 
-  geom_ribbon(aes(ymin=pmin(mean,1), ymax=1), fill="red", col="indianred1", alpha=0.5) +
-  geom_ribbon(aes(ymin=1, ymax=pmax(mean,1)), fill="green", col="palegreen", alpha=0.5) +
-  geom_line(aes(y=1), linetype="dashed") +
-  geom_point(size=2) +
-  theme(legend.position = "none") +
-  facet_wrap(~Size_cat, ncol=1) +
-  xlab("Année") + 
-  ylab("taux de croissance annuel moyen")
-ggplot(plot) + 
-  geom_rect(data=plot[1,], aes(xmin =2002, xmax = 2020, ymin = -Inf, ymax = 1), 
-            fill = "indianred1", alpha = 0.4) +
-  geom_rect(data=plot[1,], aes(xmin = 2002, xmax = 2020, ymin = 1, ymax = +Inf), 
-            fill = "palegreen", alpha = 0.4) +
-  geom_rect(data=plot[2,], aes(xmin =2002, xmax = 2020, ymin = -Inf, ymax = 1), 
-            fill = "indianred1", alpha = 0.4) +
-  geom_rect(data=plot[2,], aes(xmin = 2002, xmax = 2020, ymin = 1, ymax = +Inf), 
-            fill = "palegreen", alpha = 0.4) +
-  geom_line(aes(x= GLT_Year1, y=1)) +
-  geom_line(aes(x = GLT_Year1, y = mean)) +
-  geom_point(aes(x = GLT_Year1, y = mean), size=2) +
-  theme(legend.position = "none") +
-  theme_light() +
-  facet_wrap(~Size_cat, ncol=1) +
-  xlab("Année") + 
-  ylab("Taux de croissance annuel moyen")
 my_sum <- GS_year2 %>%
   dplyr::group_by(GLT_Year1,Size_cat) %>%
   dplyr::summarise( 
@@ -782,8 +736,39 @@ my_sum <- GS_year2 %>%
     min=min(Year_growth_rate),
     max=max(Year_growth_rate)
   ) %>%
-  dplyr::mutate( se=sd/sqrt(n))  %>%
-  dplyr::mutate( ic=se * qt((1-0.05)/2 + .5, n-1))
+  dplyr::mutate(Evolution = ifelse(mean < 1, "Négative",
+                                   ifelse(mean == 1, "Stable",
+                                          ifelse(mean > 1, "Positive", NA)))) %>% 
+  ungroup() %>% 
+  as.data.frame()
+ggplot(my_sum,aes(x = GLT_Year1, y = mean)) + 
+  geom_ribbon(aes(ymin=pmin(mean,1), ymax=1), fill="red", col="indianred1", alpha=0.5) +
+  geom_ribbon(aes(ymin=1, ymax=pmax(mean,1)), fill="green", col="palegreen", alpha=0.5) +
+  geom_line(aes(y=1), linetype="dashed") +
+  geom_point(size=2) +
+  theme(legend.position = "none") +
+  facet_wrap(~Size_cat, ncol=1) +
+  xlab("Année") + 
+  ylab("Taux de croissance annuel moyen")
+ggplot(my_sum, aes(x = GLT_Year1, y = mean)) +
+  annotate(geom = "rect",
+           xmin = 2002, xmax = 2020, ymin = -Inf, ymax = 1, fill="indianred1", alpha = 0.4) +
+  annotate(geom = "rect",
+           xmin = 2002, xmax = 2020, ymin = 1, ymax = +Inf, fill="palegreen", alpha = 0.4) +
+  geom_line(aes(x= GLT_Year1, y=1),linetype="dashed") +
+  geom_ribbon(aes(ymin = mean - sd,
+                  ymax = mean + sd),
+              color = "grey", fill="grey", alpha=0.3) + 
+  geom_line() +
+  geom_point(aes(color=Evolution), size=3) +
+  scale_color_manual(values=c("indianred3", "palegreen3", "black")) +
+  scale_x_continuous(n.breaks=10) +
+  theme(legend.position = "none") +
+  theme_bw() +
+  theme(axis.text.x = element_text(angle = 90)) +
+  facet_wrap(~Size_cat, ncol=2) +
+  xlab("Année") + 
+  ylab("Taux de croissance annuel moyen")
 ggplot(my_sum) +
   geom_bar( aes(x=GLT_Year1, y=mean), stat="identity", fill="gold2", alpha=0.7) +
   geom_errorbar( aes(x=GLT_Year1, ymin=mean-sd, ymax=mean+sd), width=0.4, colour="black", alpha=0.9, size=1) +
@@ -810,10 +795,10 @@ ggplot(plot,aes(x = GLT_Year1, y = mean)) +
   xlab("Année") + 
   ylab("Taux de croissance annuel moyen")
 ggplot(plot) + 
-  geom_rect(aes(xmin =2002, xmax = 2020, ymin = -Inf, ymax = 1), 
-            fill = "indianred1", alpha = 0.4) +
-  geom_rect(aes(xmin = 2002, xmax = 2020, ymin = 1, ymax = +Inf), 
-            fill = "palegreen", alpha = 0.4) +
+  annotate(geom = "rect",
+           xmin = 2002, xmax = 2020, ymin = -Inf, ymax = 1, fill="indianred1", alpha = 0.4) +
+  annotate(geom = "rect",
+           xmin = 2002, xmax = 2020, ymin = 1, ymax = +Inf, fill="palegreen", alpha = 0.4) +
   geom_line(aes(x = GLT_Year1, y = mean)) +
   geom_point(aes(x = GLT_Year1, y = mean), size=1) +
   theme(legend.position = "none") +
@@ -882,8 +867,7 @@ GD_frag_year %>%
   dplyr::group_by(Size_cat) %>%
   summarise_all(.funs = funs(statistic = shapiro.test(.)$statistic, 
                              p.value = shapiro.test(.)$p.value))
-# Comme p-value < 0.05, distribution differe d'une distribution normale
-# Test
+# Alternative test
 wilcox.test(GD_frag_year$weight~GD_frag_year$Size_cat)
 
 
@@ -929,15 +913,21 @@ my_sum <- GD_frag_year %>%
     sd=sd(Grp_density_km2),
     min=min(Grp_density_km2),
     max=max(Grp_density_km2)
-  ) %>%
-  dplyr::mutate( se=sd/sqrt(n))  %>%
-  dplyr::mutate( ic=se * qt((1-0.05)/2 + .5, n-1))
+  ) %>% 
+  dplyr::mutate(ic_min=mean-sd, 
+                ic_max=mean+sd) %>% 
+  dplyr::mutate(ic_min = ifelse(ic_min < 0, 0, ic_min))
 ggplot(my_sum, aes(x = GLT_Year1, y = mean)) + 
+  geom_ribbon(aes(ymin = ic_min,
+                  ymax = ic_max),
+              color = "grey", fill="grey", alpha=0.3) + 
   geom_line() +
-  geom_point(size=2) +
+  geom_point(size=3) +
+  scale_x_continuous(n.breaks=10) +
   theme(legend.position = "none") +
-  theme_light() +
-  facet_wrap(~Size_cat, ncol=1) +
+  theme_bw() +
+  theme(axis.text.x = element_text(angle = 90)) +
+  facet_wrap(~Size_cat, ncol=2) +
   xlab("Année") + 
   ylab("Densité moyenne (en groupes/km²)")
 ggplot(my_sum) +
@@ -946,25 +936,28 @@ ggplot(my_sum) +
   facet_wrap(~Size_cat, ncol=1) +
   ylab("Densité moyenne (en groupes/km²)") +
   xlab("Année") +
-  theme_light()
-GD_frag_year$GLT_Year1_factor = as.factor(GD_frag_year$GLT_Year1)
-ggplot(GD_frag_year, aes(x=GLT_Year1, y=Grp_density_km2)) +
-  geom_boxplot(aes(group=GLT_Year1_factor)) +
-  geom_jitter(size=1) +
-  facet_wrap(~Size_cat, ncol=1) +
-  ylab("Densité moyenne (en groupes/km²)") +
-  xlab("Année") +
-  theme_light()
+  theme_bw()
 # Plot group density/grp number
 ggplot(aes(x=weight, y=logGD, fill=Size_cat), data=GD_frag_year) +
-  geom_encircle(s_shape=1.1, alpha=0.5, size=2) +
+  geom_encircle(s_shape=1.1, alpha=0.4, size=2) +
   geom_jitter(size=3, shape=21, color="white") +
   scale_fill_manual(name = "Taille du fragment",
-                     values=c('darkolivegreen3','lightblue'))+
-  theme_minimal() +
+                     values=c('lightblue3','darkolivegreen3'))+
+  theme_bw() +
   xlab("Nombre de groupes") +
   ylab("Log de densité (en groupes/km²)")+
   xlim(-1, 22)
+
+# Linear regression Group density ~ Group number
+lm1 = lm(formula = logGD~log(weight), GD_frag_year)
+summary(lm1)
+# Model conditions
+scatterplot(logGD~log(weight), GD_frag_year) # Linear relationship
+acf(residuals(lm1), main="lm1") 
+durbinWatsonTest(lm1) # Autocorrelation
+plot(lm1,2) # Normality
+shapiro.test(residuals(lm1))
+plot(lm1,3) # Residuals distribution
 
 
 
