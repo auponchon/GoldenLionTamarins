@@ -156,6 +156,7 @@ load(here::here("data","NewlyCreatedData","Cover_rasters.RData"))
 load(here::here("data","NewlyCreatedData","Raster_size.RData"))
 load(here::here("data","NewlyCreatedData","Raster_perim.RData"))
 load(here::here("data","NewlyCreatedData","Raster_shape.RData"))
+load(here::here("data","NewlyCreatedData","Raster_patches.RData"))
 
 
 #get regions with groups
@@ -168,6 +169,7 @@ reg<-sort(unique(group.reg$UMMPs))
 totsizearea<-NULL
 totshape<-NULL
 totperim<-NULL
+patchNB<-NULL
 
 #loop trhough each UMMP region
 for (p in 1:length(reg)){
@@ -185,6 +187,7 @@ habcropstack<-stack(habitatcrop)
 sizecrop<-crop(rastsize,pda)
 perimcrop<-crop(rastperim,pda)
 shapecrop<-crop(rastshape,pda)
+patchcrop<-crop(patches,pda)
 
 #extract habitat code for each group location
 habarea<-terra::extract(habcropstack,loc) %>% 
@@ -204,6 +207,27 @@ habarea<-terra::extract(habcropstack,loc) %>%
   dplyr::arrange(Group,Year) %>% 
   drop_na() %>% 
   distinct()
+
+#extract habitat code for each group location
+patchnb<-terra::extract(patchcrop,loc) %>% 
+  as.data.frame(.) %>% 
+   cbind(loc) %>% 
+#  dplyr::filter(Farm=="Rebio PDA" | Farm=="PDA") %>% 
+  left_join (group.reg, by="Group") %>% 
+  pivot_longer(cols=1:32,
+               names_to="Cover_year",
+               values_to="Habitat") %>% 
+  dplyr::mutate(Year=parse_number(Cover_year),
+                Fragment.Region=as.factor(Fragment.Region),
+                Group=as.factor(Group),
+   #             Patch= as.factor(brasil_coverage_1990),
+                UMMPs=as.factor(UMMPs)) %>% 
+# dplyr::filter(UMMPs=="Poco das Antas") %>%    #Aldeia II,  Rio Vermelho
+  dplyr::arrange(Group,Year) %>% 
+  drop_na() %>% 
+  distinct()
+
+patchNB<-rbind(patchNB,patchnb)
 
 #extract patch size for each group location
 sizearea<-terra::extract(sizecrop,loc) %>% 

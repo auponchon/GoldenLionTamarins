@@ -114,7 +114,7 @@ write_sf(lines_disp,
 
 fieldgg<-ggplot()+
   geom_sf(data = land,
-          colour="grey90",
+          colour="grey70",
           alpha=0.7) +
   geom_sf(data=lines_disp,
           aes(colour=GLT),

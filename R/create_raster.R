@@ -1,10 +1,18 @@
- create_raster_stack<-function(layer){
+#projection for Brazil
+proj<-"+proj=utm +zone=23 +south +ellps=GRS80 +towgs84=0,0,0,0,0,0,0 +units=m +no_defs +type=crs"
 
+#forest patches from shapefile
+land<-sf::read_sf(here::here("data","RawData","Landscape","Shapefiles Landscape AMLD", 
+                             "SIG-EDUC Redescobrindo 2021 - Fragmentos de Vegetação.shp"))
+
+create_raster_stack<-function(layer){
+  
 xx<-raster(layer) %>% 
-  raster::crop(.,extreg) %>%    #crop to the study region
-  projectRaster(., crs=proj ,method="ngb",res=30) %>%  #project 
+  raster::crop(.,extreg) %>%    #crop to the large-scale study region
+  projectRaster(., crs=proj ,method="ngb",res=30) %>% # %>%  #project 
+  raster::crop(.,land)  #crop to forest fragments
 #  raster::aggregate(., fact=3,fun=max) %>% 
-  mask(.,ummp)
+#  mask(.,ummp)
 
 
 forest<-c(3,4,5,49)

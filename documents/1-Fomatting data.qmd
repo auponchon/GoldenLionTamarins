@@ -234,7 +234,7 @@ sum.up<-data.clean %>%
 ## Produce a table with a wide format
 
 dat<-data.clean %>% 
-  dplyr::filter(Disp=="0" & Death=="0" & Solo=="0") %>% 
+  dplyr::filter(Disp=="0" & Death=="0") %>% 
   dplyr::filter(!GLT %in% bad) %>% 
   dplyr::mutate(Date=floor_date(as.Date(DateObs), 'year')) %>% 
   dplyr::arrange(Date,Group) %>% 
