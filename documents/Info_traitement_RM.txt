@@ -9,7 +9,7 @@ Format des données :
 * 2009-2022 = Excel
 
 
-
+***** CORRECTION DES DONNEES
 *** CORRECTION DU SEXE
 
 I. Mise à jour des erreurs de typographie (m, M0, S)
@@ -168,9 +168,6 @@ Méthodes :
 * Remplir IdadeOK avec Idade là où NA
 3) à l'aide du poids : AD > 550 g
 
-? A l'aide d'une date de naissance inferrée depuis Idade ?
-* On extrait les individus observés la première fois comme juvéniles
-* On leur attribue une date de naissance fictive qui vaut la date d'observation - 5 mois
 
 PUIS on remplit les cases vides à l'aide des catégories d'âge connues à certaines dates
 * CAS 1 : individus adultes à une ou plusieurs dates
@@ -185,9 +182,9 @@ PUIS on remplit les cases vides à l'aide des catégories d'âge connues à cert
 
 
 ERREURS :
-1) Incohérences entre le stade et le poids (adultes < 550 g) et pour lesquels la date de naissance (VR) est inconnue
-2) Incohérences entre les deux variables Idade
-3) Incohérences chronologiques
+1) Incohérences entre le stade et le poids (adultes < 550 g) et pour lesquels la date de naissance (VR) est inconnue (erreur "Weight")
+2) Incohérences entre les deux variables Idade (erreur "Diff_Idade")
+3) Incohérences chronologiques (erreur "Chronology")
 EXPORT pour vérification manuelle
 
 A L'ISSUE DE LA VERIFICATION :
@@ -238,6 +235,7 @@ VI. ANALYSE STATISTIQUE
 *** Données :
 - Données d'observation des groupes de GLT
 - Données mensuelles de précipitations de Worldclim (résolution 5 minutes ~85 km2) (Fick & Hijmans, 2017). CF : https://www.worldclim.org/data/monthlywth.html 
+- Paramètres des fragments
 
 *** Préparation des données :
 - GLT_Year = année (12 mois) d'une saison sèche à une autre (cf Dias et al. 2015). Mois de référence = mois où les groupes sont les plus stables (pas de naissance, pas d'immigration/émigration) (cf Dietz et al. 1994; Romano et al. 2019) = JUILLET
@@ -258,7 +256,7 @@ w = nombre de groupes par fragment par an
 
 *** Subset
 - On ne garde que les données des fichiers d'observation
-- On ne garde que les années de suivi entre 2000 et 2020
+- On ne garde que les années de suivi entre 2001 et 2020
 - On ne garde que les groupes suivis au moins 6 ans (à partir de l'année GLT) (ie 3 générations; d'après Strier & Mendes, 2009)
 - On retire les groupes NA et les UMMPs NA
 
@@ -269,22 +267,8 @@ Période 2001-2020.
 Fréquence des visites : de 7 à 82 (mean +- SD = 30.7 +- 21.7). 
 Fréquence moyenne de visite va de 0.35 visites à 5.7 visites/an (mean +- SD = 2.99 +- 1.37).
 
-- Plot number of visits
-- Plot mean annual visits
 
 I. TAILLE ET CROISSANCE DES GROUPES
-1) STATISTIQUES PAR GROUPE
-CF script
-
-- Plot taille du groupe dans le temps
-- Plot taille du groupe selon les MUs
-- Boxplot taille du groupe selon les saisons
-
-2) STATISTIQUES DES FRAGMENTS
-*** Fragment parameters
-CF script
-
-3) ANALYSE STATISTIQUE
 
 * Retrait des outliers (Grubbs test)
 
@@ -295,23 +279,12 @@ A) GROUP SIZE (group level)
 Year_grp_size = negative binomial
 * Modèle GLMM
 Modèle Poisson sur-dispersé = passage en nbinom
-A.1) Not-Nested Model : Group Size ~ Size + Rainfall + (1|Year) + (1|Group) + (1|UMMPs)
-Erreur
-A.2) Nested Model : Group Size ~ Size + Rainfall + (1|Year) + (1|UMMPs/Group)
-Celui que l'on garde
+Nested Model : Group Size ~ Size + Rainfall + (1|Year) + (1|UMMPs/Group)
 
 NB : pas de puissance inférentielle suffisante pour tester l'interaction de l'année et de la taille du fragment (pas assez de données)
 
-* Sélection des variables et modèle final
-
-AA) GROUP SIZE (fragment level)
-Taille du groupe moyenne annuelle sur le fragment ~ Taille du fragment + Rainfall + (1|UMMPs) + (1|Year)
-
-* Echantillon
-* Distribution
-Gamma
-* Modèle final
-
+* Modèle final après sélection des variables
+* Plot
 
 B) GROWTH RATE (group level)
 
@@ -321,8 +294,7 @@ B) GROWTH RATE (group level)
 Lognormale
 
 * Modèles LMM avec fonction lmer (package lmerTest)
-A.1) Not-Nested Model : Group Size ~ Size + Rainfall + (1|Year) + (1|Group) + (1|UMMPs)
-A.2) Nested Model : Group Size ~ Size + Rainfall + (1|Year) + (1|UMMPs/Group)
+Nested Model : Group Size ~ Size + Rainfall + (1|Year) + (1|UMMPs/Group)
 
 * Modèle final après sélection des variables
 * Plot
@@ -342,3 +314,5 @@ Group Density ~ Size + Rainfall + (1|Year) + (1|UMMPs)
 
 * Modèle final après sélection des variables
 * Plot
+
+II. CHANGE POINT ANALYSIS
