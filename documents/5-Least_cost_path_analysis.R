@@ -15,7 +15,9 @@ extreg<-extent(-42.7,-41.9,-22.9,-22.3)
 rast<-list.files(here::here("data","RawData","Landscape","Rasters land cover"),
                  full.names=T)
 
-coverStack<-purrr::map(rast,create_raster_stack,.progress=T)
+#coverStack<-purrr::map(rast,create_raster_stack,.progress=T)
+#save(coverStack,file=here::here("data","NewlyCreatedData","LandUseStack.RData"))
+load(here::here("data","NewlyCreatedData","LandUseStack.RData"))
 
 #Extract 1 raster for extent
 landuse<-coverStack[[1]]
@@ -46,24 +48,25 @@ loc<-read.table(here::here("data","rawData","Landscape","RegionsName.csv"),
 #            delete_dns=T,
 #            delete_layer=T)
 
-read_sf(here::here("data","RawData","Landscape","Roads","BRA_roads.shp")) 
+roads<-read_sf(here::here("data","RawData","Landscape","Roads","BRA_roads.shp")) 
 
 
 #extract topography for the study site from elevatr package
-library(elevatr)sf::
-stage_bbox = st_bbox(landuse)
-ex.df <- data.frame(x= c(stage_bbox[['xmin']], stage_bbox[['xmax']]), 
-                    y= c(stage_bbox[['ymin']], stage_bbox[['ymax']]))
-elev_img <- get_elev_raster(ex.df, prj = proj, z = 12, clip = "bbox") %>% 
-            resample(., landuse) 
-elev_img
-
+library(elevatr)
+# stage_bbox = st_bbox(landuse)
+# ex.df <- data.frame(x= c(stage_bbox[['xmin']], stage_bbox[['xmax']]), 
+#                     y= c(stage_bbox[['ymin']], stage_bbox[['ymax']]))
+# elev_img <- get_elev_raster(ex.df, prj = proj, z = 12, clip = "bbox") %>% 
+#             resample(., landuse) %>% 
+# plot(elev_img)
+#save(elev_img,file=here::here("data","NewlyCreatedData","elevationRaster.RData"))
+load(here::here("data","NewlyCreatedData","elevationRaster.RData"))
+elev_img[elev_img<0]<-NA
 
 #get cost based on topography
-slope_cs <- leastcostpath::create_slope_cs(x=elev_img, cost_function = "tobler", neighbours = 16)
+slope_cs <-create_slope_cs(x=elev_img, cost_function = "tobler", neighbours=16)
 
-
-
+plot.conductanceMatrix(slope_cs$conductanceMatrix)
 
 
 
