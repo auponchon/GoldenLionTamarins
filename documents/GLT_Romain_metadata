@@ -1,0 +1,30 @@
+PART I : Data correction
+
+sex_check : Subset of GLT with ambiguous sexes for visual inspection
+BirthDates : Excel dataframe of known birthdates (created by Valeria)
+red_flags_birthdates : Excel dataframe of GLT with erroneous birth dates
+
+* The variable 'BirthError' indicates the type of error we detected:
+Multiple_BD = Multiple birth dates
+diff_BD_Emig = Difference between emigration date and birth date (ie the GLT was born after emigrating)
+diff_BD_1stObs = Difference between the date of first observation and the birth date (ie the GLT was born after first observation)
+1stObs_is_BD = The 1st observation equals the birth date
+Grp_sameBD = Individuals within groups with same birth dates
+Grp_sameBD_?P = Individuals within groups with same birth dates (suspicion of Polygamy)
+Adult_with_BD = GLT never observed as juveniles and yet with known birth dates
+
+idade_checks : Excel dataframes of age categories inconsistencies for visual inspection
+idade_checked : Excel dataframe of age categories corrected via visual inspection
+red_flags_idade : Excel dataframe of GLT with erroneous age categories
+* The variable 'IdadeError' indicates the type of error we detected:
+Weight : inconsistency between the weight and the age category
+Diff_Idade : The multiple age categories (the one in the observation files, and the one we inferred) don't match
+Chronology : The age categories chronology are not logical (eg Juvenile-Adult-Subadult)
+
+data_clean_v2 : observation data with birth (BirthOK) and age categories (IdadeOK) corrections and errors
+
+
+PART II : Data analysis
+
+GS_year.RData = Subset of data for the group dynamics analysis (group size and growth rate). The data com from data_clean_v2 and correspond to the observation data, aggregated by group and by year. The groups have been selected according to the monitoring period (>= 6 years, from 2001 to 2020). "GS" = "Group Size"
+GS_frag_year.RData = This dataset has been created by aggregating GS_year at the fragment scale.
