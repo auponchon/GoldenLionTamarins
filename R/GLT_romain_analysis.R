@@ -412,6 +412,7 @@ GS_frag_year = GS_frag_year %>%
 
 ### STATISTICAL ANALYSIS 
 load("D:/monas/Git/repo/glt/GoldenLionTamarins/data/NewlyCreatedData/GS_year.RData")
+load("D:/monas/Git/repo/glt/GoldenLionTamarins/data/NewlyCreatedData/GS_frag_year.RData")
 summary(GS_year)
 
 # Outliers removal
@@ -431,34 +432,34 @@ GS_year = GS_year %>%
   dplyr::mutate(Rainfall_sc = scale(cum_mean_cell_rainfall) %>% as.vector)
 
 # Statistical summaries
-# GS_year %>% 
+# GS_year %>%
 #   dplyr::summarise(across(c("UMMPs","Group","id_frag"), ~ n_distinct(.x, na.rm = TRUE)))
-# GS_year %>% 
-#   dplyr::select(Year_grp_size, Year_growth_rate) %>% 
+# GS_year %>%
+#   dplyr::select(Year_grp_size, Year_growth_rate) %>%
 #   psych::describe(quant=c(.25,.75)) %>%
 #   as_tibble(rownames="rowname")  %>%
 #   print()
-# GS_year %>% 
-#   dplyr::group_by(GLT_Year1) %>% 
-#   dplyr::summarise_at("Year_grp_size",list(min=min, max=max, mean=mean, sd=sd)) %>% 
-#   dplyr::arrange(mean) %>% 
+# GS_year %>%
+#   dplyr::group_by(GLT_Year1) %>%
+#   dplyr::summarise_at("Year_grp_size",list(min=min, max=max, mean=mean, sd=sd)) %>%
+#   dplyr::arrange(mean) %>%
 #   print(n=30)
-# GS_year %>% 
-#   dplyr::group_by(UMMPs) %>% 
-#   dplyr::summarise_at("Year_grp_size",list(min=min, max=max, mean=mean, sd=sd)) %>% 
-#   dplyr::arrange(mean) %>% 
+# GS_year %>%
+#   dplyr::group_by(UMMPs) %>%
+#   dplyr::summarise_at("Year_grp_size",list(min=min, max=max, mean=mean, sd=sd)) %>%
+#   dplyr::arrange(mean) %>%
 #   print(n=30)
-# GS_year %>% 
-#   dplyr::filter(!is.na(Year_growth_rate)) %>% 
-#   dplyr::group_by(GLT_Year1) %>% 
-#   dplyr::summarise_at("Year_growth_rate",list(min=min, max=max, mean=mean, median=median, sd=sd)) %>% 
-#   dplyr::arrange(mean) %>% 
+# GS_year %>%
+#   dplyr::filter(!is.na(Year_growth_rate)) %>%
+#   dplyr::group_by(GLT_Year1) %>%
+#   dplyr::summarise_at("Year_growth_rate",list(min=min, max=max, mean=mean, median=median, sd=sd)) %>%
+#   dplyr::arrange(mean) %>%
 #   print(n=30)
-# GS_year %>% 
-#   dplyr::filter(!is.na(Year_growth_rate)) %>% 
-#   dplyr::group_by(UMMPs) %>% 
-#   dplyr::summarise_at("Year_growth_rate",list(min=min, max=max, mean=mean, sd=sd)) %>% 
-#   dplyr::arrange(mean) %>% 
+# GS_year %>%
+#   dplyr::filter(!is.na(Year_growth_rate)) %>%
+#   dplyr::group_by(UMMPs) %>%
+#   dplyr::summarise_at("Year_growth_rate",list(min=min, max=max, mean=mean, sd=sd)) %>%
+#   dplyr::arrange(mean) %>%
 #   print(n=30)
 # Growth rate table
 growth_rate = GS_year %>% 
@@ -546,12 +547,29 @@ GS_year2 %>%
 # car::qqp(GS_year2$Year_growth_rate, "gamma", shape = gamma$estimate[[1]], rate = gamma$estimate[[2]]) # Gamma distribution
 
 # LMM
-lmm1 = lmerTest::lmer(logYGR ~ Size_sc + Rainfall_sc + (1|GLT_Year1) + (1|UMMPs/Group),
+# glmm1 = glmmPQL(Year_growth_rate ~ Size_sc + Rainfall_sc, random=c(~1|UMMPs, ~1|Group, ~1|GLT_Year1), family = gaussian(link = "log"),
+#         data = GS_year2, verbose = FALSE,weights=weight)
+# summary(glmm1)
+lmm1 = lmerTest::lmer(Year_growth_rate ~ Size_sc + Rainfall_sc + (1|GLT_Year1) + (1|UMMPs/Group),
                       data = GS_year2, weights=weight, REML=FALSE)
-summary(lmm1)
+lmm2 = lmerTest::lmer(log(Year_growth_rate) ~ Size_sc + Rainfall_sc + (1|GLT_Year1) + (1|UMMPs/Group),
+                      data = GS_year2, weights=weight, REML=FALSE)
+summary(lmm2)
 # Variable selection
-lmm_up = update(lmm1,~.-Rainfall_sc)
+lmm_up = update(lmm2,~.-Rainfall_sc)
 summary(lmm_up)
+# Model assumptions
+# Residuals vs fitted plot (linearity)
+plot(lmm_up, type=c("p","smooth"), col.line=1)
+plot(GS_year2$Size_sc,resid(lmm_up))
+# QQ Plot (normality)
+qqnorm(resid(lmm_up)) # Residuals normal dispersion
+qqline(resid(lmm_up)) # Residuals normal dispersion
+# Scale-location (homoscedasticity)
+plot(lmm_up,
+     sqrt(abs(resid(.)))~fitted(.),
+     type=c("p","smooth"), col.line=1)  # Homoscedasticity
+
 # Comparison between large and small fragments
 my_sum <- GS_year2 %>%
   dplyr::group_by(Size_cat) %>%
@@ -741,7 +759,30 @@ summary(lmm1)
 # Update model
 lmm_up = update(lmm1,~.-Rainfall_sc)
 summary(lmm_up)
+# Model assumptions
+# Residuals vs fitted plot (linearity)
+plot(lmm_up, type=c("p","smooth"), col.line=1)
+plot(GD_frag_year$Size_sc,resid(lmm_up))
+# QQ Plot (normality)
+qqnorm(resid(lmm_up)) # Residuals normal dispersion
+qqline(resid(lmm_up)) # Residuals normal dispersion
+# Scale-location (homoscedasticity)
+plot(lmm_up,
+     sqrt(abs(resid(.)))~fitted(.),
+     type=c("p","smooth"), col.line=1)  # Homoscedasticity
 # Comparison between large and small fragments
+my_sum <- GD_frag_year %>%
+  dplyr::group_by(Size_cat) %>%
+  dplyr::summarise(
+    n=n(),
+    mean=mean(weight),
+    sd=sd(weight),
+    min=min(weight),
+    max=max(weight)
+  ) %>%
+  dplyr::mutate(ic_min=mean-sd,
+                ic_max=mean+sd) %>%
+  dplyr::mutate(ic_min = ifelse(ic_min < 0, 0, ic_min))
 GD_frag_year %>% 
   dplyr::select(Size_cat, weight) %>% 
   dplyr::group_by(Size_cat) %>%
@@ -749,6 +790,7 @@ GD_frag_year %>%
                              p.value = shapiro.test(.)$p.value))
 # Alternative test
 wilcox.test(GD_frag_year$weight~GD_frag_year$Size_cat)
+wilcox.test(GD_frag_year$Grp_density_km2~GD_frag_year$Size_cat)
 
 
 
