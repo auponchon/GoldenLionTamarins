@@ -66,9 +66,13 @@ elev_img[elev_img<0]<-NA
 #get cost based on topography
 slope_cs <-create_slope_cs(x=elev_img, cost_function = "tobler", neighbours=16)
 
-plot.conductanceMatrix(slope_cs$conductanceMatrix)
 
 
+
+
+lcp <- leastcostpath::create_lcp(cost_surface = landuse, 
+                                 origin = loc[1:(nrow(loc)-1)], 
+                                 destination = loc[2:(nrow(loc))])
 
 
 

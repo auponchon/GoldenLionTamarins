@@ -91,7 +91,7 @@ revalue_old_regions<-function(data){
   data$Group<-plyr::revalue(as.factor(data$Group), 
                              c("AXII"="AX2",      
                                "BBII"= "BB2",
-                               "FU" = "Fusao",
+                    #           "FU" = "Fusao",
                                "JA" = "Jaguar",
                                "LAII" = "LA2",
                                "MFII" = "MF2",
@@ -111,6 +111,7 @@ revalue_old_regions<-function(data){
 revalue_names_capture<-function(data){
   data$GLT[which(data$Tattoo=="2405")]<-"2405"
   data$GLT[which(data$Tattoo=="2155")]<-"2155"
+  data$Tattoo[which(data$GLT=="ST38")]<-"ST38"
   data$GLT[which(data$GLT=="2317")]<-data$Tattoo[which(data$GLT=="2317")]
 
   return(data)

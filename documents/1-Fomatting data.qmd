@@ -145,110 +145,87 @@ save(data.clean,file=here::here("Data",
 
 # 2- Checking duplicates and errors
 
-Duplicates are checked in group and region names, as well as in individuals. Individual variables are also filled, to ensure that they are consistent among observations of the same individual (notably sex and date birth). After data correction, all objects should be empty!
+Duplicates are checked in group and region names, as well as in individuals. Individual variables are also filled, to ensure that they are consistent among observations of the same individual (notably sex and date birth).
 
 ```{r}
 #| echo: false
 #| message: false
 #| warning: false
+source(here::here("R","GLT_romain_data_correction.R"))
+data.clean.final<-correcting_sex_stage() 
 
-load(here::here("Data","NewlyCreatedData","clean_raw_data_long.RData"))
+#filter only necessary data
+data.clean.final<-data.clean.final%>% 
+  dplyr::select(Year,DateObs,DateObsMY,Region,UMMPs,
+                Group,GLT,Tattoo,SexOK, BirthOK,IdadeOK,
+                Disp,Death,Solo,
+                File,season,ObsOrder)
 
-#identify duplicates in individual names
-#create an object with GLT duplicates
-dup<-data.clean %>%
-  dplyr::filter(!GLT %in% bad) %>%
-  dplyr::filter(Disp==0) %>% 
-  dplyr::group_by(DateObs,GLT) %>%
-  dplyr::summarise(n = dplyr::n(), .groups = "drop") %>%
-  dplyr::filter(n > 1L) # & GLT!="?" & GLT!="T0" & GLT!="IN") %>% 
+## Export the corrected dataset
+ save(data.clean.final, file=here::here("data","NewlyCreatedData","data_clean_long_final.RData"))
 
-#get all observations of duplicates to reconstitute their individual histories
+# #identify duplicates in individual names
+# #create an object with GLT duplicates
+# dup<-data.clean %>%
+#   dplyr::filter(!GLT %in% bad) %>%
+#   dplyr::filter(Disp==0) %>% 
+#   dplyr::group_by(DateObs,GLT) %>%
+#   dplyr::summarise(n = dplyr::n(), .groups = "drop") %>%
+#   dplyr::filter(n > 1L) # & GLT!="?" & GLT!="T0" & GLT!="IN") %>% 
+# 
+# #get all observations of duplicates to reconstitute their individual histories
+# 
+# dups<-data.clean %>% 
+#   dplyr::filter(GLT %in% dup$GLT) %>% 
+#   dplyr::arrange(GLT, DateObs)
+# 
+# ###
+# ##Individual Cibele wuth different sex
+# #RL15, AF6, Af8
+# 
+# ##checking duplicates in Sex
+# sexo<-data.clean %>%
+#   dplyr::filter(Sex!="nonID") %>% 
+#   dplyr::group_by(GLT) %>%
+#   dplyr::summarise(Sexy = Sex,.groups="keep") %>% 
+#   distinct() %>% 
+#   dplyr::filter(n()>1)
+# 
+# write.table(sexo,file=here::here("data","NewlyCreatedData","Checks","sex_check.txt"),
+#       sep="\t",row.names=F,quote=F)
+# 
+# #MP475 problematic (same birth and both M & F)
+# 
+# #1375 with 3 different dates!!
+# #AF22, AF23, AF24, AF25 born after observation and dispersed?!
+# #check FA40 (2018 & 2019)
+# #JP23 duplicate
+# #check 1311, 1312, MP104, MP108, MP109, MP176, MP292, MP313, MP99, TM20, UR4
+# 
+# #check differences between GLT and tattoo
+# ind<-data.clean %>% 
+#   dplyr::filter(!is.na(Tattoo)) %>% 
+#   dplyr::filter(GLT!=Tattoo) %>% 
+#   dplyr::arrange(GLT,DateObs)
+# 
+# 
+# #check duplicates with groups and regions
+# group<-data.clean %>% 
+#   dplyr::filter(Disp!=1 & Death==0 & Solo ==0) %>% 
+#   dplyr::group_by(Group) %>% 
+#   dplyr::select(Group,Region) %>% 
+#   dplyr::distinct() %>% 
+#   dplyr::arrange(Group) %>% 
+#   as.data.frame(.) %>% 
+#   write.xlsx(., file=here::here("data","NewlyCreatedData","GroupRegionCheck.xlsx"),
+#                           col.names=T,
+#              row.names=F)
 
-dups<-data.clean %>% 
-  dplyr::filter(GLT %in% dup$GLT) %>% 
-  dplyr::arrange(GLT, DateObs)
 
-###
-##Individual Cibele wuth different sex
-#RL15, AF6, Af8
-
-##checking duplicates in Sex
-sexo<-data.clean %>%
-  dplyr::filter(Sex!="nonID") %>% 
-  dplyr::group_by(GLT) %>%
-  dplyr::summarise(Sexy = Sex,.groups="keep") %>% 
-  distinct() %>% 
-  dplyr::filter(n()>1)
-
-write.table(sexo,file=here::here("data","NewlyCreatedData","Checks","sex_check.txt"),
-      sep="\t",row.names=F,quote=F)
-
-#MP475 problematic (same birth and both M & F)
-
-#1375 with 3 different dates!!
-#AF22, AF23, AF24, AF25 born after observation and dispersed?!
-#check FA40 (2018 & 2019)
-#JP23 duplicate
-#check 1311, 1312, MP104, MP108, MP109, MP176, MP292, MP313, MP99, TM20, UR4
-
-#check differences between GLT and tattoo
-ind<-data.clean %>% 
-  dplyr::filter(!is.na(Tattoo)) %>% 
-  dplyr::filter(GLT!=Tattoo) %>% 
-  dplyr::arrange(GLT,DateObs)
-
-
-#check duplicates with groups and regions
-group<-data.clean %>% 
-  dplyr::filter(Disp!=1 & Death==0 & Solo ==0) %>% 
-  dplyr::group_by(Group) %>% 
-  dplyr::select(Group,Region) %>% 
-  dplyr::distinct() %>% 
-  dplyr::arrange(Group) %>% 
-  as.data.frame(.) %>% 
-  write.xlsx(., file=here::here("data","NewlyCreatedData","GroupRegionCheck.xlsx"),
-                          col.names=T,
-             row.names=F)
-
-```
-
-# 3- Formatting dataset to a wide format
-
-The dataset for capture-recapture analyses includes individuals which have been clearly identified. Dispersed individuals and dead individuals are removed, as well as non identified infants.
-
-Duplicate individual GLT and tattoos are renamed in the code, not in the files (see revalue_variables R file).
-
-```{r}
-#| echo: false
-#| message: false
-#| warning: false
-
-load(here::here("Data","NewlyCreatedData","clean_raw_data_long.RData"))
-bad<-c("?","T0","IN","?-1","?-2","?-3","FT","?-4","?-5","?-6")
-
-sum.up<-data.clean %>% 
-  group_by(Group,GLT) %>% 
-  dplyr::arrange(DateObs)
-
-## Produce a table with a wide format
-
-dat<-data.clean %>% 
-  dplyr::filter(Disp=="0" & Death=="0") %>% 
-  dplyr::filter(!GLT %in% bad) %>% 
-  dplyr::mutate(Date=floor_date(as.Date(DateObs), 'year')) %>% 
-  dplyr::arrange(Date,Group) %>% 
-  dplyr::select(Date,Region,Group, GLT, Sex ) %>% 
- # dplyr::distinct() %>% 
-  pivot_wider(names_from=Date,
-              names_prefix="Obs",
-              values_from=Group) #%>% 
-  # write.table(., file=here::here("Data","NewlyCreatedData","data_wide.xslx"),
-  #             quote=F,row.names=F ,sep=";")
 
 ```
 
-# 4- Checking continuity in observations
+# 3- Checking continuity in observations
 
 ```{r}
 #| echo: false
@@ -335,7 +312,7 @@ title_file<-paste("Continuity_field_effort_",
   
 ```
 
-# 5- Identifying successful dispersal events
+# 4- Identifying successful dispersal events
 
 ```{r}
 
@@ -377,7 +354,7 @@ data.disp<-data.filter %>%
 
 ```
 
-# 6- Identifying all dispersal events
+# 5- Identifying all dispersal events
 
 ```{r}
 #| echo: false

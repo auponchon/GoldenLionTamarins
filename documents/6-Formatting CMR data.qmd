@@ -1,0 +1,59 @@
+---
+title: "6-CMR formatting"
+author: "Aurore Ponchon"
+format: html
+editor: visual
+---
+
+## 1- Formatting dataset to a wide format
+
+The dataset for capture-recapture analyses includes individuals which have been clearly identified. Dispersed individuals, individuals out of groups and dead individuals are removed, as well as non identified infants.
+
+```{r}
+#| echo: false
+#| message: false
+#| warning: false
+#| 
+load(here::here("Data","NewlyCreatedData","clean_data_long_final.RData"))
+bad<-c("?","T0","IN","?-1","?-2","?-3","FT","?-4","?-5","?-6")
+
+
+
+sum.up<-data.clean.final %>% 
+   dplyr::filter(!GLT %in% bad) %>% 
+  dplyr::filter(Disp=="0" & Death=="0" & Solo=="0") %>% 
+  group_by(Group,GLT,SexOK,Year) %>% 
+  dplyr::arrange(DateObs) %>% 
+  dplyr::count(Year)
+
+
+#get the name of all individuals observed in more than one group
+dispind<-sum.up %>%
+  dplyr::group_by(GLT) %>%
+  dplyr::summarise(N = n_distinct(Group)) %>% 
+  dplyr::filter(N >1)
+
+
+## Produce a table with a wide format
+dat<-data.clean.final %>% 
+  dplyr::filter(Disp=="0" & Death=="0" & Solo=="0") %>% 
+  dplyr::filter(!GLT %in% bad) %>% 
+  dplyr::mutate(Date=floor_date(as.Date(DateObs), 'year')) %>% 
+  dplyr::arrange(Date,Group) %>% 
+  dplyr::select(Date,Region,Group, GLT, Sex ) %>% 
+ # dplyr::distinct() %>% 
+  pivot_wider(names_from=Date,
+              names_prefix="Obs",
+              values_from=Group) #%>% 
+  # write.table(., file=here::here("Data","NewlyCreatedData","data_wide.xslx"),
+  #             quote=F,row.names=F ,sep=";")
+```
+
+You can add options to executable code like this
+
+```{r}
+#| echo: false
+2 * 2
+```
+
+The `echo: false` option disables the printing of code (only output is displayed).

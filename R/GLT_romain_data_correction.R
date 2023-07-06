@@ -1,3 +1,10 @@
+#Correcting error in Sex, birth dates and life stage through test and error protocol
+
+correcting_sex_stage<-function(){
+
+  conflicts_prefer(dplyr::arrange)
+  conflicts_prefer(dplyr::first)
+
 ####### GLT data correction
 ### Author: Romain Monassier
 ### Date: 2023
@@ -13,9 +20,9 @@ sapply(load.lib,require,character=TRUE)
 ##### Load data
 
 # Clean data
-load("D:/monas/Git/repo/glt/GoldenLionTamarins/data/NewlyCreatedData/clean_raw_data_long.RData")
+load(here::here("Data","NewlyCreatedData","clean_raw_data_long.RData"))
 data.clean = as.data.table(data.clean)
-summary(data.clean)
+#•summary(data.clean)
 # Date formatting
 data.clean = data.clean %>% 
   dplyr::mutate(DateObsMY = format(DateObs, "%m-%Y")) # Mutate to date format
@@ -31,7 +38,7 @@ data.clean = data.clean %>%
 
 
 # Capture data information
-capt.data = read_excel("D:/monas/Git/repo/glt/GoldenLionTamarins/data/RawData/ProcessamentoMLD.xlsx")
+capt.data = read_excel(here::here("data","RawData","ProcessamentoMLD.xlsx"))
 capt.data = capt.data %>% 
   dplyr::rename(DateObs = Date) %>% 
   dplyr::rename(Group = Grupo)
@@ -42,7 +49,7 @@ data.clean = data.clean %>%
   dplyr::rename(Weight = BWeight) # Join weight
 
 # GLT movement
-GLT_mov = read_excel("D:/monas/Git/repo/glt/GoldenLionTamarins/data/RawData/GLT_movement.xls",
+GLT_mov = read_excel(here::here("data","RawData","GLT_movement.xls"),
                      na="NA")
 GLT_mov = GLT_mov %>% 
   dplyr::rename(GLT = Individual) %>% 
@@ -50,7 +57,7 @@ GLT_mov = GLT_mov %>%
 GLT_mov$Estimated.date.of.emigration = as.Date(GLT_mov$Estimated.date.of.emigration, format="%d/%m/%y")
 
 # Group location
-loc_grp <- read_delim("data/NewlyCreatedData/Nb_obs_gp.csv", delim=";", show_col_types = FALSE)
+loc_grp <- read_delim(here::here("data","NewlyCreatedData","Nb_obs_gp.csv"), delim=";", show_col_types = FALSE)
 
 # Create a unique row id (ie observation id)
 data.clean = rowid_to_column(data.clean)
@@ -129,7 +136,7 @@ data.clean$Sex[data.clean$GLT == "RT1"] = "M" # Manual correction after verifica
 ## Export red flags
 rf.sex = rf.sex %>% 
   dplyr::filter(GLT!="LC4" & GLT!="RT1")
-# write.xlsx(rf.sex, "D:/monas/Git/repo/glt/GoldenLionTamarins/data/NewlyCreatedData/Checks/sex_checkV3.xlsx", row.names=FALSE)
+ write.xlsx(rf.sex, here::here("data","NewlyCreatedData","Checks","sex_checkV3.xlsx"), row.names=FALSE)
 
 # Mutate a new variable precising sex errors in the dataset
 data.clean = data.clean %>% 
@@ -141,7 +148,7 @@ data.clean = data.clean %>%
 ### Age and life stage verification
 
 ## Load birth Dates from 1989 to 2001
-BirthDates = read_excel("D:/monas/Git/repo/glt/GoldenLionTamarins/data/NewlyCreatedData/Checks/BirthDates.xlsx",
+BirthDates = read_excel(here::here("data","NewlyCreatedData","Checks","BirthDates.xlsx"),
                         na="NA")
 BirthDates = BirthDates[!duplicated(BirthDates$GLT), ] # Remove duplicated GLT
 data.clean = data.clean %>% 
@@ -356,7 +363,7 @@ rf.birthdates = data.clean %>%
   dplyr::filter(GLT %in% errors.index$GLT) %>% 
   dplyr::select(c(rowid, GLT, Tattoo, Group, Region, DateObs, ObsOrder, Birth_mov, Birth_VR, Idade, Weight, File, BirthError)) %>% 
   arrange(GLT, ObsOrder) # Create the red flags dataset
-# write.xlsx(rf.birthdates, "D:/monas/Git/repo/glt/GoldenLionTamarins/data/NewlyCreatedData/Checks/red_flags_birthdates1.xlsx", row.names=FALSE)
+ write.xlsx(rf.birthdates, here::here("data","NewlyCreatedData","Checks","red_flags_birthdates1.xlsx"), row.names=FALSE)
 
 
 
@@ -490,7 +497,7 @@ rf.Idade = n %>%
 rf.Idade = rf.Idade %>%
   dplyr::group_by(GLT) %>% 
   dplyr::arrange(ObsOrder) %>% 
-  dplyr::mutate(Diff = IdadeNum - lag(IdadeNum)) %>% 
+  dplyr::mutate(Diff = IdadeNum - dplyr::lag(IdadeNum)) %>% 
   dplyr::filter(! is.na(Diff)) %>% 
   dplyr::summarise(Increasing = all(Diff >= 0))
 rf.Idade = rf.Idade %>% 
@@ -518,7 +525,7 @@ rf.Idade = data.clean %>%
   dplyr::select(c(rowid, GLT, Tattoo, Group, Region, DateObs, ObsOrder, Birth_mov, Birth_VR, Idade, Weight, File)) %>% 
   dplyr::left_join(rf.Idade) %>% 
   arrange(GLT, ObsOrder)
-# write.xlsx(rf.Idade, "D:/monas/Git/repo/glt/GoldenLionTamarins/data/NewlyCreatedData/Checks/red_flags_idade1.xlsx", row.names=FALSE)
+ write.xlsx(rf.Idade, here::here("data","NewlyCreatedData","Checks","red_flags_idade1.xlsx"), row.names=FALSE)
 
 # Remaining errors after the first filter
 idade.checks = errors.index %>% 
@@ -530,12 +537,12 @@ idade.checks = n %>%
   dplyr::arrange(GLT, ObsOrder) %>% 
   dplyr::filter(GLT!="?" & GLT!="IN" & GLT!="T0" & GLT!="FT") %>% 
   dplyr::filter(error_type!="Diff_Idade")
-# write.xlsx(idade.checks, "D:/monas/Git/repo/glt/GoldenLionTamarins/data/NewlyCreatedData/Checks/idade_checks_v2.xlsx", row.names=FALSE)
+ write.xlsx(idade.checks, here::here("data","NewlyCreatedData","Checks","idade_checks_v2.xlsx"), row.names=FALSE)
 
 
 ## Corrected Idade via manual inspection
 # Corrections
-idade.checked1 = read_excel("D:/monas/Git/repo/glt/GoldenLionTamarins/data/NewlyCreatedData/Checks/idade_checked_v1.xlsx",
+idade.checked1 = read_excel(here::here("data","NewlyCreatedData","Checks","idade_checked_v1.xlsx"),
                             na="NA")
 idade.checked1 = as.data.table(idade.checked1)
 corrections = idade.checked1 %>% 
@@ -549,12 +556,14 @@ idade.checks = idade.checks %>%
 
 
 ## Join the idade error to the dataset
-data_clean_v2 = data.clean %>% 
+data.clean.final = data.clean %>% 
   dplyr::left_join(select(n,c(rowid,BirthOK,IdadeOK))) %>% 
   dplyr::left_join(select(rf.Idade,c(rowid,error_type))) %>% 
   dplyr::rename(IdadeError = error_type) %>% 
   dplyr::mutate(IdadeError = ifelse(is.na(IdadeError), "None", IdadeError)) %>% 
   dplyr::mutate(IdadeError = ifelse(GLT %in% "?" | GLT %in% "IN" | GLT %in% "FT" | GLT %in% "T0", "UnknownGLT", IdadeError))
 
-## Export the corrected dataset
-# save(data_clean_v2, file="D:/monas/Git/repo/glt/GoldenLionTamarins/data/NewlyCreatedData/data_clean_v2.RData")
+ return(data.clean.final)     
+ 
+}
+      
