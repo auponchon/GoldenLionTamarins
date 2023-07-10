@@ -201,7 +201,8 @@ c("2 Irmãos" =	"Faz. 2 Irmaos",
                         "TM-3"=	"TM3",
                         "TM2?"=	"TMII",
                         "Triplets"=	"TR",
-                        "Unigranrio"=	"UR"))
+                        "Unigranrio"=	"UR",
+                        "XT" = "SI"))
   
   data$Region[which(data$Group=="AX" | 
                       data$Group=="SI" | 
@@ -215,6 +216,10 @@ c("2 Irmãos" =	"Faz. 2 Irmaos",
   
   data$Group[which(data$GLT=="PT3" & data$Year==2004)]<-NA
   data$Group[which(data$Group=="AL" & data$Year<2007)]<-"AL1"
+  data$Group[which(data$Group=="PA2" & data$Year>2004)]<-"PDA2"
+#  data$Group[which(data$Group=="BC" & data$Year>2000)]<-"BC.PDA"
+#  data$Group[which(data$Group=="BC2" & data$Year>2000)]<-"BC2.PDA"
+  
   data$Group[which(data$GLT=="1303" & 
                      data$Year>=2014 & 
                      data$Year<2020 & 
@@ -302,6 +307,7 @@ revalue_name<-function(data){
   data$GLT[data$Tattoo=="1318"]<-"1318"
   data$GLT[data$Tattoo=="AM1"]<-"AM1"
   data$Tattoo[data$Tattoo=="Si4"]<-"SI4"
+  data$GLT[data$GLT=="OL3O"]<-"OL30"
   
 
   

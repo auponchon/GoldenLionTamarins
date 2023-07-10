@@ -12,27 +12,30 @@ ummp<-sf::read_sf(here::here("data","RawData","Landscape","Shapefiles Landscape 
   dplyr::mutate(UMMPs = as.factor(UMMPs)) 
 
 
-#isolate vendaval region
-vendaval<-land %>% 
-  dplyr::filter(ID==100) %>% 
-  dplyr::mutate(UMMPs="Vendaval") %>% 
-  dplyr::rename(Id=ID) %>% 
-  dplyr::select(Id,UMMPs,geometry) %>% 
-  st_buffer(., 100)  
+# #isolate vendaval region
+# vendaval<-land %>% 
+#   dplyr::filter(ID==100) %>% 
+#   dplyr::mutate(UMMPs="Boa Esperanca") %>% 
+#   dplyr::rename(Id=ID) %>% 
+#   dplyr::select(Id,UMMPs,geometry) %>% 
+#   st_buffer(., 100)  
+# 
+# 
+# #isolate boa esperanza region and bind vendaval
+# boaesperanz<-land %>% 
+#   dplyr::filter(ID>100) %>% 
+# #  dplyr::rename(Id=ID) %>% 
+#   dplyr::mutate(UMMPs="Boa Esperanca") %>% 
+#   dplyr::rename(Id=ID) %>% 
+#   dplyr::select(Id,UMMPs,geometry) %>% 
+#    st_buffer(., 100) 
+#   
+# ummp_add<- boaesperanz %>% 
+#   rbind(vendaval)  %>% 
+#   rbind(ummp)
 
 
-#isolate boa esperanza region and bind vendaval
-boaesperanz<-land %>% 
-  dplyr::filter(ID>100) %>% 
-#  dplyr::rename(Id=ID) %>% 
-  dplyr::mutate(UMMPs="Boa Esperanca") %>% 
-  dplyr::rename(Id=ID) %>% 
-  dplyr::select(Id,UMMPs,geometry) %>% 
-   st_buffer(., 100) 
-  
-ummp_add<- boaesperanz %>% 
-  rbind(vendaval)  %>% 
-  rbind(ummp)
+ummp_add<-ummp
 
 return(ummp_add)
 }

@@ -151,7 +151,7 @@ save(rastshape,file=here::here("data","NewlyCreatedData","Raster_shape.RData"))
 library(gganimate)
 library(gifski)
 
-load(here::here("data","NewlyCreatedData","clean_raw_data_long.RData"))
+load(here::here("data","NewlyCreatedData","data_clean_long_final.RData"))
 load(here::here("data","NewlyCreatedData","Cover_rasters.RData"))
 load(here::here("data","NewlyCreatedData","Raster_size.RData"))
 load(here::here("data","NewlyCreatedData","Raster_perim.RData"))
@@ -160,7 +160,7 @@ load(here::here("data","NewlyCreatedData","Raster_patches.RData"))
 
 
 #get regions with groups
-group.reg<-data.clean %>% 
+group.reg<-data.clean.final %>% 
   ungroup() %>% 
   distinct_at(vars(Year,Group,UMMPs), keep_all=F)
 

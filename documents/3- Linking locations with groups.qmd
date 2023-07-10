@@ -18,7 +18,7 @@ library(ggrepel)
 
 source(here::here("R","progress_bar.R"))
 
-load(here::here("Data","NewlyCreatedData","clean_raw_data_long.RData"))
+load(here::here("Data","NewlyCreatedData","data_clean_long_final.RData"))
 bad<-c("?","T0","IN","?-1","?-2","?-3","FT","?-4","?-5","?-6", "FT")
 
 
@@ -36,7 +36,7 @@ loc<-read.table(here::here("data","rawData","Landscape","RegionsName.csv"),
 excl<-c("AF","JG", "PA")
 
 
-spatdata<-data.clean %>% 
+spatdata<-data.clean.final %>% 
    dplyr::left_join(.,loc, by="Group",
             multiple="first") %>% 
   dplyr::filter(!is.na(Long)) %>%

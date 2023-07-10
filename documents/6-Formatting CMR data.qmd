@@ -7,14 +7,18 @@ editor: visual
 
 ## 1- Formatting dataset to a wide format
 
-The dataset for capture-recapture analyses includes individuals which have been clearly identified. Dispersed individuals, individuals out of groups and dead individuals are removed, as well as non identified infants.
+The dataset for capture-recapture analyses includes individuals which have been clearly identified and sexed. Dispersed individuals, individuals out of groups and dead individuals are removed, as well as non identified infants.
 
 ```{r}
+
+library(here)
+library(tidyverse)
+
 #| echo: false
 #| message: false
 #| warning: false
 #| 
-load(here::here("Data","NewlyCreatedData","clean_data_long_final.RData"))
+load(here::here("data","NewlyCreatedData","data_clean_long_final.RData"))
 bad<-c("?","T0","IN","?-1","?-2","?-3","FT","?-4","?-5","?-6")
 
 
@@ -22,38 +26,79 @@ bad<-c("?","T0","IN","?-1","?-2","?-3","FT","?-4","?-5","?-6")
 sum.up<-data.clean.final %>% 
    dplyr::filter(!GLT %in% bad) %>% 
   dplyr::filter(Disp=="0" & Death=="0" & Solo=="0") %>% 
-  group_by(Group,GLT,SexOK,Year) %>% 
+  dplyr::filter(!is.na(SexOK)) %>% 
+  dplyr::filter(!is.na(UMMPs)) %>% 
+  group_by(GLT,Year,Group,UMMPs,SexOK) %>% 
   dplyr::arrange(DateObs) %>% 
-  dplyr::count(Year)
+  dplyr::count(Year) %>% 
+  group_by(GLT,Year,SexOK) %>% 
+  dplyr::mutate(State=0,
+                Female=ifelse(SexOK=="F",1,0),
+                Male=ifelse(SexOK=="M",1,0)) %>% 
+  slice_max(n) #%>% 
+ # dplyr::summarise(N = n_distinct(Group)) #%>% 
+
+length(unique(sum.up$GLT))
+
+region.gp<-data.clean.final %>% 
+  group_by(UMMPs,Group) %>% 
+  slice(1) %>% 
+  dplyr::select(UMMPs, Group) %>% 
+  dplyr::filter(!is.na(UMMPs))
 
 
 #get the name of all individuals observed in more than one group
-dispind<-sum.up %>%
-  dplyr::group_by(GLT) %>%
-  dplyr::summarise(N = n_distinct(Group)) %>% 
-  dplyr::filter(N >1)
+#dispind<- sum.up %>%
+ # dplyr::group_by(GLT,Year) %>%
+  # dplyr::filter(N > 2)
+
+
+ids<-unique(sum.up$GLT)
+
+for (a in 1:length(ids)){
+  
+  temp<-sum.up[which(sum.up$GLT==ids[a]),]
+  
+  gp<-unique(temp$Group)
+  
+  #get first group in state 1
+  sum.up$State[which(sum.up$GLT==ids[a] & sum.up$Group==gp[1])]<-1
+  
+ #when disperse only once
+   if(length(gp)==2){
+    
+    #if individuals disperse towards another group within same region
+    ifelse(region.gp$UMMPs[which(region.gp$Group==gp[2])] ==
+             region.gp$UMMPs[which(region.gp$Group==gp[1])],
+    sum.up$State[which(sum.up$GLT==ids[a] & sum.up$Group==gp[2])]<-2,
+    sum.up$State[which(sum.up$GLT==ids[a] & sum.up$Group==gp[2])]<-3)
+   }
+  
+        if(length(gp)==3){
+       ifelse(region.gp$UMMPs[which(region.gp$Group==gp[2])] ==
+             region.gp$UMMPs[which(region.gp$Group==gp[1])],
+    sum.up$State[which(sum.up$GLT==ids[a] & sum.up$Group==gp[2])]<-2,
+    sum.up$State[which(sum.up$GLT==ids[a] & sum.up$Group==gp[2])]<-3)
+  
+    ifelse(region.gp$UMMPs[which(region.gp$Group==gp[3])] ==
+             region.gp$UMMPs[which(region.gp$Group==gp[2])],
+    sum.up$State[which(sum.up$GLT==ids[a] & sum.up$Group==gp[3])]<-2,
+    sum.up$State[which(sum.up$GLT==ids[a] & sum.up$Group==gp[3])]<-3)
+        }
+   }
+
+
+
+
 
 
 ## Produce a table with a wide format
-dat<-data.clean.final %>% 
-  dplyr::filter(Disp=="0" & Death=="0" & Solo=="0") %>% 
-  dplyr::filter(!GLT %in% bad) %>% 
-  dplyr::mutate(Date=floor_date(as.Date(DateObs), 'year')) %>% 
-  dplyr::arrange(Date,Group) %>% 
-  dplyr::select(Date,Region,Group, GLT, Sex ) %>% 
+dat<-sum.up %>% 
+  dplyr::select(Year,GLT,Female,Male,State,n ) %>% 
  # dplyr::distinct() %>% 
-  pivot_wider(names_from=Date,
+  pivot_wider(names_from=Year,
               names_prefix="Obs",
-              values_from=Group) #%>% 
+              values_from=State) #%>% 
   # write.table(., file=here::here("Data","NewlyCreatedData","data_wide.xslx"),
   #             quote=F,row.names=F ,sep=";")
 ```
-
-You can add options to executable code like this
-
-```{r}
-#| echo: false
-2 * 2
-```
-
-The `echo: false` option disables the printing of code (only output is displayed).

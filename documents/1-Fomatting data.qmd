@@ -237,7 +237,7 @@ library(gridExtra)
 
 source(here::here("R","plot_continuity.R"))
 
-fq<-data.clean %>%  
+fq<-data.clean.final %>%  
   dplyr::filter(!GLT %in% bad & Disp==0 & Death==0 & Solo==0) %>% 
   group_by(Group,DateObs) %>% 
   dplyr::count() %>% 
@@ -251,14 +251,14 @@ title_plot<-"Monitoring continuity in all regions"
 title_file<-"Continuity_field_effort_all_regions.tif"
 
  
-plot_continuity(data.clean,fq,title_plot,title_file,W=6000,H=6500)
+plot_continuity(data.clean.final,fq,title_plot,title_file,W=6000,H=6500)
   
   
-   regio<-sort(unique(data.clean$UMMPs))
+   regio<-sort(unique(data.clean.final$UMMPs))
    
    
    for (k in 1:length(regio)){
-     sub<-data.clean %>% 
+     sub<-data.clean.final %>% 
        dplyr::filter(UMMPs==regio[k]) 
        
       fq<-sub %>%  
@@ -294,7 +294,7 @@ title_file<-paste("Continuity_field_effort_",
    
    
    
-  gpobs<- data.clean %>%  
+  gpobs<- data.clean.final %>%  
   dplyr::filter(!GLT %in% bad & Disp!=1 & Death==0 & Solo==0) %>% 
   group_by(Group) %>% 
    dplyr::summarize(MinYear=min(Year),
@@ -321,7 +321,7 @@ title_file<-paste("Continuity_field_effort_",
 #| warning: false
 
 #filter data and add id count over time
-data.filter<-data.clean %>% 
+data.filter<-data.clean.final %>% 
   dplyr::filter(!GLT %in% bad & Disp!=1 & Death==0) %>% 
   dplyr::arrange(DateObs, GLT) %>% 
   group_by(GLT) %>% 
@@ -363,7 +363,7 @@ data.disp<-data.filter %>%
 
 
 #filter data and add id count over time
-data.filter<-data.clean %>% 
+data.filter<-data.clean.final %>% 
   dplyr::filter(!GLT %in% bad & Disp==0 & Death==0) %>% 
   dplyr::arrange(DateObs, GLT) %>% 
   group_by(GLT) %>% 
