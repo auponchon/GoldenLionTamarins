@@ -308,7 +308,7 @@ revalue_name<-function(data){
   data$GLT[data$Tattoo=="AM1"]<-"AM1"
   data$Tattoo[data$Tattoo=="Si4"]<-"SI4"
   data$GLT[data$GLT=="OL3O"]<-"OL30"
-  
+  data$GLT[data$Tattoo=="Nina"]<-"SP26"
 
   
   data$GLT[data$GLT=="FA40" & data$Tattoo=="UR2"]<-"FA40.1"

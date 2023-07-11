@@ -23,7 +23,6 @@ library(readxl)
 library(xlsx)
 library(conflicted)
 
-conflict_prefer("mutate", "dplyr")
 
 #Source files with specific functions
 source(here::here("R","extract_functions.R"))
@@ -159,7 +158,8 @@ data.clean.final<-data.clean.final%>%
   dplyr::select(Year,DateObs,DateObsMY,Region,UMMPs,
                 Group,GLT,Tattoo,SexOK, BirthOK,IdadeOK,
                 Disp,Death,Solo,
-                File,season,ObsOrder)
+                File,season,ObsOrder) %>% 
+   as.data.frame(.)
 
 ## Export the corrected dataset
  save(data.clean.final, file=here::here("data","NewlyCreatedData","data_clean_long_final.RData"))

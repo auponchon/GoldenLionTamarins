@@ -27,7 +27,7 @@ sum.up<-data.clean.final %>%
    dplyr::filter(!GLT %in% bad) %>% 
   dplyr::filter(Disp=="0" & Death=="0" & Solo=="0") %>% 
   dplyr::filter(!is.na(SexOK)) %>% 
-  dplyr::filter(!is.na(UMMPs)) %>% 
+ # dplyr::filter(!is.na(UMMPs)) %>% 
   group_by(GLT,Year,Group,UMMPs,SexOK) %>% 
   dplyr::arrange(DateObs) %>% 
   dplyr::count(Year) %>% 
@@ -48,9 +48,10 @@ region.gp<-data.clean.final %>%
 
 
 #get the name of all individuals observed in more than one group
-#dispind<- sum.up %>%
- # dplyr::group_by(GLT,Year) %>%
-  # dplyr::filter(N > 2)
+dispind<- sum.up %>%
+dplyr::group_by(GLT,Year) %>%
+  count(.) %>% 
+dplyr::filter(n > 1)
 
 
 ids<-unique(sum.up$GLT)
@@ -60,6 +61,7 @@ for (a in 1:length(ids)){
   temp<-sum.up[which(sum.up$GLT==ids[a]),]
   
   gp<-unique(temp$Group)
+  print(max(length(gp)))
   
   #get first group in state 1
   sum.up$State[which(sum.up$GLT==ids[a] & sum.up$Group==gp[1])]<-1
@@ -95,8 +97,10 @@ for (a in 1:length(ids)){
 ## Produce a table with a wide format
 dat<-sum.up %>% 
   dplyr::select(Year,GLT,Female,Male,State,n ) %>% 
- # dplyr::distinct() %>% 
-  pivot_wider(names_from=Year,
+  dplyr::distinct() %>% 
+  dplyr::arrange(Year,GLT) %>% 
+  pivot_wider(id_cols=c(GLT,,
+              names_from=Year,
               names_prefix="Obs",
               values_from=State) #%>% 
   # write.table(., file=here::here("Data","NewlyCreatedData","data_wide.xslx"),

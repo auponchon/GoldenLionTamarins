@@ -29,21 +29,21 @@ plot_continuity<-function(data,freq,title_plot,title_file,W,H){
                show.legend=F) +
     scale_colour_manual(values=colorme) +
     scale_y_discrete(guide=guide_axis(n.dodge = 2)) + 
-    scale_x_date(limits=c(as.Date("1989-01-01",format="%F"),
-                          as.Date("2023-01-01",format="%F")),
-                 breaks=seq(as.Date("1989-01-01",format="%F"),
-                            as.Date("2022-11-01",format="%F"),
-                            "6 years")) +
+    # scale_x_date(limits=c(as.Date("1989-01-01",format="%F"),
+    #                       as.Date("2023-01-01",format="%F")),
+    #              breaks=seq(as.Date("1989-01-01",format="%F"),
+    #                         as.Date("2022-11-01",format="%F"),
+    #                         "6 years")) +
     theme_bw() +
     labs(x="Date",
          y="Groups",
          title=title_plot) +
     theme(legend.position = "none")
   
-  if(nrow(fq) > 50){
-    
-  }
-  
+  # if(nrow(fq) > 50){
+  #   
+  # }
+  # 
   tiff(here::here("outputs","Monitoring effort","Conservation regions",title_file),
        width=W,
        height=H,

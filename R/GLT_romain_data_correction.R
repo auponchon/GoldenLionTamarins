@@ -4,6 +4,7 @@ correcting_sex_stage<-function(){
 
   conflicts_prefer(dplyr::arrange)
   conflicts_prefer(dplyr::first)
+  conflicts_prefer(dplyr::mutate)
 
 ####### GLT data correction
 ### Author: Romain Monassier
