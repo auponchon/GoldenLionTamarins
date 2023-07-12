@@ -325,8 +325,7 @@ data.filter<-data.clean.final %>%
   dplyr::filter(!GLT %in% bad & Disp!=1 & Death==0) %>% 
   dplyr::arrange(DateObs, GLT) %>% 
   group_by(GLT) %>% 
-  mutate(id=row_number())
-
+  
 #get the name of all individuals observed in more than one group
 dispind<-data.filter %>%
   dplyr::group_by(GLT) %>%
@@ -336,12 +335,25 @@ dispind<-data.filter %>%
 data.disp<-data.filter %>% 
   dplyr::filter(GLT %in% dispind$GLT) %>% 
   dplyr::arrange(GLT,DateObs) %>% 
-  dplyr::mutate(From=dplyr::lag(Group),
-                To=Group)
- # dplyr::mutate(Change=ifelse(To != From, 1,0)) %>% 
- #  dplyr::filter(Change >0) 
+  dplyr::mutate(FromGroup=dplyr::lag(Group),
+                ToGroup=Group,
+                FromRegion=dplyr::lag(Region),
+                ToRegion=Region,
+                FromUMMP=dplyr::lag(UMMPs),
+                ToUMMP=UMMPs) %>% 
+  dplyr::mutate(Transloc=ifelse(dplyr::lag(Disp==2) & 
+                                  Disp==0 & 
+                                  dplyr::lag(GLT)==GLT,
+                                1,0)) %>% 
+  dplyr::filter(ObsOrder>1) %>%    #remove first observation
   
+  dplyr::mutate(Change=ifelse(ToGroup != FromGroup, 1,0)) %>% 
+   dplyr::filter(Change > 0 & Transloc == 0) %>% 
+   dplyr::select(Year,DateObs,GLT,Tattoo,SexOK,BirthOK,IdadeOK,
+                 FromGroup,ToGroup,FromRegion,ToRegion,FromUMMP,ToUMMP)
 
+
+dispind[which(dispind$N>2),]
   
 
   write.xlsx(as.data.frame(data.disp),
@@ -364,10 +376,10 @@ data.disp<-data.filter %>%
 
 #filter data and add id count over time
 data.filter<-data.clean.final %>% 
-  dplyr::filter(!GLT %in% bad & Disp==0 & Death==0) %>% 
+  dplyr::filter(!GLT %in% bad & Disp!=1 & Death==0) %>% 
   dplyr::arrange(DateObs, GLT) %>% 
-  group_by(GLT) %>% 
-  mutate(id=row_number())
+  group_by(GLT) 
+
 disp<-NULL
 
 gp<-sort(unique(data.filter$Group))
@@ -401,9 +413,12 @@ disp<-rbind(disp,miss)
 
 emigr<-disp %>% 
   group_by(GLT) %>% 
-  dplyr::slice(max(id)) %>% 
+  dplyr::slice(max(ObsOrder)) %>% 
   as.data.frame(.) %>% 
-  write.xlsx(.,file=here::here("data","NewlyCreatedData","All_dispersal_events_filtered.xlsx"),
+  
+  
+  write.xlsx(.,file=here::here("data","NewlyCreatedData",
+                               "All_dispersal_events_lastobs.xlsx"),
              sheetName = "Sheet1",
              col.names=T,
              row.names=F)

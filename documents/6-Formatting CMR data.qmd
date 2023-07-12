@@ -25,18 +25,23 @@ bad<-c("?","T0","IN","?-1","?-2","?-3","FT","?-4","?-5","?-6")
 
 sum.up<-data.clean.final %>% 
    dplyr::filter(!GLT %in% bad) %>% 
-  dplyr::filter(Disp=="0" & Death=="0" & Solo=="0") %>% 
-  dplyr::filter(!is.na(SexOK)) %>% 
- # dplyr::filter(!is.na(UMMPs)) %>% 
+  dplyr::filter(Disp!=1 & Death=="0" & Solo=="0") %>% 
+ # dplyr::filter(!is.na(SexOK)) %>% 
+  dplyr::filter(!is.na(UMMPs)) %>% 
+    dplyr::arrange(DateObs) %>% 
   group_by(GLT,Year,Group,UMMPs,SexOK) %>% 
-  dplyr::arrange(DateObs) %>% 
   dplyr::count(Year) %>% 
-  group_by(GLT,Year,SexOK) %>% 
   dplyr::mutate(State=0,
                 Female=ifelse(SexOK=="F",1,0),
-                Male=ifelse(SexOK=="M",1,0)) %>% 
-  slice_max(n) #%>% 
- # dplyr::summarise(N = n_distinct(Group)) #%>% 
+                Male=ifelse(SexOK=="M",1,0)) 
+ 
+  
+xx<-sum.up %>% 
+  group_by(Year,GLT) %>% 
+   dplyr::filter(n == max(n))
+  
+ww<-anti_join(sum.up,xx)
+# dplyr::summarise(N = n_distinct(Group)) #%>% 
 
 length(unique(sum.up$GLT))
 
@@ -47,11 +52,14 @@ region.gp<-data.clean.final %>%
   dplyr::filter(!is.na(UMMPs))
 
 
-#get the name of all individuals observed in more than one group
-dispind<- sum.up %>%
-dplyr::group_by(GLT,Year) %>%
-  count(.) %>% 
-dplyr::filter(n > 1)
+#get the name of all individuals observed in more than one group for the same year
+dispind<- xx %>%
+      dplyr::group_by(GLT,Year) %>%
+      count(.) %>% 
+      dplyr::filter(n > 1)
+
+#get subset with those individuals
+xx<- sum.up[which(sum.up$GLT %in% dispind$GLT),] 
 
 
 ids<-unique(sum.up$GLT)
@@ -99,10 +107,10 @@ dat<-sum.up %>%
   dplyr::select(Year,GLT,Female,Male,State,n ) %>% 
   dplyr::distinct() %>% 
   dplyr::arrange(Year,GLT) %>% 
-  pivot_wider(id_cols=c(GLT,,
+  pivot_wider(id_cols=c(GLT,Male,Female),
               names_from=Year,
               names_prefix="Obs",
-              values_from=State) #%>% 
-  # write.table(., file=here::here("Data","NewlyCreatedData","data_wide.xslx"),
-  #             quote=F,row.names=F ,sep=";")
+               values_from=State) #%>% 
+   # write.table(., file=here::here("Data","NewlyCreatedData","CMR_wide_3states.csv"),
+   #             quote=F,row.names=F ,sep=";")
 ```
