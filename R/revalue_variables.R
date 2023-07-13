@@ -230,7 +230,7 @@ c("2 Irmãos" =	"Faz. 2 Irmaos",
   data$Disp[which(data$GLT=="MK10" & data$Year > 2003 & data$Group=="ML")]<-1
   data$Disp[which(data$GLT=="PA1" & data$Year > 2005 & data$Group=="PA")]<-1
   
-  
+
 #  data$Region[which(data$Group=="JR")] <- "Faz. Sta Helena"
   
   return(data)

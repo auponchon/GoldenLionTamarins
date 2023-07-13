@@ -22,55 +22,67 @@ load(here::here("data","NewlyCreatedData","data_clean_long_final.RData"))
 bad<-c("?","T0","IN","?-1","?-2","?-3","FT","?-4","?-5","?-6")
 
 
-
+#select all individuals with valid observations
 sum.up<-data.clean.final %>% 
    dplyr::filter(!GLT %in% bad) %>% 
   dplyr::filter(Disp!=1 & Death=="0" & Solo=="0") %>% 
- # dplyr::filter(!is.na(SexOK)) %>% 
-  dplyr::filter(!is.na(UMMPs)) %>% 
+  # dplyr::filter(!is.na(SexOK)) %>% 
+  # dplyr::filter(!is.na(UMMPs)) %>% 
     dplyr::arrange(DateObs) %>% 
   group_by(GLT,Year,Group,UMMPs,SexOK) %>% 
   dplyr::count(Year) %>% 
   dplyr::mutate(State=0,
                 Female=ifelse(SexOK=="F",1,0),
-                Male=ifelse(SexOK=="M",1,0)) 
- 
-  
-xx<-sum.up %>% 
-  group_by(Year,GLT) %>% 
-   dplyr::filter(n == max(n))
-  
-ww<-anti_join(sum.up,xx)
-# dplyr::summarise(N = n_distinct(Group)) #%>% 
-
-length(unique(sum.up$GLT))
+                Male=ifelse(SexOK=="M",1,0)) %>% 
+  ungroup()
 
 region.gp<-data.clean.final %>% 
-  group_by(UMMPs,Group) %>% 
+  group_by(UMMPs,Group,Region) %>% 
   slice(1) %>% 
-  dplyr::select(UMMPs, Group) %>% 
-  dplyr::filter(!is.na(UMMPs))
+  dplyr::select(Group,Region,UMMPs) %>% 
+  dplyr::filter(is.na(UMMPs) & !is.na(Group)) 
+  # write.table(., file=here::here("Data","NewlyCreatedData","groups_without_ummp.csv"),
+  #               quote=F,row.names=F ,sep=";")
+
+#extract duplicated groups within years
+dups<-sum.up %>% 
+  group_by(GLT,Year) %>% 
+  dplyr::mutate(Max=ifelse(n==max(n),1,0)) %>% 
+      filter(n() > 1)  %>% 
+     dplyr::mutate(Duplicated=1)
+    # write.table(., file=here::here("Data","NewlyCreatedData","Duplicated_groups_within_years.csv"),
+    #               quote=F,row.names=F ,sep=";")
+length(unique(sum.up$GLT))
 
 
-#get the name of all individuals observed in more than one group for the same year
-dispind<- xx %>%
-      dplyr::group_by(GLT,Year) %>%
-      count(.) %>% 
-      dplyr::filter(n > 1)
+#Duplicates to remove identified individually in the following file
+correct<-read.csv(here::here("data","NewlyCreatedData",
+                             "Duplicated_groups_within_years_corrected.csv"),
+                  header=T,
+                  sep=";") %>% 
+  dplyr::select(GLT,Year, Group,n,Duplicated,ToRemove)
 
-#get subset with those individuals
-xx<- sum.up[which(sum.up$GLT %in% dispind$GLT),] 
+#Remove duplicate years
+sum.up.correct<-sum.up %>% 
+  left_join(correct,by=c("GLT","Year","Group","n")) %>% 
+  dplyr::mutate(ToRemove = replace_na(ToRemove, 0)) %>% 
+  dplyr::filter(ToRemove==0) %>% 
+  dplyr::select(GLT,Year,Group,UMMPs,State)
 
 
+
+
+## Design states based on groups and regions
 ids<-unique(sum.up$GLT)
 
 for (a in 1:length(ids)){
   
+  #subset individual data history
   temp<-sum.up[which(sum.up$GLT==ids[a]),]
   
+  #get ids of the different groups
   gp<-unique(temp$Group)
-  print(max(length(gp)))
-  
+ 
   #get first group in state 1
   sum.up$State[which(sum.up$GLT==ids[a] & sum.up$Group==gp[1])]<-1
   
@@ -84,17 +96,17 @@ for (a in 1:length(ids)){
     sum.up$State[which(sum.up$GLT==ids[a] & sum.up$Group==gp[2])]<-3)
    }
   
-        if(length(gp)==3){
-       ifelse(region.gp$UMMPs[which(region.gp$Group==gp[2])] ==
-             region.gp$UMMPs[which(region.gp$Group==gp[1])],
-    sum.up$State[which(sum.up$GLT==ids[a] & sum.up$Group==gp[2])]<-2,
-    sum.up$State[which(sum.up$GLT==ids[a] & sum.up$Group==gp[2])]<-3)
-  
-    ifelse(region.gp$UMMPs[which(region.gp$Group==gp[3])] ==
-             region.gp$UMMPs[which(region.gp$Group==gp[2])],
-    sum.up$State[which(sum.up$GLT==ids[a] & sum.up$Group==gp[3])]<-2,
-    sum.up$State[which(sum.up$GLT==ids[a] & sum.up$Group==gp[3])]<-3)
-        }
+    #     if(length(gp)==3){
+    #    ifelse(region.gp$UMMPs[which(region.gp$Group==gp[2])] ==
+    #          region.gp$UMMPs[which(region.gp$Group==gp[1])],
+    # sum.up$State[which(sum.up$GLT==ids[a] & sum.up$Group==gp[2])]<-2,
+    # sum.up$State[which(sum.up$GLT==ids[a] & sum.up$Group==gp[2])]<-3)
+    # 
+    # ifelse(region.gp$UMMPs[which(region.gp$Group==gp[3])] ==
+    #          region.gp$UMMPs[which(region.gp$Group==gp[2])],
+    # sum.up$State[which(sum.up$GLT==ids[a] & sum.up$Group==gp[3])]<-2,
+    # sum.up$State[which(sum.up$GLT==ids[a] & sum.up$Group==gp[3])]<-3)
+    #     }
    }
 
 
@@ -104,7 +116,7 @@ for (a in 1:length(ids)){
 
 ## Produce a table with a wide format
 dat<-sum.up %>% 
-  dplyr::select(Year,GLT,Female,Male,State,n ) %>% 
+  dplyr::select(Year,GLT,State,n ) %>% 
   dplyr::distinct() %>% 
   dplyr::arrange(Year,GLT) %>% 
   pivot_wider(id_cols=c(GLT,Male,Female),
