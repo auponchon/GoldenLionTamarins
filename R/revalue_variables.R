@@ -3,6 +3,8 @@ revalue_region<-function(data){
   
   data$Group[which(data$Region=="Faz. Vendaval")]<-"AL1"
   data$Group[which(data$Group=="JR" & data$Year>2010)]<-"JR.1"
+  data$Group[which(data$Group=="JG" & data$Year<2003)]<-"JG.1"
+  
  
 
 data$Region<-plyr::revalue(as.factor(data$Region), 

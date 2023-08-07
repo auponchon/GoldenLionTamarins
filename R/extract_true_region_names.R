@@ -13,6 +13,12 @@ library(sf)
                                           "União I" = "Uniao I",
                                           "União II" = "Uniao II"))
   
+  #load groups without coordinates but with region information
+  gp.reg<-read.csv2(here::here("data","rawData","Landscape","groups_with_corrected_ummp.csv"),
+                    header=T,
+                    as.is=T) %>% 
+    dplyr::filter(!is.na(Group))
+  
 #import spatial locations of groups
 loc<-read.table(here::here("data","rawData","Landscape","RegionsName.csv"),
                 header=T,
@@ -20,16 +26,23 @@ loc<-read.table(here::here("data","rawData","Landscape","RegionsName.csv"),
                 as.is=T) %>% 
   dplyr::rename(Long=CENTROIDE.X.UTM.SAD69.23S,
                 Lat=CENTROIDE.Y.UTM.SAD69.23S,
-                Group=Abreviation) %>% 
-  dplyr::select(-Platform,-City) %>% 
+                Group=Abreviation,
+                Region=Fragment.Region) %>% 
   sf::st_as_sf(., coords = c("Long","Lat")) %>% 
   sf::st_set_crs(31983) 
 
 
 group_regions<-st_join(loc,ummp) %>% 
-  dplyr::select(Group,Farm,Id,UMMPs) %>% 
+  dplyr::select(Group,Region,UMMPs) %>% 
   st_drop_geometry()
 
+nolocgroup<-gp.reg[!gp.reg$Group %in% group_regions$Group,]
 
-return(group_regions)
+
+group_regions_all<-group_regions %>% 
+      rbind(.,nolocgroup) %>% 
+      dplyr::arrange(Group) %>% 
+  dplyr::select(-Region)
+
+return(group_regions_all)
 }

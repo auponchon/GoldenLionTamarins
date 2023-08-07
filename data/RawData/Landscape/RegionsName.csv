@@ -2,6 +2,7 @@
 Faz. Afetiva;Plataforma grupo Afetiva;AF;Silva Jardim;760295;7494955;Faz. Afetiva
 Faz. Afetiva;Plataforma - AF3;AF3;Silva Jardim;760304;7494942;Faz. Afetiva
 Faz. Boa Esperanca;Plataforma grupo AF8;AF8;Silva Jardim;761195;7494295;Faz. Boa Esperanca
+Fazenda Nova Esperança;Plataforma - NE;FA22;Silva Jardim;764129;7494838;Nova Esperança
 Faz. Afetiva;Plataforma - AF2;AFII;Silva Jardim;760539;7494754;Faz. Afetiva
 Poco das Antas;Plataforma - AF;AFT;Silva Jardim;777270;7505718;Poco das Antas
 Poco das Antas;Plataforma grupo AL;AL;Silva Jardim;777558;7506694;Poco das Antas
@@ -13,7 +14,7 @@ St. das Andorinhas;Plataforma grupo Atlanta;AT;Silva Jardim;761883;7494870;St. d
 Ataliba;Plataforma ;Ataliba;Silva Jardim;769996;7498197;Ataliba
 Faz. Sta Helena 2;Plataforma grupo Alex;AX;Silva Jardim;767274;7497645;Faz. Sta Helena 2
 Faz. Boa Esperanca;Plataforma grupo Alex2;AX2;Silva Jardim;763279;7492616;Faz. Boa Esperanca
-Faz. Sta Barbara;Plataforma comum grupos Bira e Bira2;BI;Silva Jardim;775874;7507834;Faz. Sta Barbara
+Faz. Boa Esperanca;Plataforma grupo Alex3;AX3;Silva Jardim;763300;7492700;Faz. Boa Esperanca
 Pirineus;Plataforma grupo BJ;BJ;Pirineus;754695;7510796;Pirineus
 Faz. Vale do Cedro;Plataforma grupo Brookfield;BK;Silva Jardim;771633;7504501;Faz. Vale do Cedro
 Poco das Antas;Plataforma grupo BO2;BO2;Silva Jardim;777129;7505637;Poco das Antas
@@ -25,6 +26,7 @@ Faz. 2 Irmaos;Plataforma grupo Cahoma2;CA2;Silva Jardim;774348;7507995;Faz. 2 Ir
 Faz. Coqueiros;Plataforma grupo Columbia;CB;Silva Jardim;777446;7509902;Faz. Coqueiros
 Faz. Coqueiros;Plataforma grupo Columbia2;CB2;Silva Jardim;777334;7510069;Faz. Coqueiros
 Faz. Rio Vermelho;Plataforma grupo CB5;CB5;Rio Bonito;751021;7484587;Faz. Rio Vermelho
+Andorinhas;Plataforma - CH2;CH2;Silva Jardim;761785;7494944;Sitio das Andorinha
 Faz. 2 Irmaos;Plataforma grupo CLA;CLA;Silva Jardim;774415;7508292;Faz. 2 Irmaos
 Faz. 2 Irmaos;Plataforma - DI;DI;Silva Jardim;773967;7507949;Faz. 2 Irmaos
 Faz. Rio Vermelho;Plataforma grupo Daniel;DN;Rio Bonito;751055;7485831;Faz. Rio Vermelho
@@ -39,7 +41,6 @@ Poco das Antas;Plataforma - Est (1);Estação1;Silva Jardim;779324;7502140;Poco 
 Faz. Estreito;Plataforma grupo ET;ET;Silva Jardim;761935;7497135;Faz. Estreito
 Poco das Antas;Plataforma grupo EUC2;EUC2;Silva Jardim;778279;7506405;Poco das Antas
 Faz. Boa Esperanca;NA;EX;NA;763127;7492230;Faz. Boa Esperanca
-Faz. Nova Esperanca;Plataforma - NE;FA22;Silva Jardim;764129;7494838;Faz. Nova Esperanca
 Faz. Nova Esperanca;Plataforma - FB;FB;Silva Jardim;765167;7494788;Faz. Nova Esperanca
 Faz. Rio Vermelho;Plataforma grupo Folcon;FC;Rio Bonito;748737;7485187;Faz. Rio Vermelho
 Faz. Afetiva;Plataforma - FP;FP;Silva Jardim;760222;7495014;Faz. Afetiva
@@ -47,12 +48,13 @@ Rebio Uniao;Plataforma grupo Funil;FU;Rio das Ostras;806534;7517497;Rebio Uniao
 Rebio Uniao;Plataforma grupo Dublin;FU2;Rio das Ostras;806612;7517300;Rebio Uniao
 Faz. Boa Esperanca;Plataforma grupo FX;FX;Silva Jardim;762731;7491974;Faz. Boa Esperanca
 Faz. Nova Esperanca;Plataforma - GM;GM;Silva Jardim;764657;7494788;Faz. Nova Esperanca
-Faz. Nova Esperanca;Plataforma - GM2;GM2;Silva Jardim;764631;7494983;Faz. Nova Esperanca
+Faz. Nova Esperanca;Plataforma - GM2;GM2;Silva Jardim;764620;7494932;Faz. Nova Esperanca
 Faz. Nova Esperanca;Plataforma - GM3;GM3;Silva Jardim;764154;7494871;Faz. Nova Esperanca
 Faz. Nova Esperanca;Plataforma - GM4;GM4;Silva Jardim;763701;7494412;Faz. Nova Esperanca
 Faz. Nova Esperanca;Plataforma - GM5;GM5;Silva Jardim;763853;7494634;Faz. Nova Esperanca
 Faz. Nova Esperanca;Plataforma - GM6;GM6;Silva Jardim;763853;7494474;Faz. Nova Esperanca
 Faz. Nova Esperanca;Olataforma - GM7;GM7;Silva Jardim;764127;7494807;Faz. Nova Esperanca
+Faz. Nova Esperanca;Olataforma - GM8;GM8;Silva Jardim;765007;7494837;Faz. Nova Esperanca
 Poco das Antas;Plataforma - GN;GN;Silva Jardim;777313;7505844;Poco das Antas
 Faz. Igarape;Plataforma grupo Igarape;IG;Silva Jardim;776529;7508341;Faz. Igarape
 Faz. Igarape;Plataforma -IG;IG2;Silva Jardim;776133;7508572;Faz. Igarape
@@ -61,18 +63,26 @@ Faz. Sao Joao;Plataforma grupo Israel;IR;Silva Jardim;762256;7490526;Faz. Sao Jo
 Faz. Rio Vermelho;Plataforma - RV/JB;JB;Rio Bonito;748153;7485267;Faz. Rio Vermelho
 Sitio Joedi;Plataforma grupo Joedi;JD;Silva Jardim;776205;7508925;Sitio Joedi
 Sitio Joedi;Plataforma grupo Joedi (2);JD2;Silva Jardim;776174;7508634;Sitio Joedi
-Faz. Afetiva;Plataforma grupo Jorge Inicial;JG;Silva Jardim;760670;7494943;Faz. Afetiva
+Faz. Afetiva;Plataforma grupo Jorge Inicial;JG.1;Silva Jardim;760670;7494943;Faz. Afetiva
 Faz. Cabana nova Conquista;Plataforma - JG;JG;Silva Jardim;765027;7495286;Faz. Cabana nova Conquista
 Faz. Afetiva;Plataforma grupo Jorge (2);JG2;Silva Jardim;760287;7494952;Faz. Afetiva
 Sitio 7 Jotas;Plataforma grupo JJ;JJ;Silva Jardim;763425;7500034;Sitio 7 Jotas
 Faz. Rio Vermelho;Plataforma comum grupos CB5 e Stockholm;JQ;Rio Bonito;750708;7484360;Faz. Rio Vermelho
 Faz. Igarape;Plataforma grupo Jersey no fundo de vale;JR;Silva Jardim;774240;7508618;Faz. Igarape
 Faz. Igarape;Plataforma grupo JR2;JR2;Silva Jardim;774271;7508621;Faz. Igarape
-Faz. Sta Helena;Plataforma - JR;JRSH;Silva Jardim;771330;7505536;Faz. Sta Helena
+Faz. Sta Helena;Plataforma - JR;JR.1;Silva Jardim;771330;7505536;Faz. Sta Helena
 Faz. Sao Francisco;Plataforma grupo Skank (2);KS;Silva Jardim;775105;7508815;Faz. Sao Francisco
 Faz. Sta Helena;NA;LA;NA;771180;7505522;Faz. Sta Helena
 Faz. Sta Helena;Plataforma grupo LA2;LA2;Silva Jardim;771281;7505531;Faz. Sta Helena
 Rebio Uniao;Plataforma grupo Luiza Brunet;LB;Rio das Ostras;806208;7515714;Rebio Uniao
+Rebio Uniao Sul;Plataforma grupo LB2;LB2;Rio das Ostras;806468;7515602.5;Rebio Uniao
+Rebio Uniao Sul;Plataforma - LB3;LB3;Rio das Ostras;806728;7515491;Rebio Uniao
+Rebio Uniao Sul;Plataforma - LB4;LB4;Rio das Ostras;806728;7515460;Rebio Uniao
+Rebio Uniao Sul;Plataforma - LB-5;LB5;Rio das Ostras;806647;7515580;Rebio Uniao
+Rebio Uniao Sul;Plataforma - LB-6;LB-6;Rio das Ostras;806689;7515345;Rebio Uniao
+Rebio Uniao Sul;Plataforma - LB-7;LB-7;Rio das Ostras;806643;7515343;Rebio Uniao
+Rebio Uniao Sul;Plataforma - LB-8;LB-8;Rio das Ostras;806812;7515616;Rebio Uniao
+Rebio Uniao Sul;Plataforma - LB9;LB9;Rio das Ostras;807015;7515763;Rebio Uniao
 Pirineus;Plataforma grupo LD;LD;Pirineus;753829;7511316;Pirineus
 Faz. Igarape;Plataforma grupo Lincon;LI;Silva Jardim;774214;7509072;Faz. Igarape
 Rebio Uniao;Plataforma grupo Lava Pe;LP;Rio das Ostras;804385;7517170;Rebio Uniao
@@ -125,7 +135,7 @@ Rebio Uniao;Plataforma grupo Sede;SD;Rio das Ostras;804126;7517008;Rebio Uniao
 Faz. Sao Francisco;Plataforma grupo Seatle;SE;Silva Jardim;775676;7509399;Faz. Sao Francisco
 Faz. Sao Francisco;Plataforma grupo Seatle (2);SE2;Silva Jardim;775544;7508514;Faz. Sao Francisco
 Faz. Sta Helena;Plataforma grupo Santa Helena;SH;Silva Jardim;771480;7505759;Faz. Sta Helena
-Faz. Sta Helena 2;NA;SI;NA;767762;7497710;Faz. Sta Helena 2
+Faz. Sta Helena 2;NA;SI;NA;667762;7497710;Faz. Sta Helena 2
 Faz. Sta Helena 2;Plataforma grupo Sidnei2 (2);SI2;Silva Jardim;767886;7497685;Faz. Sta Helena 2
 Faz. Tamarins;Plataforma - SI3;SI3;Silva Jardim;768089;7498133;Faz. Tamarins
 Faz. Iguape;Plataforma grupo Silva Jardim;SJ;Silva Jardim;775221;7506496;Faz. Iguape
@@ -135,8 +145,12 @@ Faz. Rio Vermelho;Plataforma grupo Salario;SL;Rio Bonito;751779;7486067;Faz. Rio
 Faz. Afetiva;Plataforma grupo Super;SP;Silva Jardim;760297;7494833;Faz. Afetiva
 Faz. Afetiva;Plataforma grupo Super (2);SP2;Silva Jardim;760433;7494714;Faz. Afetiva
 Rebio Uniao;Plataforma grupo Saquarema;SQ;Rio das Ostras;805651;7517583;Rebio Uniao
-Rebio Uniao;Plataforma grupo Saquarema (2);SQ2;Rio das Ostras;805959;7517866;Rebio Uniao
-Faz. Sta Helena;Plataforma - SS (2);SS;Silva Jardim;773002;7506643;Faz. Sta Helena
+Rebio Uniao;Plataforma grupo Saquarema (2);SQII;Rio das Ostras;805959;7517866;Rebio Uniao
+Sta Helena I;Plataforma - SS (1);SS;Silva Jardim;772894;7506224;Sta Helena I
+Sta Helena I;Plataforma - SS (1);SS1;Silva Jardim;772894;7506224;Sta Helena I
+Sta Helena I;Plataforma - SS (2);SS2;Silva Jardim;773002;7506643;Sta Helena I
+Sta Helena I;Plataforma - SS (3);SS3;Silva Jardim;772672;7506588;Sta Helena I
+Sta Helena I;Plataforma - SS (4);SS4;Silva Jardim;772997;7506256;Sta Helena I
 Faz. Rio Vermelho;Plataforma grupo Stockholm;ST;Rio Bonito;750338;7484551;Faz. Rio Vermelho
 Faz. Rio Vermelho;Plataforma grupo Stockholm (2);ST2;Rio Bonito;750111;7484283;Faz. Rio Vermelho
 Faz. Sta Helena 2;Plataforma grupo Tamarins;TM;Silva Jardim;767827;7498235;Faz. Sta Helena 2
@@ -148,3 +162,9 @@ Faz. Afetiva;Plataforma - UR;UR;Silva Jardim;760531;7494811;Faz. Afetiva
 Faz. Afetiva; Plataforma - UR2;UR2;Silva Jardim;760947;7494613;Faz. Afetiva
 Faz. Vale do Cedro;Plataforma grupo Vale do Cedro;VC;Silva Jardim;771959;7503945;Faz. Vale do Cedro
 Faz. Bom Retiro;Plataforma grupo Wild Seattle;WS;Silva Jardim;778186;7514360;Faz. Bom Retiro
+Ribeirao;Plataforma ZN;ZN;Casimiro;763412;7495171;Ribeirao
+Sitio IPE;Plataforma IPE (2);IPE;Silva Jardim;763368;7495064;Sitio IPE
+Fazenda Afetiva;Plataforma - FPIII (2);FPIII;Silva Jardim;760114;7494512;Fazenda Afetiva
+Sitio Zama;Plataforma - ZM1;ZM;Silva Jardim;760495;7496696;Imbau
+Fazenda Nova Esperança;Platagorma - GM9/GM7;GM9;Silva Jardim;764127;7494807;Nova Esperança
+Fazenda Nova Esperança;Plataforma - GM10;GM10;Silva Jardim;764483;7495030;Nova Esperança

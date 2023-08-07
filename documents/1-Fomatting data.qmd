@@ -93,10 +93,10 @@ data.clean<-data2000 %>%
                 Birth=as.Date(paste("01/",Birth, sep=""),format="%d/%m/%y")) %>% 
   rbind(datadisp) %>% 
   account_translocations() %>% 
-  left_join(data.regions,by="Group") %>% 
+  left_join(data.regions,by="Group", keep=F) %>% 
   
   dplyr::distinct(DateObs,Group,GLT,.keep_all = T) %>% 
-   dplyr::arrange(DateObs,Group,GLT) 
+   dplyr::arrange(DateObs,Group,GLT)
 
 
 #check unique group names and Regions
@@ -117,29 +117,10 @@ data.clean<-data2000 %>%
 # write.table(., file=here::here("Data","NewlyCreatedData","data_long.xslx"),
 #            quote=F,row.names=F ,sep=";")
 
-#filter individuals and produce final files
-
-
-
 save(data.clean,file=here::here("Data",
                                 "NewlyCreatedData",
                                 "clean_raw_data_long.RData"))
-# 
-#check group names 
-# subseto<-DATA %>% 
-#   filter(Group=="DN"|
-#          Group=="Fugitivo"|
-#          Group=="Fusão"|
-#          Group=="GM"|
-#            Group=="FQL"|
-#            Group=="Jaguar"|
-#            Group=="ML2"|
-#            Group=="MR"|
-#            Group=="NA") %>% 
-#   select(-Grupo)
-# 
-# write_xlsx(subseto,
-# path=here("Data","NewlyCreatedData","check_group_Valeria.xlsx"))
+
 ```
 
 # 2- Checking duplicates and errors
@@ -238,7 +219,7 @@ library(gridExtra)
 source(here::here("R","plot_continuity.R"))
 
 fq<-data.clean.final %>%  
-  dplyr::filter(!GLT %in% bad & Disp==0 & Death==0 & Solo==0) %>% 
+  dplyr::filter(!GLT %in% bad & Disp!=1 & Death==0 & Solo==0) %>% 
   group_by(Group,DateObs) %>% 
   dplyr::count() %>% 
   group_by(Group) %>% 
@@ -324,7 +305,7 @@ title_file<-paste("Continuity_field_effort_",
 data.filter<-data.clean.final %>% 
   dplyr::filter(!GLT %in% bad & Disp!=1 & Death==0) %>% 
   dplyr::arrange(DateObs, GLT) %>% 
-  group_by(GLT) %>% 
+  group_by(GLT) 
   
 #get the name of all individuals observed in more than one group
 dispind<-data.filter %>%

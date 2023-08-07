@@ -24,6 +24,7 @@ source(here::here("R","correct_translocations_cmr.R"))
 load(here::here("data","NewlyCreatedData","data_clean_long_final.RData"))
 bad<-c("?","T0","IN","?-1","?-2","?-3","FT","?-4","?-5","?-6")
 
+
 #Monitoring effort over years based on the cuont of individuals
 data.clean.final %>% 
   group_by(Year) %>% 
@@ -71,6 +72,14 @@ dups.gp<-read.csv(here::here("data","NewlyCreatedData",
                   sep=";") %>% 
   dplyr::select(GLT,Year, Group,n,Duplicated,ToRemove)
 
+#select groups with the most of observations over years (> 5 obs if <2022)
+nb.gp.obs<-read.csv(here::here("data","NewlyCreatedData",
+                             "Nb_obs_gp.csv"),
+                  header=T,
+                  sep=";") %>% 
+  dplyr::filter(Duration >6 & N>4 & !is.na(Group)) %>% 
+  dplyr::select(Group)
+
 ```
 
 # Create a subset with adults, sex and well observed groups over years
@@ -82,6 +91,13 @@ sum.up<-data.clean.final %>%
   dplyr::filter(Disp!=1 & Death=="0" & Solo=="0") %>% 
   dplyr::filter(!is.na(SexOK)) %>%  #get correct sex
    dplyr::filter(IdadeOK=="AD") %>% #get only adults
+  dplyr::filter( Year < 2010 &  
+                 Group!="CB" & 
+                    Group!= "PA2" &
+                  GLT %in% unique(data.clean.final$GLT
+                                  [data.clean.final$UMMPs=="Rio Vermelho" |
+                                   data.clean.final$UMMPs=="Aldeia I" |
+                                  data.clean.final$UMMPs=="Aldeia II"])) %>% 
     dplyr::arrange(DateObs) %>% 
   group_by(GLT,Year,Group,SexOK) %>% 
   dplyr::count(Year) %>% 
@@ -93,20 +109,14 @@ length(unique(sum.up$GLT))  #1245 with correct known sex; 1347 including undefin
 #
 
 
-#select groups with the most of observations over years (> 5 obs if <2022)
-nb.gp.obs<-read.csv(here::here("data","NewlyCreatedData",
-                             "Nb_obs_gp_include_cmr.csv"),
-                  header=T,
-                  sep=";") %>% 
-  dplyr::filter(To.include==1 & !is.na(Group)) %>% 
-  dplyr::select(Group)
+
 
 #filter nb of obs and group duplicates
 sum.up.correct<-sum.up %>% 
   dplyr::filter(Group %in% nb.gp.obs$Group) %>%  #5978 obs
   left_join(dups.gp,by=c("GLT","Year","Group")) %>% 
   dplyr::mutate(ToRemove = replace_na(ToRemove, 0)) %>% 
-  dplyr::filter(ToRemove==0) %>% 
+  dplyr::filter(ToRemove==0 ) %>% 
   dplyr::select(GLT,Year,Group,Female,Male) %>% 
    dplyr::mutate(State="1")
 
@@ -135,7 +145,8 @@ format<-distinct.sum.up %>%
     Female=paste0(distinct.sum.up$Female," ;"))
 
 
- write.table(format, file=here::here("CMR", "data", "CMR_1state_AD_sex_filtGP_allperiods.inp"),
+ write.table(format, file=here::here("CMR", "data", 
+                                     "CMR_1state_AD_AldeiaI-II_RV_1989-2009.inp"),
                  quote=F,row.names=F ,
                  sep=" ",
                  col.names=F)
@@ -155,14 +166,6 @@ format<-distinct.sum.up %>%
 length(unique(sum.up$GLT))  #1245 with correct known sex; 1347 including undefined sex
 #
 
-
-#select groups with the most of observations over years (> 5 obs if <2022)
-nb.gp.obs<-read.csv(here::here("data","NewlyCreatedData",
-                             "Nb_obs_gp_include_cmr.csv"),
-                  header=T,
-                  sep=";") %>% 
-  dplyr::filter(To.include==1 & !is.na(Group)) %>% 
-  dplyr::select(Group)
 
 #filter nb of obs and group duplicates
 sum.up.correct<-sum.up %>% 
@@ -197,7 +200,7 @@ format<-distinct.sum.up %>%
   dplyr::mutate(Male="1;")
 
 
- write.table(format, file=here::here("CMR", "data", "CMR_1state_AD_NOsex_filtGP_allperiods.inp"),
+ write.table(format, file=here::here("CMR", "data", "CMR_1state_AD_NOsex_filt78GP_allperiods.inp"),
                  quote=F,row.names=F ,
                  sep=" ",
                  col.names=F)
@@ -254,7 +257,8 @@ distinct.sum.up<-sum.up.correct %>%
               names_prefix="Obs",
                values_from=State,
               values_fill=0) %>% 
-    write.table(., file=here::here("Data","NewlyCreatedData","CMR", "CMR_3states-stage_nosex_allperiods.csv"),
+    write.table(., file=here::here("Data","NewlyCreatedData","CMR", 
+                                   "CMR_3states-stage_nosex_allperiods.csv"),
                 quote=F,row.names=F ,sep=";")
 
 ```
