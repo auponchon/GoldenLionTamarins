@@ -45,6 +45,5 @@ loc<-read.table(here::here("data","rawData","Landscape","RegionsName.csv"),
   sf::st_set_crs(31983)
 
 
-plot(land$geometry,col="grey90")
-plot(rast,col=)
+plot(land$geometry,col="grey90",add=T)
 plot(loc,add=T,col="red",pch=16)

@@ -92,11 +92,8 @@ sum.up<-data.clean.final %>%
   dplyr::filter(!is.na(SexOK)) %>%  #get correct sex
    dplyr::filter(IdadeOK=="AD") %>% #get only adults
   dplyr::filter( Year < 2010 &  
-                 Group!="CB" & 
-                    Group!= "PA2" &
                   GLT %in% unique(data.clean.final$GLT
-                                  [data.clean.final$UMMPs=="Rio Vermelho" |
-                                   data.clean.final$UMMPs=="Aldeia I" |
+                                  [data.clean.final$UMMPs=="Aldeia I" |
                                   data.clean.final$UMMPs=="Aldeia II"])) %>% 
     dplyr::arrange(DateObs) %>% 
   group_by(GLT,Year,Group,SexOK) %>% 
@@ -107,8 +104,6 @@ sum.up<-data.clean.final %>%
 
 length(unique(sum.up$GLT))  #1245 with correct known sex; 1347 including undefined sex
 #
-
-
 
 
 #filter nb of obs and group duplicates
@@ -134,6 +129,19 @@ distinct.sum.up<-sum.up.correct %>%
                values_fill="0")  %>% 
      as.data.frame(.) 
 
+
+file<-"CMR_1state_AD_AldeiaI-II_1989-2009"
+  
+   write.table(distinct.sum.up, file=here::here("data", 
+                                                "NewlyCreatedData", 
+                                                "CMR", 
+                                                paste0(file,".csv")),
+                 quote=F,
+                 row.names=F ,
+                 sep=";",
+                 col.names=T)
+
+
 colNamesObs = colnames(distinct.sum.up)[4:ncol(distinct.sum.up)]
 
 distinct.sum.up$Obs = apply(distinct.sum.up[, colNamesObs, drop = F], 
@@ -146,64 +154,12 @@ format<-distinct.sum.up %>%
 
 
  write.table(format, file=here::here("CMR", "data", 
-                                     "CMR_1state_AD_AldeiaI-II_RV_1989-2009.inp"),
-                 quote=F,row.names=F ,
+                                     paste0(file,".inp")),
+                 quote=F,
+             row.names=F ,
                  sep=" ",
                  col.names=F)
  
- 
- 
- #same simple dataset but with all adults regardless sex
- sum.up<-data.clean.final %>% 
-   dplyr::filter(!GLT %in% bad) %>% 
-  dplyr::filter(Disp!=1 & Death=="0" & Solo=="0") %>% 
-   dplyr::filter(IdadeOK=="AD") %>% #get only adults
-    dplyr::arrange(DateObs) %>% 
-  group_by(GLT,Year,Group,SexOK) %>% 
-  dplyr::count(Year)  %>% 
-  ungroup()
-
-length(unique(sum.up$GLT))  #1245 with correct known sex; 1347 including undefined sex
-#
-
-
-#filter nb of obs and group duplicates
-sum.up.correct<-sum.up %>% 
-  dplyr::filter(Group %in% nb.gp.obs$Group) %>%  #5978 obs
-  left_join(dups.gp,by=c("GLT","Year","Group")) %>% 
-  dplyr::mutate(ToRemove = replace_na(ToRemove, 0)) %>% 
-  dplyr::filter(ToRemove==0) %>% 
-  dplyr::select(GLT,Year,Group) %>% 
-   dplyr::mutate(State="1")
-
-#get the wide table
-distinct.sum.up<-sum.up.correct %>% 
- correct_translocation_cmr() %>% 
-  group_by(Year,GLT) %>% 
-      distinct() %>% 
-  dplyr::mutate(State="1") %>% 
-      arrange(Year,GLT) %>% 
-  pivot_wider(id_cols=c(GLT),
-              names_from=Year,
-              names_prefix="O",
-               values_from=State,
-               values_fill="0")  %>% 
-     as.data.frame(.) 
-
-colNamesObs = colnames(distinct.sum.up)[2:ncol(distinct.sum.up)]
-
-distinct.sum.up$Obs = apply(distinct.sum.up[, colNamesObs, drop = F], 
-                              MARGIN = 1, FUN = function(i) paste(i, collapse = ""))
-
-format<-distinct.sum.up %>% 
-  dplyr::select(Obs) %>% 
-  dplyr::mutate(Male="1;")
-
-
- write.table(format, file=here::here("CMR", "data", "CMR_1state_AD_NOsex_filt78GP_allperiods.inp"),
-                 quote=F,row.names=F ,
-                 sep=" ",
-                 col.names=F)
 ```
 
 # Create a dataset with stage and sex ok

@@ -63,6 +63,9 @@ loc.groups<-spatdata %>%
 
 land<-sf::read_sf(here::here("data","RawData","Landscape","Shapefiles Landscape AMLD", "SIG-EDUC Redescobrindo 2021 - Fragmentos de Vegetação.shp")) 
 
+ummp<-sf::read_sf(here::here("data","RawData","Landscape","Shapefiles Landscape AMLD", "SIG-LGCI_UMMP-13.shp")) 
+
+
 
 region_groups<-st_join(spatdata,land)
 
@@ -115,13 +118,16 @@ write_sf(lines_disp,
 fieldgg<-ggplot()+
   geom_sf(data = land,
           colour="grey70",
-          alpha=0.7) +
+          alpha=0.7) + 
+  geom_sf(data=ummp,
+          aes(fill=UMMPs),
+          alpha=0.5) +
   geom_sf(data=lines_disp,
-          aes(colour=GLT),
           size=0.2) +  
   geom_sf(data=spdisp,
           aes(colour=Group),
           size=0.5) +  
+  
   # geom_sf_text(data=spdisp,
   #              mapping=aes(label = Group),
   #              nudge_x=100,
