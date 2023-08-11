@@ -416,6 +416,9 @@ revalue_birth<-function(data){
   data$Birth[data$Birth=="-"]<-NA
   
   
+  
+  
+  
   return(data) 
   
 }

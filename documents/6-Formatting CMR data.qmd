@@ -77,7 +77,7 @@ nb.gp.obs<-read.csv(here::here("data","NewlyCreatedData",
                              "Nb_obs_gp.csv"),
                   header=T,
                   sep=";") %>% 
-  dplyr::filter(Duration >6 & N>4 & !is.na(Group)) %>% 
+ # dplyr::filter(Duration >6 & N>4 & !is.na(Group)) %>% 
   dplyr::select(Group)
 
 ```
@@ -91,15 +91,24 @@ sum.up<-data.clean.final %>%
   dplyr::filter(Disp!=1 & Death=="0" & Solo=="0") %>% 
   dplyr::filter(!is.na(SexOK)) %>%  #get correct sex
    dplyr::filter(IdadeOK=="AD") %>% #get only adults
-  dplyr::filter( Year < 2010 &  
+#  dplyr::filter(!is.na(IdadeOK)) %>% 
+  dplyr::filter( Year > 2008 & 
                   GLT %in% unique(data.clean.final$GLT
-                                  [data.clean.final$UMMPs=="Aldeia I" |
-                                  data.clean.final$UMMPs=="Aldeia II"])) %>% 
+                                  [data.clean.final$UMMPs=="Uniao I" |
+                                   data.clean.final$UMMPs=="Poco das Antas" |
+                                      data.clean.final$UMMPs=="Imbau II" |
+                                        data.clean.final$UMMPs=="Imbau I" |
+                                   data.clean.final$Group=="LB" | 
+                                   data.clean.final$Group=="EB" |
+                                   data.clean.final$Group=="EX" |
+                                      data.clean.final$Group=="AX2"])) %>% 
+  #filter(!Group=="BV")
+  
     dplyr::arrange(DateObs) %>% 
-  group_by(GLT,Year,Group,SexOK) %>% 
+  group_by(GLT,Year,UMMPs,Group,SexOK,IdadeOK) %>% 
   dplyr::count(Year) %>% 
-  dplyr::mutate(Female=ifelse(SexOK=="F","1","0"),
-                Male=ifelse(SexOK=="M","1","0")) %>% 
+   dplyr::mutate(Female=ifelse(SexOK=="F","1","0"),
+               Male=ifelse(SexOK=="M","1","0")) %>% 
   ungroup()
 
 length(unique(sum.up$GLT))  #1245 with correct known sex; 1347 including undefined sex
@@ -112,7 +121,8 @@ sum.up.correct<-sum.up %>%
   left_join(dups.gp,by=c("GLT","Year","Group")) %>% 
   dplyr::mutate(ToRemove = replace_na(ToRemove, 0)) %>% 
   dplyr::filter(ToRemove==0 ) %>% 
-  dplyr::select(GLT,Year,Group,Female,Male) %>% 
+#  dplyr::select(GLT,Year,Group,Female,Male) %>% 
+  dplyr::select(GLT,Year,Group,Juvenile,Subadult,Adult) %>% 
    dplyr::mutate(State="1")
 
 #get the wide table
@@ -122,7 +132,8 @@ distinct.sum.up<-sum.up.correct %>%
       distinct() %>% 
   dplyr::mutate(State="1") %>% 
       arrange(Year,GLT) %>% 
-  pivot_wider(id_cols=c(GLT,Male,Female),
+  pivot_wider(#id_cols=c(GLT,Male,Female),
+              id_cols=c(GLT,Juvenile,Subadult,Adult),
               names_from=Year,
               names_prefix="O",
                values_from=State,
@@ -130,7 +141,7 @@ distinct.sum.up<-sum.up.correct %>%
      as.data.frame(.) 
 
 
-file<-"CMR_1state_AD_AldeiaI-II_1989-2009"
+file<-"CMR_1state_3stages_UniaoI_PDA_ImbauI_II_LB_EB_EX_AX2_2009-2022"
   
    write.table(distinct.sum.up, file=here::here("data", 
                                                 "NewlyCreatedData", 
@@ -142,15 +153,19 @@ file<-"CMR_1state_AD_AldeiaI-II_1989-2009"
                  col.names=T)
 
 
-colNamesObs = colnames(distinct.sum.up)[4:ncol(distinct.sum.up)]
+#colNamesObs = colnames(distinct.sum.up)[4:ncol(distinct.sum.up)] when sex included
+colNamesObs = colnames(distinct.sum.up)[5:ncol(distinct.sum.up)] #when stage is included
+
+
 
 distinct.sum.up$Obs = apply(distinct.sum.up[, colNamesObs, drop = F], 
                               MARGIN = 1, FUN = function(i) paste(i, collapse = ""))
 
 format<-distinct.sum.up %>% 
   dplyr::select(Obs) %>% 
-  dplyr::mutate(Male=distinct.sum.up$Male,
-    Female=paste0(distinct.sum.up$Female," ;"))
+  dplyr::mutate(Juv=distinct.sum.up$Juvenile,
+                Subadult=distinct.sum.up$Subadult,
+    FAdult=paste0(distinct.sum.up$Adult," ;"))
 
 
  write.table(format, file=here::here("CMR", "data", 
@@ -162,60 +177,188 @@ format<-distinct.sum.up %>%
  
 ```
 
-# Create a dataset with stage and sex ok
-
-The dataset for capture-recapture analyses includes individuals which have been clearly identified and sexed. Individuals observed as "dispersed", individuals out of groups (solo individuals) and dead individuals are removed, as well as non identified infants. Dispersal for translocated individuals is included before and after translocation while translocation itself is excluded when individuals are moved to a new group.First CMR analysis consists in estimating survival for juvenile, subadult and adult stages without accounting for sex.
-
-State 1=infant or juvenile
-
-State2=subadult
-
-State3=adult
+# Create a dataset with 3 states with adults and sex
 
 ```{r}
 #select all individuals with valid observations
 sum.up<-data.clean.final %>% 
    dplyr::filter(!GLT %in% bad) %>% 
   dplyr::filter(Disp!=1 & Death=="0" & Solo=="0") %>% 
-#  dplyr::filter(!is.na(SexOK)) %>% 
-#   dplyr::filter(!is.na(UMMPs)) %>% 
-   dplyr::filter(!is.na(IdadeOK)) %>% 
+  dplyr::filter(!is.na(SexOK)) %>%  #get correct sex
+ #  dplyr::filter(IdadeOK=="AD") %>% #get only adults
+#  dplyr::filter(!is.na(IdadeOK)) %>% 
+  dplyr::filter( Year > 2008 & 
+                  GLT %in% unique(data.clean.final$GLT
+                                  [data.clean.final$UMMPs=="Uniao I" |
+                                   data.clean.final$UMMPs=="Poco das Antas" |
+                                      data.clean.final$UMMPs=="Imbau II" |
+                                        data.clean.final$UMMPs=="Imbau I" |
+                                   data.clean.final$Group=="LB" | 
+                                   data.clean.final$Group=="EB" |
+                                   data.clean.final$Group=="EX" |
+                                      data.clean.final$Group=="AX2"])) %>% 
     dplyr::arrange(DateObs) %>% 
-  group_by(GLT,Year,Group,IdadeOK) %>% 
+  group_by(GLT,Year,UMMPs,Group,SexOK,IdadeOK) %>% 
   dplyr::count(Year) %>% 
-  dplyr::mutate(State=1,
-                Stage=ifelse(IdadeOK=="IN"|IdadeOK=="JU",1,
-                             ifelse(IdadeOK=="SA",2,3)),
-                Juvenile=ifelse(Stage==1,1,0),
-                Subadult=ifelse(Stage==2,1,0),
-                Adult=ifelse(Stage==3,1,0)) %>% 
+   dplyr::mutate(Female=ifelse(SexOK=="F","1","0"),
+               Male=ifelse(SexOK=="M","1","0")) %>% 
   ungroup()
 
+length(unique(sum.up$GLT))  #1245 with correct known sex; 1347 including undefined sex
+
+levels(sum.up$UMMPs) <- c(levels(sum.up$UMMPs), "out")
+sum.up$UMMPs[which(is.na(sum.up$UMMPs))]<-"out"
 
 
-#Remove duplicate years
+#filter nb of obs and group duplicates
 sum.up.correct<-sum.up %>% 
+  dplyr::filter(Group %in% nb.gp.obs$Group) %>%  #5978 obs
   left_join(dups.gp,by=c("GLT","Year","Group")) %>% 
   dplyr::mutate(ToRemove = replace_na(ToRemove, 0)) %>% 
-  dplyr::filter(ToRemove==0) %>% 
-  dplyr::select(GLT,Year,Group,State, IdadeOK,Juvenile,Subadult,Adult)
+  dplyr::filter(ToRemove==0 ) %>% 
+  dplyr::select(GLT,Year,Group,UMMPs,Female,Male) %>% 
+   dplyr::mutate(State="0") %>% 
+   correct_translocation_cmr()  %>% 
+  distinct() %>% 
+  dplyr::mutate(UMMPs=as.character(UMMPs))
 
-distinct.sum.up<-sum.up.correct %>% 
- correct_translocation_cmr()  %>% 
-  dplyr::select(Year,GLT,State,Juvenile,Subadult,Adult) %>% 
+#get the wide table
+distinct.sum.up.group<-sum.up.correct %>% 
   group_by(Year,GLT) %>% 
-      # mutate(Stage=ifelse(State==max(State),1,0)) %>% 
-      # dplyr::filter(Stage!=0)  %>% 
-      distinct() %>% 
       arrange(Year,GLT) %>% 
-  pivot_wider(id_cols=c(GLT,Juvenile,Subadult,Adult),
+  pivot_wider(id_cols=c(GLT,Male,Female),
+              #id_cols=c(GLT,Juvenile,Subadult,Adult),
               names_from=Year,
-              names_prefix="Obs",
-               values_from=State,
-              values_fill=0) %>% 
-    write.table(., file=here::here("Data","NewlyCreatedData","CMR", 
-                                   "CMR_3states-stage_nosex_allperiods.csv"),
-                quote=F,row.names=F ,sep=";")
+              names_prefix="O",
+               values_from=Group,
+               values_fill="0")  %>% 
+     as.data.frame(.) 
+
+#get the wide table
+distinct.sum.up.ummp<-sum.up.correct %>% 
+  group_by(Year,GLT) %>% 
+      arrange(Year,GLT) %>% 
+  pivot_wider(id_cols=c(GLT,Male,Female),
+              #id_cols=c(GLT,Juvenile,Subadult,Adult),
+              names_from=Year,
+              names_prefix="O",
+               values_from=UMMPs,
+               values_fill="0")  %>% 
+     as.data.frame(.) 
+
+
+ids<-unique(sum.up.correct$GLT)
+
+for (a in 1:length(ids)){
+  
+  #subset individual data history
+  temp<-sum.up.correct[which(sum.up.correct$GLT==ids[a]),]
+  
+  #get ids of the different groups
+  gp<-unique(temp$Group)
+ 
+  #get first group in state 1
+  sum.up.correct$State[which(sum.up.correct$GLT==ids[a] & 
+                               sum.up.correct$Group==gp[1])]<-1
+  
+ #when disperse only once
+   if(length(gp)==2){
+
+    #if individuals disperse towards another group within same region
+    ifelse(region.gp$UMMPs[which(region.gp$Group==gp[2])] ==
+             region.gp$UMMPs[which(region.gp$Group==gp[1])],
+    sum.up.correct$State[which(sum.up.correct$GLT==ids[a] & 
+                                 sum.up.correct$Group==gp[2])]<-2,
+    sum.up.correct$State[which(sum.up.correct$GLT==ids[a] & 
+                                 sum.up.correct$Group==gp[2])]<-5)
+   }
+
+    if(length(gp)==3){
+   ifelse(region.gp$UMMPs[which(region.gp$Group==gp[2])] ==
+         region.gp$UMMPs[which(region.gp$Group==gp[1])],
+sum.up.correct$State[which(sum.up.correct$GLT==ids[a] &
+sum.up.correct$Group==gp[2])]<-2,
+sum.up.correct$State[which(sum.up.correct$GLT==ids[a] &
+ sum.up.correct$Group==gp[2])]<-5)
+
+ifelse(region.gp$UMMPs[which(region.gp$Group==gp[3])] ==
+         region.gp$UMMPs[which(region.gp$Group==gp[2])],
+sum.up.correct$State[which(sum.up.correct$GLT==ids[a] &
+sum.up.correct$Group==gp[3])]<-3,
+sum.up.correct$State[which(sum.up.correct$GLT==ids[a] &
+sum.up.correct$Group==gp[3])]<-6)
+    }
+  
+      if(length(gp)==4){
+        print(ids[a])
+        
+   ifelse(region.gp$UMMPs[which(region.gp$Group==gp[2])] ==
+         region.gp$UMMPs[which(region.gp$Group==gp[1])],
+sum.up.correct$State[which(sum.up.correct$GLT==ids[a] &
+sum.up.correct$Group==gp[2])]<-2,
+sum.up.correct$State[which(sum.up.correct$GLT==ids[a] &
+ sum.up.correct$Group==gp[2])]<-5)
+
+ifelse(region.gp$UMMPs[which(region.gp$Group==gp[3])] ==
+         region.gp$UMMPs[which(region.gp$Group==gp[2])],
+sum.up.correct$State[which(sum.up.correct$GLT==ids[a] &
+sum.up.correct$Group==gp[3])]<-3,
+sum.up.correct$State[which(sum.up.correct$GLT==ids[a] &
+sum.up.correct$Group==gp[3])]<-6)
+    
+
+   ifelse(region.gp$UMMPs[which(region.gp$Group==gp[4])] ==
+         region.gp$UMMPs[which(region.gp$Group==gp[3])],
+sum.up.correct$State[which(sum.up.correct$GLT==ids[a] &
+sum.up.correct$Group==gp[4])]<-4,
+sum.up.correct$State[which(sum.up.correct$GLT==ids[a] &
+ sum.up.correct$Group==gp[4])]<-7)
+        }
+
+  maxi<-c(maxi,length(gp))
+  
+   }
+
+
+
+
+
+
+
+file<-"CMR_3states_AD_UniaoI_PDA_ImbauI_II_LB_EB_EX_AX2_2009-2022"
+  
+   write.table(distinct.sum.up, file=here::here("data", 
+                                                "NewlyCreatedData", 
+                                                "CMR", 
+                                                paste0(file,".csv")),
+                 quote=F,
+                 row.names=F ,
+                 sep=";",
+                 col.names=T)
+
+
+#colNamesObs = colnames(distinct.sum.up)[4:ncol(distinct.sum.up)] when sex included
+colNamesObs = colnames(distinct.sum.up)[4:ncol(distinct.sum.up)] #when stage is included
+
+
+
+distinct.sum.up$Obs = apply(distinct.sum.up[, colNamesObs, drop = F], 
+                              MARGIN = 1, FUN = function(i) paste(i, collapse = ""))
+
+format<-distinct.sum.up %>% 
+  dplyr::select(Obs) %>% 
+  dplyr::mutate(Juv=distinct.sum.up$Juvenile,
+                Subadult=distinct.sum.up$Subadult,
+    FAdult=paste0(distinct.sum.up$Adult," ;"))
+
+
+ write.table(format, file=here::here("CMR", "data", 
+                                     paste0(file,".inp")),
+                 quote=F,
+             row.names=F ,
+                 sep=" ",
+                 col.names=F)
+ 
 
 ```
 
@@ -237,7 +380,7 @@ dplyr::filter(!is.na(IdadeOK))
                 Male=ifelse(SexOK=="M",1,0)) %>% 
   ungroup()
 
-region.gp<-data.clean.final %>% 
+region.gp<-sum.up %>% 
   group_by(UMMPs,Group) %>% 
   slice(1) %>% 
   dplyr::select(Group,Region,UMMPs) %>% 

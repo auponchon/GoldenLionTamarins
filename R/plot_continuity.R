@@ -17,8 +17,8 @@ plot_continuity<-function(data,freq,title_plot,title_file,W,H){
   
   check<-data %>% 
     dplyr::filter(!GLT %in% bad & Disp==0 & Death==0 & Solo==0) %>%
-    mutate(Group=as.factor(Group)) %>%
-    mutate(Group=factor(Group,
+    dplyr::mutate(Group=as.factor(Group)) %>%
+    dplyr::mutate(Group=factor(Group,
                         levels=freq$Group)) %>% 
     dplyr::filter(!is.na(Group)) %>% 
     ggplot(.,aes(x=DateObs,
@@ -44,7 +44,7 @@ plot_continuity<-function(data,freq,title_plot,title_file,W,H){
   #   
   # }
   # 
-  tiff(here::here("outputs","Monitoring effort","Conservation regions",title_file),
+  tiff(here::here("outputs","Monitoring effort","2009-2022",title_file),
        width=W,
        height=H,
        res=600,
