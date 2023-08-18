@@ -80,6 +80,8 @@ nb.gp.obs<-read.csv(here::here("data","NewlyCreatedData",
  # dplyr::filter(Duration >6 & N>4 & !is.na(Group)) %>% 
   dplyr::select(Group)
 
+
+
 ```
 
 # Create a subset with adults, sex and well observed groups over years
@@ -89,7 +91,7 @@ nb.gp.obs<-read.csv(here::here("data","NewlyCreatedData",
 sum.up<-data.clean.final %>% 
    dplyr::filter(!GLT %in% bad) %>% 
   dplyr::filter(Disp!=1 & Death=="0" & Solo=="0") %>% 
-  dplyr::filter(!is.na(SexOK)) %>%  #get correct sex
+#  dplyr::filter(!is.na(SexOK)) %>%  #get correct sex
    dplyr::filter(IdadeOK=="AD") %>% #get only adults
 #  dplyr::filter(!is.na(IdadeOK)) %>% 
   dplyr::filter( Year > 2008 & 
@@ -107,8 +109,8 @@ sum.up<-data.clean.final %>%
     dplyr::arrange(DateObs) %>% 
   group_by(GLT,Year,UMMPs,Group,SexOK,IdadeOK) %>% 
   dplyr::count(Year) %>% 
-   dplyr::mutate(Female=ifelse(SexOK=="F","1","0"),
-               Male=ifelse(SexOK=="M","1","0")) %>% 
+   dplyr::mutate(Male=ifelse(SexOK=="F","1","0"),
+               Female=ifelse(SexOK=="M","1","0")) %>% 
   ungroup()
 
 length(unique(sum.up$GLT))  #1245 with correct known sex; 1347 including undefined sex
@@ -121,8 +123,8 @@ sum.up.correct<-sum.up %>%
   left_join(dups.gp,by=c("GLT","Year","Group")) %>% 
   dplyr::mutate(ToRemove = replace_na(ToRemove, 0)) %>% 
   dplyr::filter(ToRemove==0 ) %>% 
-#  dplyr::select(GLT,Year,Group,Female,Male) %>% 
-  dplyr::select(GLT,Year,Group,Juvenile,Subadult,Adult) %>% 
+  dplyr::select(GLT,Year,Group,Female,Male) %>% 
+ # dplyr::select(GLT,Year,Group,Juvenile,Subadult,Adult) %>% 
    dplyr::mutate(State="1")
 
 #get the wide table
@@ -132,8 +134,8 @@ distinct.sum.up<-sum.up.correct %>%
       distinct() %>% 
   dplyr::mutate(State="1") %>% 
       arrange(Year,GLT) %>% 
-  pivot_wider(#id_cols=c(GLT,Male,Female),
-              id_cols=c(GLT,Juvenile,Subadult,Adult),
+  pivot_wider(id_cols=c(GLT,Male,Female),
+            #  id_cols=c(GLT,Juvenile,Subadult,Adult),
               names_from=Year,
               names_prefix="O",
                values_from=State,
@@ -141,7 +143,7 @@ distinct.sum.up<-sum.up.correct %>%
      as.data.frame(.) 
 
 
-file<-"CMR_1state_3stages_UniaoI_PDA_ImbauI_II_LB_EB_EX_AX2_2009-2022"
+file<-"CMR_1state_AD_UniaoI_PDA_ImbauI_II_LB_EB_EX_AX2_2009-2022_update"
   
    write.table(distinct.sum.up, file=here::here("data", 
                                                 "NewlyCreatedData", 
@@ -153,8 +155,8 @@ file<-"CMR_1state_3stages_UniaoI_PDA_ImbauI_II_LB_EB_EX_AX2_2009-2022"
                  col.names=T)
 
 
-#colNamesObs = colnames(distinct.sum.up)[4:ncol(distinct.sum.up)] when sex included
-colNamesObs = colnames(distinct.sum.up)[5:ncol(distinct.sum.up)] #when stage is included
+colNamesObs = colnames(distinct.sum.up)[4:ncol(distinct.sum.up)] #when sex included
+#colNamesObs = colnames(distinct.sum.up)[5:ncol(distinct.sum.up)] #when stage is included
 
 
 
@@ -163,9 +165,11 @@ distinct.sum.up$Obs = apply(distinct.sum.up[, colNamesObs, drop = F],
 
 format<-distinct.sum.up %>% 
   dplyr::select(Obs) %>% 
-  dplyr::mutate(Juv=distinct.sum.up$Juvenile,
-                Subadult=distinct.sum.up$Subadult,
-    FAdult=paste0(distinct.sum.up$Adult," ;"))
+  # dplyr::mutate(Juv=distinct.sum.up$Juvenile,
+  #               Subadult=distinct.sum.up$Subadult,
+  #   Adult=paste0(distinct.sum.up$Adult," ;"))
+  dplyr::mutate(Female=distinct.sum.up$Female,
+                Male=paste0(distinct.sum.up$Male," ;"))
 
 
  write.table(format, file=here::here("CMR", "data", 
@@ -177,15 +181,15 @@ format<-distinct.sum.up %>%
  
 ```
 
-# Create a dataset with 3 states with adults and sex
+# Create a dataset with 3 states with adults
 
 ```{r}
 #select all individuals with valid observations
 sum.up<-data.clean.final %>% 
    dplyr::filter(!GLT %in% bad) %>% 
   dplyr::filter(Disp!=1 & Death=="0" & Solo=="0") %>% 
-  dplyr::filter(!is.na(SexOK)) %>%  #get correct sex
- #  dplyr::filter(IdadeOK=="AD") %>% #get only adults
+ # dplyr::filter(!is.na(SexOK)) %>%  #get correct sex
+   dplyr::filter(IdadeOK=="AD") %>% #get only adults
 #  dplyr::filter(!is.na(IdadeOK)) %>% 
   dplyr::filter( Year > 2008 & 
                   GLT %in% unique(data.clean.final$GLT
@@ -211,118 +215,87 @@ sum.up$UMMPs[which(is.na(sum.up$UMMPs))]<-"out"
 
 
 #filter nb of obs and group duplicates
-sum.up.correct<-sum.up %>% 
+sum.up.correct<-sum.up %>%
   dplyr::filter(Group %in% nb.gp.obs$Group) %>%  #5978 obs
-  left_join(dups.gp,by=c("GLT","Year","Group")) %>% 
-  dplyr::mutate(ToRemove = replace_na(ToRemove, 0)) %>% 
-  dplyr::filter(ToRemove==0 ) %>% 
-  dplyr::select(GLT,Year,Group,UMMPs,Female,Male) %>% 
-   dplyr::mutate(State="0") %>% 
-   correct_translocation_cmr()  %>% 
-  distinct() %>% 
-  dplyr::mutate(UMMPs=as.character(UMMPs))
+  left_join(dups.gp,by=c("GLT","Year","Group")) %>%
+  dplyr::mutate(ToRemove = replace_na(ToRemove, 0)) %>%
+  dplyr::filter(ToRemove==0 ) %>%
+  dplyr::select(GLT,Year,Group,UMMPs,Female,Male) %>%
+   dplyr::mutate(State=0) %>%
+   correct_translocation_cmr()  %>%
+  distinct() %>%
+  dplyr::mutate(UMMPs=as.character(UMMPs)) %>% 
+  arrange(GLT,Year)
 
-#get the wide table
-distinct.sum.up.group<-sum.up.correct %>% 
-  group_by(Year,GLT) %>% 
-      arrange(Year,GLT) %>% 
-  pivot_wider(id_cols=c(GLT,Male,Female),
-              #id_cols=c(GLT,Juvenile,Subadult,Adult),
-              names_from=Year,
-              names_prefix="O",
-               values_from=Group,
-               values_fill="0")  %>% 
-     as.data.frame(.) 
-
-#get the wide table
-distinct.sum.up.ummp<-sum.up.correct %>% 
-  group_by(Year,GLT) %>% 
-      arrange(Year,GLT) %>% 
-  pivot_wider(id_cols=c(GLT,Male,Female),
-              #id_cols=c(GLT,Juvenile,Subadult,Adult),
-              names_from=Year,
-              names_prefix="O",
-               values_from=UMMPs,
-               values_fill="0")  %>% 
-     as.data.frame(.) 
-
+# xx<-sum.up.correct %>% 
+#   group_by(GLT,Group) %>%
+#  dplyr::summarise(GP = n()) %>% 
+#    group_by(GLT) %>% 
+#    dplyr::filter(n()>1) %>% 
+#   distinct(GLT)   #73 individuals which have dispersed at least once; 
+#20 which changed region
 
 ids<-unique(sum.up.correct$GLT)
 
+#a<-127
+
 for (a in 1:length(ids)){
+  row.id<-which(sum.up.correct$GLT==ids[a])
   
-  #subset individual data history
-  temp<-sum.up.correct[which(sum.up.correct$GLT==ids[a]),]
+  temp<-sum.up.correct[row.id,]
   
-  #get ids of the different groups
-  gp<-unique(temp$Group)
- 
-  #get first group in state 1
+gp<-unique(temp$Group)
+ummp<-unique(temp$UMMPs)
+
+sum.up.correct$State[which(sum.up.correct$GLT==ids[a] & 
+                           sum.up.correct$Group==gp[1])]<-1
+
+
+if(length(gp)>=2 & length(ummp)==1){
   sum.up.correct$State[which(sum.up.correct$GLT==ids[a] & 
-                               sum.up.correct$Group==gp[1])]<-1
+                           sum.up.correct$Group %in% gp[2:length(gp)])]<-2}
   
- #when disperse only once
-   if(length(gp)==2){
+ if(length(gp)==2 & length(ummp)==2){ 
+  sum.up.correct$State[which(sum.up.correct$GLT==ids[a] & 
+                           sum.up.correct$Group==gp[2])]<-3}
+  
+  
+if(length(gp)>2 & length(ummp)>=2){ 
+  sum.up.correct$State[which(sum.up.correct$GLT==ids[a] & 
+                               sum.up.correct$Group!=gp[1] & 
+                               sum.up.correct$UMMPs !=ummp[1])]<-3
+  
+  sum.up.correct$State[which(sum.up.correct$GLT==ids[a] & 
+                               sum.up.correct$Group!=gp[1] & 
+                               sum.up.correct$UMMPs == ummp[1])]<-2}
 
-    #if individuals disperse towards another group within same region
-    ifelse(region.gp$UMMPs[which(region.gp$Group==gp[2])] ==
-             region.gp$UMMPs[which(region.gp$Group==gp[1])],
-    sum.up.correct$State[which(sum.up.correct$GLT==ids[a] & 
-                                 sum.up.correct$Group==gp[2])]<-2,
-    sum.up.correct$State[which(sum.up.correct$GLT==ids[a] & 
-                                 sum.up.correct$Group==gp[2])]<-5)
-   }
-
-    if(length(gp)==3){
-   ifelse(region.gp$UMMPs[which(region.gp$Group==gp[2])] ==
-         region.gp$UMMPs[which(region.gp$Group==gp[1])],
-sum.up.correct$State[which(sum.up.correct$GLT==ids[a] &
-sum.up.correct$Group==gp[2])]<-2,
-sum.up.correct$State[which(sum.up.correct$GLT==ids[a] &
- sum.up.correct$Group==gp[2])]<-5)
-
-ifelse(region.gp$UMMPs[which(region.gp$Group==gp[3])] ==
-         region.gp$UMMPs[which(region.gp$Group==gp[2])],
-sum.up.correct$State[which(sum.up.correct$GLT==ids[a] &
-sum.up.correct$Group==gp[3])]<-3,
-sum.up.correct$State[which(sum.up.correct$GLT==ids[a] &
-sum.up.correct$Group==gp[3])]<-6)
+for (b in row.id[c(-1,-length(row.id))]){
+  if(sum.up.correct$Group[b] == sum.up.correct$Group[b+1]){
+    sum.up.correct$State[b+1]<-1
+  }
+  
+   if(sum.up.correct$Group[b] != gp[1] & sum.up.correct$Group[b+1]==gp[1]){
+    ifelse (sum.up.correct$UMMPs[b] != sum.up.correct$UMMPs[b+1],
+        sum.up.correct$State[b+1]<-3,
+         sum.up.correct$State[b+1]<-2)
     }
-  
-      if(length(gp)==4){
-        print(ids[a])
-        
-   ifelse(region.gp$UMMPs[which(region.gp$Group==gp[2])] ==
-         region.gp$UMMPs[which(region.gp$Group==gp[1])],
-sum.up.correct$State[which(sum.up.correct$GLT==ids[a] &
-sum.up.correct$Group==gp[2])]<-2,
-sum.up.correct$State[which(sum.up.correct$GLT==ids[a] &
- sum.up.correct$Group==gp[2])]<-5)
+}
+}
 
-ifelse(region.gp$UMMPs[which(region.gp$Group==gp[3])] ==
-         region.gp$UMMPs[which(region.gp$Group==gp[2])],
-sum.up.correct$State[which(sum.up.correct$GLT==ids[a] &
-sum.up.correct$Group==gp[3])]<-3,
-sum.up.correct$State[which(sum.up.correct$GLT==ids[a] &
-sum.up.correct$Group==gp[3])]<-6)
-    
-
-   ifelse(region.gp$UMMPs[which(region.gp$Group==gp[4])] ==
-         region.gp$UMMPs[which(region.gp$Group==gp[3])],
-sum.up.correct$State[which(sum.up.correct$GLT==ids[a] &
-sum.up.correct$Group==gp[4])]<-4,
-sum.up.correct$State[which(sum.up.correct$GLT==ids[a] &
- sum.up.correct$Group==gp[4])]<-7)
-        }
-
-  maxi<-c(maxi,length(gp))
-  
-   }
-
-
-
-
-
+distinct.sum.up<-sum.up.correct %>% 
+ correct_translocation_cmr()  %>% 
+  dplyr::select(Year,GLT,State ) %>% 
+  group_by(GLT,Year) %>% 
+   slice_min(State) %>% 
+  ungroup() %>% 
+  distinct(Year,GLT,State) %>% 
+  arrange(Year,GLT) %>% 
+  pivot_wider(id_cols=GLT,
+              names_from=Year,
+              names_prefix="Obs",
+               values_from=State,
+              values_fill = 0) 
+ 
 
 
 file<-"CMR_3states_AD_UniaoI_PDA_ImbauI_II_LB_EB_EX_AX2_2009-2022"
@@ -338,7 +311,7 @@ file<-"CMR_3states_AD_UniaoI_PDA_ImbauI_II_LB_EB_EX_AX2_2009-2022"
 
 
 #colNamesObs = colnames(distinct.sum.up)[4:ncol(distinct.sum.up)] when sex included
-colNamesObs = colnames(distinct.sum.up)[4:ncol(distinct.sum.up)] #when stage is included
+colNamesObs = colnames(distinct.sum.up)[2:ncol(distinct.sum.up)] 
 
 
 
@@ -347,9 +320,7 @@ distinct.sum.up$Obs = apply(distinct.sum.up[, colNamesObs, drop = F],
 
 format<-distinct.sum.up %>% 
   dplyr::select(Obs) %>% 
-  dplyr::mutate(Juv=distinct.sum.up$Juvenile,
-                Subadult=distinct.sum.up$Subadult,
-    FAdult=paste0(distinct.sum.up$Adult," ;"))
+  dplyr::mutate(Ind="1 ;")
 
 
  write.table(format, file=here::here("CMR", "data", 
@@ -362,40 +333,36 @@ format<-distinct.sum.up %>%
 
 ```
 
-# Dataset wit states for dispersal
+# Dataset with 2 stages and 2 states
 
 ```{r}
 #select all individuals with valid observations
 sum.up<-data.clean.final %>% 
    dplyr::filter(!GLT %in% bad) %>% 
   dplyr::filter(Disp!=1 & Death=="0" & Solo=="0") %>% 
-  dplyr::filter(!is.na(SexOK)) %>% 
+ # dplyr::filter(!is.na(SexOK)) %>% 
  #  dplyr::filter(!is.na(UMMPs)) %>% 
-dplyr::filter(!is.na(IdadeOK))
+dplyr::filter(!is.na(IdadeOK)) %>% 
+  dplyr::filter(!is.na(BirthOK)) %>% 
+   # dplyr::filter( Year > 2008 & 
+   #                GLT %in% unique(data.clean.final$GLT
+   #                                [data.clean.final$UMMPs=="Uniao I" |
+   #                                 data.clean.final$UMMPs=="Poco das Antas" |
+   #                                    data.clean.final$UMMPs=="Imbau II" |
+   #                                      data.clean.final$UMMPs=="Imbau I" |
+   #                                 data.clean.final$Group=="LB" | 
+   #                                 data.clean.final$Group=="EB" |
+   #                                 data.clean.final$Group=="EX" |
+   #                                    data.clean.final$Group=="AX2"])) %>% 
     dplyr::arrange(DateObs) %>% 
-  group_by(GLT,Year,Group,UMMPs,SexOK,IdadeOK) %>% 
+  group_by(GLT,Year,Group,UMMPs,SexOK,IdadeOK,BirthOK) %>% 
   dplyr::count(Year) %>% 
-  dplyr::mutate(State=0,
-                Female=ifelse(SexOK=="F",1,0),
-                Male=ifelse(SexOK=="M",1,0)) %>% 
+  dplyr::mutate(State=ifelse(IdadeOK=="JU" | 
+                                IdadeOK=="SA" |
+                                IdadeOK=="IN" ,1,
+                      ifelse(IdadeOK=="AD",2,0))) %>% 
   ungroup()
 
-region.gp<-sum.up %>% 
-  group_by(UMMPs,Group) %>% 
-  slice(1) %>% 
-  dplyr::select(Group,Region,UMMPs) %>% 
-  dplyr::filter(!is.na(UMMPs) & !is.na(Group)) 
-  # write.table(., file=here::here("Data","NewlyCreatedData","groups_without_ummp.csv"),
-  #               quote=F,row.names=F ,sep=";")
-
-#extract duplicated groups within years
-dups<-sum.up %>% 
-  group_by(GLT,Year) %>% 
-  dplyr::mutate(Max=ifelse(n==max(n),1,0)) %>% 
-      filter(n() > 1)  %>% 
-     dplyr::mutate(Duplicated=1)
-    # write.table(., file=here::here("Data","NewlyCreatedData","Duplicated_groups_within_years.csv"),
-    #               quote=F,row.names=F ,sep=";")
 length(unique(sum.up$GLT))
 
 
@@ -414,94 +381,49 @@ sum.up.correct<-sum.up %>%
   dplyr::select(GLT,Year,Group,UMMPs,State,n)
 
 
-maxi<-0
-
-## Design states based on groups and regions
-ids<-unique(sum.up.correct$GLT)
-
-for (a in 1:length(ids)){
-  
-  #subset individual data history
-  temp<-sum.up.correct[which(sum.up.correct$GLT==ids[a]),]
-  
-  #get ids of the different groups
-  gp<-unique(temp$Group)
- 
-  #get first group in state 1
-  sum.up.correct$State[which(sum.up.correct$GLT==ids[a] & 
-                               sum.up.correct$Group==gp[1])]<-1
-  
- #when disperse only once
-   if(length(gp)==2){
-
-    #if individuals disperse towards another group within same region
-    ifelse(region.gp$UMMPs[which(region.gp$Group==gp[2])] ==
-             region.gp$UMMPs[which(region.gp$Group==gp[1])],
-    sum.up.correct$State[which(sum.up.correct$GLT==ids[a] & 
-                                 sum.up.correct$Group==gp[2])]<-2,
-    sum.up.correct$State[which(sum.up.correct$GLT==ids[a] & 
-                                 sum.up.correct$Group==gp[2])]<-5)
-   }
-
-    if(length(gp)==3){
-   ifelse(region.gp$UMMPs[which(region.gp$Group==gp[2])] ==
-         region.gp$UMMPs[which(region.gp$Group==gp[1])],
-sum.up.correct$State[which(sum.up.correct$GLT==ids[a] &
-sum.up.correct$Group==gp[2])]<-2,
-sum.up.correct$State[which(sum.up.correct$GLT==ids[a] &
- sum.up.correct$Group==gp[2])]<-5)
-
-ifelse(region.gp$UMMPs[which(region.gp$Group==gp[3])] ==
-         region.gp$UMMPs[which(region.gp$Group==gp[2])],
-sum.up.correct$State[which(sum.up.correct$GLT==ids[a] &
-sum.up.correct$Group==gp[3])]<-3,
-sum.up.correct$State[which(sum.up.correct$GLT==ids[a] &
-sum.up.correct$Group==gp[3])]<-6)
-    }
-  
-      if(length(gp)==4){
-        print(ids[a])
-        
-   ifelse(region.gp$UMMPs[which(region.gp$Group==gp[2])] ==
-         region.gp$UMMPs[which(region.gp$Group==gp[1])],
-sum.up.correct$State[which(sum.up.correct$GLT==ids[a] &
-sum.up.correct$Group==gp[2])]<-2,
-sum.up.correct$State[which(sum.up.correct$GLT==ids[a] &
- sum.up.correct$Group==gp[2])]<-5)
-
-ifelse(region.gp$UMMPs[which(region.gp$Group==gp[3])] ==
-         region.gp$UMMPs[which(region.gp$Group==gp[2])],
-sum.up.correct$State[which(sum.up.correct$GLT==ids[a] &
-sum.up.correct$Group==gp[3])]<-3,
-sum.up.correct$State[which(sum.up.correct$GLT==ids[a] &
-sum.up.correct$Group==gp[3])]<-6)
-    
-
-   ifelse(region.gp$UMMPs[which(region.gp$Group==gp[4])] ==
-         region.gp$UMMPs[which(region.gp$Group==gp[3])],
-sum.up.correct$State[which(sum.up.correct$GLT==ids[a] &
-sum.up.correct$Group==gp[4])]<-4,
-sum.up.correct$State[which(sum.up.correct$GLT==ids[a] &
- sum.up.correct$Group==gp[4])]<-7)
-        }
-
-  maxi<-c(maxi,length(gp))
-  
-   }
-
-
 
 ## Produce a table with a wide format
-dat<-sum.up.correct %>% 
+distinct.sum.up<-sum.up.correct %>% 
  correct_translocation_cmr()  %>% 
-  dplyr::select(Year,GLT,State,n ) %>% 
-   dplyr::distinct() %>% 
-  dplyr::arrange(Year,GLT) %>% 
-  pivot_wider(id_cols=c(GLT),
+  dplyr::select(Year,GLT,State ) %>% 
+  group_by(GLT,Year) %>% 
+   slice_min(State) %>% 
+  ungroup() %>% 
+  distinct(Year,GLT,State) %>% 
+  arrange(Year,GLT) %>% 
+  pivot_wider(id_cols=GLT,
               names_from=Year,
               names_prefix="Obs",
                values_from=State,
-              values_fill=0) %>% 
-    write.table(., file=here::here("Data","NewlyCreatedData","CMR", "CMR_wide_6states_allsex.csv"),
-                quote=F,row.names=F ,sep=";")
+              values_fill = 0) 
+
+   file<-"CMR_2states_2STAGES_1989-2022"
+  
+   write.table(distinct.sum.up, file=here::here("data", 
+                                                "NewlyCreatedData", 
+                                                "CMR", 
+                                                paste0(file,".csv")),
+                 quote=F,
+                 row.names=F ,
+                 sep=";",
+                 col.names=T)
+
+colNamesObs = colnames(distinct.sum.up)[2:ncol(distinct.sum.up)] #when stage is included
+
+distinct.sum.up$Obs = apply(distinct.sum.up[, colNamesObs, drop = F], 
+                              MARGIN = 1, FUN = function(i) paste(i, collapse = ""))
+
+format<-distinct.sum.up %>% 
+  dplyr::select(Obs) %>% 
+  dplyr::mutate(Group="1 ;")
+
+
+ write.table(format, file=here::here("CMR", "data", 
+                                     paste0(file,".inp")),
+                 quote=F,
+             row.names=F ,
+                 sep=" ",
+                 col.names=F)
+ 
+
 ```
