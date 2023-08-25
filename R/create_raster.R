@@ -5,7 +5,7 @@ proj<-"+proj=utm +zone=23 +south +ellps=GRS80 +towgs84=0,0,0,0,0,0,0 +units=m +n
 land<-sf::read_sf(here::here("data","RawData","Landscape","Shapefiles Landscape AMLD", 
                              "SIG-EDUC Redescobrindo 2021 - Fragmentos de Vegetação.shp"))
 
-create_raster_stack<-function(layer){
+create_raster_stack<-function(layer,extreg){
   
 xx<-raster(layer) %>% 
   raster::crop(.,extreg) %>%    #crop to the large-scale study region
