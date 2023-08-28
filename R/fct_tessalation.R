@@ -1,18 +1,8 @@
 ############################################################################################
 
-# Mailys Querys - mai 2023
-"
-Fonctions qui permettent de réaliser la tesselation = action de décomposer une surface en parties
-régulières découpées. Tirage aléatoire de points, ou selon une grille, à définir
-"
-
-############################################################################################
-
 library(deldir)
-#library(OSMscale)
-library(sp)
 
-#1) TIRAGE ALEATOIRE DE POINTS
+#1) RANDOM SAMPLING
 
 tirage_pts_aleatoires <- function(r,n){
   r <- as(r, "Raster")
@@ -24,16 +14,16 @@ tirage_pts_aleatoires <- function(r,n){
   mes_points_xy = sampleRandom(r, size=n, na.rm=TRUE, ext=NULL, cells=FALSE, rowcol=FALSE, xy=TRUE, sp=FALSE, asRaster=FALSE,overwrite=TRUE)
   
   #Affichage des patchs et des points tirés
-  plot(r,main = "ETAPE 7 : Tirage aléatoire de points dans les patchs dont la taille est supérieur au seuil maximal")
-  plot(mes_points_raster,col="black",add=T) 
+  # plot(r,main = "ETAPE 7 : SAMPLE POINTS IN LARGEST PATCHES")
+  #  plot(ummp,add=T)
+  # plot(mes_points_raster,col="black",add=T,pch=16)
+
   
   return(mes_points_xy)
 }
 
 
-
-
-#2) TIRAGE REGULIER DE POINTS
+#2) REGULAR POINT SAMPLES
 
 tirage_pts_reguliers <- function(r,n){
 
@@ -46,14 +36,15 @@ tirage_pts_reguliers <- function(r,n){
   mes_points_reguliers = spatSample(r, size=n, method="regular", replace=FALSE, na.rm=TRUE, 
                                     as.raster=FALSE, as.df=FALSE, as.points=FALSE, values=FALSE, cells=FALSE, 
                                     xy=TRUE, ext=NULL, warn=TRUE, weights=NULL, exp=5, exhaustive=FALSE)
-  plot(r,main = "ETAPE 7 : Tirage regulier de points dans les patchs dont la taille est supérieur au seuil maximal")
-  plot(mes_points_reguliers_view,col="black",add=T,pch=20) 
-  
+   plot(r,main = "ETAPE 7 : Tirage regulier de points dans les patchs dont la taille est supérieur au seuil maximal")
+   plot(mes_points_reguliers_view,col="black",add=T,pch=20) 
+  # 
   return(mes_points_reguliers)
 }
 
 
-#3) CREATION DE LA COUCHE VECTORIELLE DE POLYGONES
+#3) CREATING POLYGONS 
+
 tess2spat <- function(obj,idvec=NULL) {
   K <- nrow(obj$summary)
   if (is.null(idvec)) { idvec <- 1:K }
@@ -72,17 +63,17 @@ tess2spat <- function(obj,idvec=NULL) {
 }
 
 
-#4) DECOUPAGE DES PATCHS SELON LES POLYGONES DE TESSELATION
+#4) DEFINING PATCHES BASED ON TESSALATION POLYGONS 
 decoupage_patchs <- function(tesselation,id_max) {
+
   #Définition des polygones de tesselation
   tessalation_polygones = tess2spat(tesselation,idvec=NULL)
   tessalation_polygones = as(tessalation_polygones,"SpatialPolygonsDataFrame")
-  writeOGR(tessalation_polygones, dsn = '.', layer = 'poly', driver = "ESRI Shapefile",overwrite = T)
-  polygones = vect("poly.shp")
+ #  writeOGR(tessalation_polygones, dsn = '.', layer = 'poly', driver = "ESRI Shapefile",overwrite = T)
+   polygones = vect(tessalation_polygones)
   
   r[r > 0] <- 1
   
-  #Découpe des patchs selon les polygones
   #polygones[,1] = 1:nrow(data.frame(polygones))
   polygones[,1] = (id_max+1):(nrow(data.frame(polygones))+id_max)
   names(polygones)[1]="id"
@@ -91,20 +82,19 @@ decoupage_patchs <- function(tesselation,id_max) {
   patch_raster <- rasterize(polygones, r*0, field = "id")
   r2 = patch_raster*r
   
-  # Affichage des patchs
   return(r2)
 }
 
 
 
-#5) ETUDE DE LA TAILLE DES PATCHS EN FONCTION DU NOMBRE DE POINTS TIRES
+#5) CHECK PATCH SIZE DEPENDING ON THE NUMBER OF POINT SAMPLES
 
 verif_decoupage <- function(new_patchs) {
 
   freq_patchs = freq(new_patchs)
   #View(freq_patchs)
   
-  coupe <- cut(freq_patchs$count,c(0,2.25,25,Inf),labels=c('TROP PETIT','OK','TROP GRAND'))
+  coupe <- cut(freq_patchs$count,c(0,2.25,25,Inf),labels=c('TOO SMALL','OK','TOO LARGE'))
   stats_taille<-table(coupe)
   
   par(mfrow=c(2,2))

@@ -42,16 +42,15 @@ qui contient la valeur 'NA' la plus petite distance à une cellule qui ne contie
   
   ### Seuillage de la distance à l'habitat (en nombre de cellules et choix du seuil par l'utilisateur)
   par (mfrow=c (5,2))
-  for (seuil in 1:10){
+  for (seuil in seq(50,300,50)){
     #On donne la valeur 0 lorsque l'on est au dessous du seuil, et 1 quuand on est en dessus
     distances_hab = distances>seuil
     filename = paste("Dilatation",seuil, sep="_")
-    # plot(distances_hab, 
-    #      type = "classes", 
-    #      main = filename,
-    #      levels = c("Habitat","Matrice"),
-    #      plg = list(cex = 0.7)
-    )
+    plot(distances_hab,
+         type = "classes",
+         main = filename,
+         levels = c("Habitat","Matrice"),
+         plg = list(cex = 0.7) )
   }
   
   seuil = as.integer(readline("Choisir le seuil souhaité : "))
@@ -90,7 +89,7 @@ dilatation_erosion <- function(file,seuil){
   "Utilisation de la fonction 'distance' du package 'raster' qui renvoie pour chaque cellule
   qui contient la valeur 'NA' la plus petite distance à une cellule qui ne contient pas 'NA'"
   distances = distance(habitat)
-  #plot(distances)
+ # plot(distances)
   # Enregistrer le raster de distance dans un fichier
   #writeRaster(x = distances, filename = "distances_habitat.tif")
 
