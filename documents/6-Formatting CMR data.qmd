@@ -191,16 +191,19 @@ sum.up<-data.clean.final %>%
  # dplyr::filter(!is.na(SexOK)) %>%  #get correct sex
    dplyr::filter(IdadeOK=="AD") %>% #get only adults
 #  dplyr::filter(!is.na(IdadeOK)) %>% 
-  dplyr::filter( Year > 2008 & 
-                  GLT %in% unique(data.clean.final$GLT
-                                  [data.clean.final$UMMPs=="Uniao I" |
-                                   data.clean.final$UMMPs=="Poco das Antas" |
-                                      data.clean.final$UMMPs=="Imbau II" |
-                                        data.clean.final$UMMPs=="Imbau I" |
-                                   data.clean.final$Group=="LB" | 
-                                   data.clean.final$Group=="EB" |
-                                   data.clean.final$Group=="EX" |
-                                      data.clean.final$Group=="AX2"])) %>% 
+  dplyr::filter( Year < 2008 & 
+                  # GLT %in% unique(data.clean.final$GLT
+                  #                 [data.clean.final$UMMPs=="Uniao I" |
+                  #                  data.clean.final$UMMPs=="Poco das Antas" |
+                  #                     data.clean.final$UMMPs=="Imbau II" |
+                  #                       data.clean.final$UMMPs=="Imbau I" |
+                  #                  data.clean.final$Group=="LB" | 
+                  #                  data.clean.final$Group=="EB" |
+                  #                  data.clean.final$Group=="EX" |
+                  #                     data.clean.final$Group=="AX2"])) %>% 
+                    GLT %in% unique(data.clean.final$GLT
+                                   [data.clean.final$UMMPs=="Aldeia I" |
+                                   data.clean.final$UMMPs=="Aldeia II"])) %>% 
     dplyr::arrange(DateObs) %>% 
   group_by(GLT,Year,UMMPs,Group,SexOK,IdadeOK) %>% 
   dplyr::count(Year) %>% 
@@ -298,7 +301,7 @@ distinct.sum.up<-sum.up.correct %>%
  
 
 
-file<-"CMR_3states_AD_UniaoI_PDA_ImbauI_II_LB_EB_EX_AX2_2009-2022"
+file<-"CMR_3states_AD_AldeiaI_II_1989-2007"
   
    write.table(distinct.sum.up, file=here::here("data", 
                                                 "NewlyCreatedData", 

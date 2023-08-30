@@ -38,7 +38,7 @@ id_paysage = "1990"
 ## Import layer of forest fragments for the study area extent
 ## Landscapes with habitat codes (file as a raster sack compiling 30 years)
 
-load(here::here("data","NewlyCreatedData","LandUseStack.RData"))
+load(here::here("data","NewlyCreatedData","Landscape raster","Rasters","LandUseStack.RData"))
 for_den_crop<-coverStack[[1]] 
   
 

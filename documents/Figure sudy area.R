@@ -15,11 +15,12 @@ proj<-"+proj=utm +zone=23 +south +ellps=GRS80 +towgs84=0,0,0,0,0,0,0 +units=m +n
 
 
 #raster land cover for each year obtained from BioMAPS
-rast<-raster(here::here("data","rawData","Landscape","Rasters land cover",
-                        "brasil_coverage_2021.tif")) %>% 
-  raster::crop(.,extreg) %>% 
-  projectRaster(., crs=proj ,method="ngb",res=30) %>%
-  raster::crop(.,extregproj) 
+load(here::here("data","NewlyCreatedData","Landscape raster","Rasters","LandUseStack.RData"))
+
+hab_df<-coverStack[[max(length(coverStack))]] %>% 
+           as(., "SpatialPixelsDataFrame") %>% 
+             as.data.frame(.)
+colnames(hab_df) <- c("value", "x", "y")
 
 #conservation units (UMMPs)
 ummp<-return_complete_ummp() #add vendaval and boa esperanza which are missing in shapefile
@@ -50,18 +51,22 @@ loc<-read.table(here::here("data","rawData","Landscape","RegionsName.csv"),
   sf::st_set_crs(31983)
 
 
-brazil<-sf::read_sf(here("data","RawData","Landscape","Shapefiles Landscape AMLD",
-                         "World_WGS84_Fine_Reso.shp")) %>% 
-  sf::st_transform(31983) 
+# brazil<-sf::read_sf(here("data","RawData","Landscape","Shapefiles Landscape AMLD",
+#                          "World_WGS84_Fine_Reso.shp")) %>% 
+#   sf::st_transform(31983) 
 
 gg<-ggplot()+
-   
+   geom_tile(data=hab_df,
+             aes(x=x,y=y,
+                 fill=as.factor(value))) +
     geom_sf(data=land,
             fill="grey80") +
     geom_sf(data=ummp,
             mapping=aes(fill=UMMPs),alpha=0.5)+
     geom_sf(data=loc,
-            shape=15)+
+            shape=15,
+            show.legend = F)+
+ 
   annotation_scale(location = "br", 
                    width_hint = 0.15,
                    pad_x = unit(0.7, "cm"),
@@ -70,6 +75,7 @@ gg<-ggplot()+
                          which_north = "true",
                          style = ggspatial::north_arrow_nautical(), 
                          pad_y = unit(0.8, "cm")) +
+  
   theme_bw() +
   theme(legend.position = "none",
         plot.margin = unit(c(0.5, 0.5, 0, 0), "lines"),
