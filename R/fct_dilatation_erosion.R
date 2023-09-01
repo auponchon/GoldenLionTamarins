@@ -95,8 +95,8 @@ dilatation_erosion <- function(file,seuil){
 
   ### Seuillage de la distance à l'habitat (en nombre de cellules)
   #On donne la valeur 0 lorsque l'on est au dessous du seuil, et 1 quuand on est en dessus
-  print("Pour rappel, le seuil choisi est :")
-  print(seuil)
+  # print("Pour rappel, le seuil choisi est :")
+  # print(seuil)
   distances_hab = distances>seuil
   #plot(distances_hab) 
 
@@ -117,3 +117,32 @@ dilatation_erosion <- function(file,seuil){
   
   return(final_rast)
 }
+
+
+
+get_largest_dilated_habitat_surface<-function(rasterstack,seuil){
+  
+  size<-data.frame(Year=NULL,Size=NULL)
+  
+  
+  for (i in 1:length(rasterstack)){
+    
+    #extract raster for year i
+    habitat<-rasterstack[[i]] 
+    
+    #filter only suitable habitat (code=1)
+    habitat[habitat>1]<-0
+    
+    #smoth the landscape at a scale of 100m
+    dilatation_erosion_paysage = dilatation_erosion(habitat,seuil)
+    #get total surface of habitat for the given year
+    line<-cbind(names(habitat),sum(values(habitat),na.rm=T))
+    size<-rbind(size,line)
+    
+    print(names(habitat))
+  }
+  
+  return(size)
+  
+}
+

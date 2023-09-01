@@ -37,6 +37,14 @@ ummp<-sf::read_sf(here::here("data","RawData","Landscape","Shapefiles Landscape 
 
 ummp_add<-ummp
 
+ummp_add$UMMPs<-plyr::revalue(ummp_add$UMMPs, c("Imbaú I" = "Imbau I",
+                                        "Imbaú II" = "Imbau II",
+                                        "Imbaú III" = "Imbau III",
+                                        "Poço das Antas" = "Poco das Antas",
+                                        "União I" = "Uniao I",
+                                        "União II" = "Uniao II"))
+
+
 return(ummp_add)
 }
 

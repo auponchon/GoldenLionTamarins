@@ -33,93 +33,57 @@ id_paysage = "1990"
 ## STEP 1 : LANDSCAPE PRE-PROCESSING ##
 ##############################################
 
-##### 1- Import landscape layers
+##### 1- Import raster and shapefile layers
 
-## Import layer of forest fragments for the study area extent
-## Landscapes with habitat codes (file as a raster sack compiling 30 years)
+## Landscapes with habitat codes (file as a raster stack compiling 32 years from 1990 to 2021)
 
 load(here::here("data","NewlyCreatedData","Landscape raster","Rasters","LandUseStack.RData"))
-for_den_crop<-coverStack[[1]] 
-  
 
-# land<-sf::read_sf(here::here("data","RawData","Landscape",
-#                              "Shapefiles Landscape AMLD",
-#                              "SIG-EDUC Redescobrindo 2021 - Fragmentos de Vegetação.shp")) %>% 
-#       st_transform(.,crs = st_crs(for_den_crop))
+#Over the 31 landscapes, identify the raster with the largest surface of habitat to define patches
+size<-get_largest_dilated_habitat_surface(coverStack,seuil=100)
+
+#Largest haitat surface was reached in 2019, which is #30 in rasterSatck
+largest_habitat<-coverStack[[30]]
+
+dil_largest_hab<-dilatation_erosion(largest_habitat,seuil=100)
 
 
 ## Import roads and train lines
 roads <- sf::read_sf(here::here("data","NewlyCreatedData","Landscape raster","SHP", 
                              "RoadsTrainUnion.shp")) %>% 
          st_set_crs(4326) %>% 
-         st_transform(.,crs = st_crs(for_den_crop)) %>% 
-         sf::st_crop(., y=for_den_crop) %>% 
+         st_transform(.,crs = st_crs(largest_habitat)) %>% 
+         sf::st_crop(., y=largest_habitat) %>% 
          sf::st_buffer(.,dist=100,
                        endCapStyle="ROUND")
 
 
-## Crop the study area and plot landscape
-plot(for_den_crop, main = "Landscape")
-#(land$geometry,add=T,border="grey")
-plot(roads$geometry,add=T,col="red")
+## Plot landscape
+plot(dil_largest_hab, main = "Dilatated Landscape")
+plot(roads$geometry,add=T)
 
 
 #conservation units (UMMPs)
-ummp<-return_complete_ummp() #add vendaval and boa esperanza which are missing in shapefile
+ummp<-return_complete_ummp() %>% 
+  st_transform(.,crs = st_crs(largest_habitat)) %>% 
+         sf::st_crop(., y=largest_habitat)
   
-#remove accents in names
-ummp$UMMPs<-plyr::revalue(ummp$UMMPs, c("Imbaú I" = "Imbau I",
-                         "Imbaú II" = "Imbau II",
-                         "Imbaú III" = "Imbau III",
-                         "Poço das Antas" = "Poco das Antas",
-                         "União I" = "Uniao I",
-                         "União II" = "Uniao II"))
-
 
 ##### 2- Define raster features
-resolution = res(for_den_crop)[1]
-nb_cell_paysage = ncell(for_den_crop)
+resolution = res(largest_habitat)[1]
+nb_cell_paysage = ncell(largest_habitat)
 nb_lignes = nb_colonnes = sqrt(nb_cell_paysage)
 cell_size = resolution * resolution
 aire_tot = (nb_cell_paysage*resolution)^2
 
 
-##### 3- Dilatation - Erosion: 
-#Transform the habitat into more homogeneous patches
 
-working_directory<-here()
-
-file = for_den_crop
-hab<-as(for_den_crop, "SpatRaster")
-hab[hab>1]<-0
-
-legende <- c("Matrice", "Habitat")
-couleurs <- c("#E2DEDE", "#0E9813")
-
-seuil = 100
-dilatation_erosion_paysage = dilatation_erosion(file,seuil)
-par(mfrow=c(1,2))
-plot(hab, 
-     main = "Landscape dilatation - erosion",
-     levels = legende,
-     col = couleurs, 
-     plg = list(cex = 0.7))
-
-plot(dilatation_erosion_paysage, 
-     type = "classes", 
-     main = "Landscape dilatation - erosion",
-     levels = legende,
-     col = couleurs, 
-     plg = list(cex = 0.7)
-)
-
-
-##### 4- Exclude roads before defning patches
-dilatation_erosion_paysage_sans_routes = mask(dilatation_erosion_paysage,roads, inverse=TRUE)
-plot(dilatation_erosion_paysage_sans_routes, 
+##### 3- Exclude roads before defining patches
+largest_hab_without_roads = mask(dil_largest_hab,roads, inverse=TRUE)
+plot(largest_hab_without_roads, 
      type = "classes", 
      main = "Landscape without roads",
-     levels = c("Matrice", "Habitat","Routes"),
+     levels = c("Matrix", "Habitat","Roads"),
      col = c("#E2DEDE", "#0E9813","#FFFFFF"), 
      plg = list(cex = 0.7)
 )
@@ -127,12 +91,12 @@ plot(dilatation_erosion_paysage_sans_routes,
 
 ##### 5- Defining patches
 
-if (minmax(dilatation_erosion_paysage_sans_routes, compute=FALSE)[1]==1) { 
+if (minmax(largest_habitat_without_roads, compute=FALSE)[1]==1) { 
   #SIf value <1, assign 0
-  dilatation_erosion_paysage_sans_routes = 
-    dilatation_erosion_paysage_sans_routes-1
+  largest_habitat_without_roads = 
+    largest_habitat_without_roads-1
 }
-patchs = patches(dilatation_erosion_paysage_sans_routes,
+patchs = patches(largest_habitat_without_roads,
                  directions = 8, 
                  zeroAsNA=TRUE, 
                  allowGaps=FALSE)
@@ -144,8 +108,8 @@ plot(patchs, main = "All patches")
 
 #get surface of each patch and define thresholds for patch size
 taille_patchs <- zonal(cellSize(x=patchs, unit="m"), patchs, sum, as.raster=TRUE)
-seuil_mini = 22500 #m²
-seuil_maxi = 250000 #m² = 25ha
+seuil_mini = 200000          # 22500 #m²
+seuil_maxi =  2300000        #250000 #m² = 25ha
 
 ## Only keep patches which surface is lower than the minimal one. Keep object for the cost layer
 patchs_inf_seuil_mini <- ifel(taille_patchs > seuil_mini, NA, patchs)
@@ -208,31 +172,6 @@ plot(new_patchs_aleatoire, main = "PATCHES AFTER RANDOM TESSELATION")
 val = verif_decoupage(new_patchs_aleatoire)
 
 
-##### 7) Tessalation on big patches wth regular samples
-
-# Définition des paramètres
-r=patchs_superieur_seuil_maxi
-n = 180000
-
-# Tirage des points réguliers
-par(mfrow=c(1,1))
-points_regulier = tirage_pts_reguliers(r,n)
-
-#Tesselation
-x = points_regulier[,1]
-y = points_regulier[,2]
-tesselation_regulier <- deldir(x, y)
-
-#Définition des nouveaux patchs
-new_patchs_regulier = decoupage_patchs(tesselation_regulier,id_max)
-
-plot(new_patchs_regulier, 
-     main = "PATCHES IN BIG AREAS AFTER TESSELATION")
-
-#Vérification que la taille des patchs correspond bien à ce qui était attendu
-val = verif_decoupage(new_patchs_regulier)
-
-
 
 ##### 8) Regroupement des patchs de taille OK et des patchs découpés précédement
 par(mfrow=c(1,2))
@@ -240,10 +179,6 @@ mosaic_raster_aleatoire <- mosaic(new_patchs_aleatoire, patchs_taille_ok)
 plot(mosaic_raster_aleatoire, 
      main = "Landscape with random tesselation")
 
-
-mosaic_raster_regulier <- mosaic(new_patchs_regulier, patchs_taille_ok)
-plot(mosaic_raster_regulier, 
-     main = "Landscape with regular tesselation")
 
 ```
 
