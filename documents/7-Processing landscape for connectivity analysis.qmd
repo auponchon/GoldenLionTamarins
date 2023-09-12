@@ -79,8 +79,8 @@ aire_tot = (nb_cell_paysage*resolution)^2
 
 
 ##### 3- Exclude roads before defining patches
-largest_hab_without_roads = mask(dil_largest_hab,roads, inverse=TRUE)
-plot(largest_hab_without_roads, 
+largest_habitat_without_roads = mask(dil_largest_hab,roads, inverse=TRUE)
+plot(largest_habitat_without_roads, 
      type = "classes", 
      main = "Landscape without roads",
      levels = c("Matrix", "Habitat","Roads"),

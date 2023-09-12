@@ -195,19 +195,19 @@ sum.up<-data.clean.final %>%
   dplyr::filter(!is.na(SexOK)) %>%  #get correct sex
    dplyr::filter(IdadeOK=="AD") %>% #get only adults
 #  dplyr::filter(!is.na(IdadeOK)) %>% 
-   dplyr::filter( Year < 2008 & 
-  #                 GLT %in% unique(data.clean.final$GLT
-  #                                 [data.clean.final$UMMPs=="Uniao I" |
-  #                                  data.clean.final$UMMPs=="Poco das Antas" |
-  #                                     data.clean.final$UMMPs=="Imbau II" |
-  #                                       data.clean.final$UMMPs=="Imbau I" |
-  #                                  data.clean.final$Group=="LB" |
-  #                                  data.clean.final$Group=="EB" |
-  #                                  data.clean.final$Group=="EX" |
-  #                                     data.clean.final$Group=="AX2"])) %>%
-                    GLT %in% unique(data.clean.final$GLT
-                                   [data.clean.final$UMMPs=="Aldeia I" |
-                                   data.clean.final$UMMPs=="Aldeia II"])) %>%
+   dplyr::filter( Year > 2009 & 
+                  GLT %in% unique(data.clean.final$GLT
+                                  [data.clean.final$UMMPs=="Uniao I" |
+                                   data.clean.final$UMMPs=="Poco das Antas" |
+                                      data.clean.final$UMMPs=="Imbau II" |
+                                        data.clean.final$UMMPs=="Imbau I" |
+                                   data.clean.final$Group=="LB" |
+                                   data.clean.final$Group=="EB" |
+                                   data.clean.final$Group=="EX" |
+                                      data.clean.final$Group=="AX2"])) %>%
+                    # GLT %in% unique(data.clean.final$GLT
+                    #                [data.clean.final$UMMPs=="Aldeia I" |
+                    #                data.clean.final$UMMPs=="Aldeia II"])) %>%
     dplyr::arrange(DateObs) %>% 
   group_by(GLT,Year,UMMPs,Group,SexOK,IdadeOK) %>% 
   dplyr::count(Year) %>% 
@@ -227,7 +227,7 @@ sum.up.correct<-sum.up %>%
   left_join(dups.gp,by=c("GLT","Year","Group")) %>%
   dplyr::mutate(ToRemove = replace_na(ToRemove, 0)) %>%
   dplyr::filter(ToRemove==0 ) %>%
-  dplyr::select(GLT,Year,Group,UMMPs,Male,Female) %>%
+ # dplyr::select(GLT,Year,Group,UMMPs,Male,Female) %>%
    dplyr::mutate(State=0) %>%
    correct_translocation_cmr()  %>%
   distinct() %>%
@@ -341,97 +341,38 @@ format<-distinct.sum.up %>%
 
 ```
 
-# Dataset with 2 stages and 2 states
+# Plotting survival for 2010-2022
 
 ```{r}
-#select all individuals with valid observations
-sum.up<-data.clean.final %>% 
-   dplyr::filter(!GLT %in% bad) %>% 
-  dplyr::filter(Disp!=1 & Death=="0" & Solo=="0") %>% 
- # dplyr::filter(!is.na(SexOK)) %>% 
- #  dplyr::filter(!is.na(UMMPs)) %>% 
-dplyr::filter(!is.na(IdadeOK)) %>% 
-  dplyr::filter(!is.na(BirthOK)) %>% 
-   # dplyr::filter( Year > 2008 & 
-   #                GLT %in% unique(data.clean.final$GLT
-   #                                [data.clean.final$UMMPs=="Uniao I" |
-   #                                 data.clean.final$UMMPs=="Poco das Antas" |
-   #                                    data.clean.final$UMMPs=="Imbau II" |
-   #                                      data.clean.final$UMMPs=="Imbau I" |
-   #                                 data.clean.final$Group=="LB" | 
-   #                                 data.clean.final$Group=="EB" |
-   #                                 data.clean.final$Group=="EX" |
-   #                                    data.clean.final$Group=="AX2"])) %>% 
-    dplyr::arrange(DateObs) %>% 
-  group_by(GLT,Year,Group,UMMPs,SexOK,IdadeOK,BirthOK) %>% 
-  dplyr::count(Year) %>% 
-  dplyr::mutate(State=ifelse(IdadeOK=="JU" | 
-                                IdadeOK=="SA" |
-                                IdadeOK=="IN" ,1,
-                      ifelse(IdadeOK=="AD",2,0))) %>% 
-  ungroup()
 
-length(unique(sum.up$GLT))
+library(xlsx)
 
+param<-read.xlsx(here::here("CMR",
+                           "models",
+                           "3states_AD_SEX_UniaoI_PDA_ImbauI_II_LB_EB_EX_AX2_2010-2022",
+                           "s(g+t)psi(2T)p(f).xls"),
+                sheetName="Reduced Set of Parameters", 
+                header=T)  %>% 
+  dplyr::filter(Parameters=="S") %>% 
+   dplyr::mutate(Sex=rep(c("Male","Female"),each=12),
+                 Year=c(seq(2010.95,2021.95,1),seq(2011.05,2022.05,1)))
 
-#Duplicates to remove identified individually in the following file
-correct<-read.csv(here::here("data","NewlyCreatedData",
-                             "Duplicated_groups_within_years_corrected.csv"),
-                  header=T,
-                  sep=";") %>% 
-  dplyr::select(GLT,Year, Group,n,Duplicated,ToRemove)
+col<-brewer.pal(5,"PuOr")[c(2,5)]
+ss<-ggplot(param,aes(Year,Estimates,group=Sex)) +
+  geom_point(aes(color=Sex,shape=Sex)) +
+  geom_line(aes(color=Sex,linetype=Sex)) +
+  geom_errorbar(aes(ymin=Estimates-SE., ymax=Estimates+SE.,color=Sex), 
+                width=.05,
+                 position=position_dodge(0.05),show.legend=F)+
+  scale_x_continuous(limits=c(2010.5,2022.5),breaks=seq(2011,2022,1),
+                     expand=c(0.001,0.001)) +
+  scale_y_continuous(limits=c(0.6,1),breaks=seq(0.6,1,0.05),
+                     expand=c(0.001,0.001)) +
+  labs(x="",
+       y="Survival probability")+
+  theme_bw()+
+  scale_color_manual(values=col)+
+  theme(legend.title=element_blank())
 
-#Remove duplicate years
-sum.up.correct<-sum.up %>% 
-  left_join(correct,by=c("GLT","Year","Group","n")) %>% 
-  dplyr::mutate(ToRemove = replace_na(ToRemove, 0)) %>% 
-  dplyr::filter(ToRemove==0) %>% 
-  dplyr::select(GLT,Year,Group,UMMPs,State,n)
-
-
-
-## Produce a table with a wide format
-distinct.sum.up<-sum.up.correct %>% 
- correct_translocation_cmr()  %>% 
-  dplyr::select(Year,GLT,State ) %>% 
-  group_by(GLT,Year) %>% 
-   slice_min(State) %>% 
-  ungroup() %>% 
-  distinct(Year,GLT,State) %>% 
-  arrange(Year,GLT) %>% 
-  pivot_wider(id_cols=GLT,
-              names_from=Year,
-              names_prefix="Obs",
-               values_from=State,
-              values_fill = 0) 
-
-   file<-"CMR_2states_2STAGES_1989-2022"
-  
-   write.table(distinct.sum.up, file=here::here("data", 
-                                                "NewlyCreatedData", 
-                                                "CMR", 
-                                                paste0(file,".csv")),
-                 quote=F,
-                 row.names=F ,
-                 sep=";",
-                 col.names=T)
-
-colNamesObs = colnames(distinct.sum.up)[2:ncol(distinct.sum.up)] #when stage is included
-
-distinct.sum.up$Obs = apply(distinct.sum.up[, colNamesObs, drop = F], 
-                              MARGIN = 1, FUN = function(i) paste(i, collapse = ""))
-
-format<-distinct.sum.up %>% 
-  dplyr::select(Obs) %>% 
-  dplyr::mutate(Group="1 ;")
-
-
- write.table(format, file=here::here("CMR", "data", 
-                                     paste0(file,".inp")),
-                 quote=F,
-             row.names=F ,
-                 sep=" ",
-                 col.names=F)
- 
-
+print(ss)
 ```
