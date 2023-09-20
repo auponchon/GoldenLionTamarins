@@ -1,16 +1,24 @@
 #projection for Brazil
+source(here::here("R","merge_ummp.R"))
 proj<-"+proj=utm +zone=23 +south +ellps=GRS80 +towgs84=0,0,0,0,0,0,0 +units=m +no_defs +type=crs"
 
 #forest patches from shapefile
-land<-sf::read_sf(here::here("data","RawData","Landscape","Shapefiles Landscape AMLD", 
-                             "SIG-EDUC Redescobrindo 2021 - Fragmentos de Vegetação.shp"))
+ummp<-return_complete_ummp() #add vendaval and boa esperanza which are missing in shapefile
+
+#remove accents in names
+ummp$UMMPs<-plyr::revalue(ummp$UMMPs, c("Imbaú I" = "Imbau I",
+                                        "Imbaú II" = "Imbau II",
+                                        "Imbaú III" = "Imbau III",
+                                        "Poço das Antas" = "Poco das Antas",
+                                        "União I" = "Uniao I",
+                                        "União II" = "Uniao II"))
 
 create_raster_stack<-function(layer,extreg){
   
 xx<-raster(layer) %>% 
   raster::crop(.,extreg) %>%    #crop to the large-scale study region
   projectRaster(., crs=proj ,method="ngb",res=30) %>% # %>%  #project 
-  raster::crop(.,land)  #crop to forest fragments
+  raster::crop(.,ummp)  #crop to forest fragments
 #  raster::aggregate(., fact=3,fun=max) %>% 
 #  mask(.,ummp)
 

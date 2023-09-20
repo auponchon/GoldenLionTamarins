@@ -341,7 +341,7 @@ format<-distinct.sum.up %>%
 
 ```
 
-# Plotting survival for 2010-2022
+# Plotting survival for 2011-2022
 
 ```{r}
 
@@ -349,20 +349,21 @@ library(xlsx)
 
 param<-read.xlsx(here::here("CMR",
                            "models",
-                           "3states_AD_SEX_UniaoI_PDA_ImbauI_II_LB_EB_EX_AX2_2010-2022",
-                           "s(g+t)psi(2T)p(f).xls"),
+                           "3states_AD_SEX_UniaoI_PDA_ImbauI_II_LB_EB_EX_AX2_2010-2022_chat",
+                           "s(t)psi(2T+g)p(f).xls"),
                 sheetName="Reduced Set of Parameters", 
                 header=T)  %>% 
-  dplyr::filter(Parameters=="S") %>% 
-   dplyr::mutate(Sex=rep(c("Male","Female"),each=12),
-                 Year=c(seq(2010.95,2021.95,1),seq(2011.05,2022.05,1)))
-
-col<-brewer.pal(5,"PuOr")[c(2,5)]
-ss<-ggplot(param,aes(Year,Estimates,group=Sex)) +
-  geom_point(aes(color=Sex,shape=Sex)) +
-  geom_line(aes(color=Sex,linetype=Sex)) +
-  geom_errorbar(aes(ymin=Estimates-SE., ymax=Estimates+SE.,color=Sex), 
-                width=.05,
+  dplyr::filter(Parameters=="T" & Step==1) %>% 
+   # dplyr::mutate(Sex=rep(c("Male","Female"),each=12),
+   #               Year=c(seq(2010.95,2021.95,1),seq(2011.05,2022.05,1)))
+   dplyr::mutate(Year=seq(2021,2022,1))
+  
+#col<-brewer.pal(5,"PuOr")[c(2,5)]
+ss<-ggplot(param,aes(Year,Estimates))+#  ,group=Sex)) +
+  geom_point()+#aes(color=Sex,shape=Sex)) +
+  geom_line()+#aes(color=Sex,linetype=Sex)) +
+  geom_errorbar(aes(ymin=Estimates-SE., ymax=Estimates+SE.), #color=Sex), 
+                width=.1,
                  position=position_dodge(0.05),show.legend=F)+
   scale_x_continuous(limits=c(2010.5,2022.5),breaks=seq(2011,2022,1),
                      expand=c(0.001,0.001)) +
@@ -371,8 +372,9 @@ ss<-ggplot(param,aes(Year,Estimates,group=Sex)) +
   labs(x="",
        y="Survival probability")+
   theme_bw()+
-  scale_color_manual(values=col)+
-  theme(legend.title=element_blank())
+#  scale_color_manual(values=col)+
+  theme(legend.title=element_blank(),
+        panel.grid.minor = element_blank())
 
 print(ss)
 ```
