@@ -5,13 +5,15 @@ library(sf)
 library(viridis)
 library(ggspatial)
 
+set.seed(123)
+
 source(here::here("R","merge_ummp.R"))
 source(here::here("R","create_raster.R"))
 
 extreg<-extent(-42.7,-41.9,-22.9,-22.3)
 extregproj<-extent(740500, 809200,7481000, 7524000)
 
-#extentinset
+#projection
 proj<-"+proj=utm +zone=23 +south +ellps=GRS80 +towgs84=0,0,0,0,0,0,0 +units=m +no_defs +type=crs"
 
 
@@ -27,7 +29,6 @@ gp.reg<-data.clean.final %>%
   dplyr::filter(!is.na(Group) | !is.na(UMMPs))
 
 
-
 #load all coordinates of groups
 loc<-read.table(here::here("data","rawData","Landscape","RegionsName.csv"),
                 header=T,sep=";") %>% 
@@ -40,6 +41,7 @@ loc<-read.table(here::here("data","rawData","Landscape","RegionsName.csv"),
   sf::st_as_sf(., coords = c("Long","Lat")) %>% 
   sf::st_set_crs(proj) 
 
+  
 
 # hab_df<-coverStack[[max(length(coverStack))]]   %>% 
 # as.data.frame(. , xy = TRUE) %>%
@@ -64,10 +66,18 @@ ummp$UMMPs<-plyr::revalue(ummp$UMMPs, c("Imbaú I" = "Imbau I",
                                         "União II" = "Uniao II"))
 
 ummp.sub<-subset(ummp, as.character(ummp$UMMPs) %in% as.character(gp.reg$UMMPs))
-  
+ummp_centroids <- st_centroid(ummp.sub)
+
+#load road layer
+road<-read_sf(here::here("data","RawData","Landscape","Roads","rodovia-estadual.shp")) %>% 
+  st_transform(., crs=proj) %>%
+  st_crop(., ummp)
+
+
 #raster land cover for each year obtained from BioMAPS
 layer<-list.files(here::here("data","RawData","Landscape","Rasters land cover"),
                  full.names=T)[34]
+
   
 ext<-extent(-43,-41,-23,-22)
 landuse<-create_raster_stack(layer,ext)
@@ -92,7 +102,7 @@ latmx<-extent(landusecrop)[4]
 
 
 
-  plasma<-inferno(n=9,begin=0.75,end=0.9)
+  plasma<-sample(inferno(n=9,begin=0.75,end=0.95))
 col<-c("#006d2c","#c7e9c0","#c7e9c0","skyblue","white",plasma) #"#a1d99b"
 # brazil<-sf::read_sf(here("data","RawData","Landscape","Shapefiles Landscape AMLD",
 #                          "World_WGS84_Fine_Reso.shp")) %>% 
@@ -116,18 +126,20 @@ scale_fill_manual(values = col)+
             shape=23,
             size=3,
             show.legend = F)+
+  geom_sf(data=road,col="black")+
   scale_color_manual(values=plasma) +
   annotation_scale(location = "br", 
                    width_hint = 0.15,
-                   pad_x = unit(0.8, "cm"),
+                   pad_x = unit(0.9, "cm"),
                    bar_cols = "black") +
   annotation_north_arrow(location = "br", 
                          which_north = "true",
                          style = ggspatial::north_arrow_nautical(), 
-                         pad_y = unit(0.8, "cm")) +
+                         pad_y = unit(0.9, "cm")) +
   coord_sf(xlim = c(longmn,longmx),
            ylim=c(latmn, latmx),
            expand = FALSE) +
+ # geom_sf_text(data=ummp_centroids,aes(label=UMMPs))+
   labs(x="",
        y="") +
   theme_bw() +
@@ -137,7 +149,13 @@ scale_fill_manual(values = col)+
         plot.title=element_text(hjust=0.5,
                                 face = "bold",
                                 size=12))
+
+
+tiff(here::here("outputs","Figure1_study_area.tiff"),
+     height=3000,
+     width=5000,
+     res=400)
 #  inset(braz,)
 print(gg)    
-
+dev.off()
 
