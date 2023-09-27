@@ -7,16 +7,17 @@ get_group_size<-function(dataset){
   IND<-dataset %>% 
     dplyr::filter(!GLT %in% bad) %>% 
     dplyr::filter(Disp!=1 & Death=="0" & Solo=="0") %>% 
-    dplyr::filter( Year > 2009 & 
-                     GLT %in% unique(dataset$GLT
-                                     [dataset$UMMPs=="Uniao I" |
-                                         dataset$UMMPs=="Poco das Antas" |
-                                         dataset$UMMPs=="Imbau II" |
-                                         dataset$UMMPs=="Imbau I" |
-                                         dataset$Group=="LB" |
-                                         dataset$Group=="EB" |
-                                         dataset$Group=="EX" |
-                                         dataset$Group=="AX2"])) %>%
+    dplyr::filter(Year> 2009) %>% 
+    # dplyr::filter( Year > 2009 & 
+    #                  GLT %in% unique(dataset$GLT
+    #                                  [dataset$UMMPs=="Uniao I" |
+    #                                      dataset$UMMPs=="Poco das Antas" |
+    #                                      dataset$UMMPs=="Imbau II" |
+    #                                      dataset$UMMPs=="Imbau I" |
+    #                                      dataset$Group=="LB" |
+    #                                      dataset$Group=="EB" |
+    #                                      dataset$Group=="EX" |
+    #                                      dataset$Group=="AX2"])) %>%
     dplyr::arrange(DateObs)
   
   
@@ -57,8 +58,7 @@ disto<-dista %>%
   dplyr::rename(FromGp=Var1,
                 ToGp=Var2,
                 Dist=Freq) %>% 
-  dplyr::mutate(Dist=as.numeric(Dist)) %>% 
-  dplyr::filter(Dist>0)
+  dplyr::mutate(Dist=as.numeric(Dist)) 
 
 return(disto)
 }

@@ -400,4 +400,69 @@ dev.off()
 gp.size<-get_group_size(data.clean.final)
 dist<-get_distance()
 
+#filter data and add id count over time
+data.filter<-data.clean.final %>% 
+  dplyr::filter(!GLT %in% bad & Disp!=1 & Death==0 & IdadeOK=="AD" & Year > 2009) %>% 
+  dplyr::arrange(DateObs, GLT) %>% 
+  group_by(GLT) 
+  
+#get the name of all individuals observed in more than one group
+dispind<-data.filter %>%
+  dplyr::group_by(GLT) %>%
+  dplyr::summarise(N = n_distinct(Group)) %>% 
+  dplyr::filter(N >1)
+
+data.disp<-data.filter %>% 
+ # dplyr::filter(GLT %in% dispind$GLT) %>% 
+  dplyr::arrange(GLT,DateObs) %>% 
+  dplyr::mutate(FromGroup=dplyr::lag(Group),
+                ToGroup=Group,
+                FromRegion=dplyr::lag(Region),
+                ToRegion=Region,
+                FromUMMP=dplyr::lag(UMMPs),
+                ToUMMP=UMMPs) %>% 
+  dplyr::mutate(Transloc=ifelse(dplyr::lag(Disp==2) & 
+                                  Disp==0 & 
+                                  dplyr::lag(GLT)==GLT,
+                                1,0)) %>% 
+#  dplyr::filter(ObsOrder>1) %>%    #remove first observation
+  dplyr::mutate(Change=ifelse(ToGroup != FromGroup, 1,0)) %>% 
+   dplyr::filter(Transloc == 0) %>% 
+   dplyr::select(Year,DateObs,GLT,SexOK,
+                 FromGroup,ToGroup,FromUMMP,ToUMMP,Change) %>% 
+
+  left_join(., y=gp.size,by=c("Year"="Year","FromGroup"="Group")) %>% 
+  rename(FromGroupSize=n) %>% 
+  left_join(., y=gp.size,by=c("Year"="Year","ToGroup"="Group")) %>% 
+  rename(ToGroupSize=n) %>% 
+  left_join(., y=dist, by=c("FromGroup"="FromGp","ToGroup" = "ToGp")) %>% 
+  dplyr::filter(!is.na(Change) & !is.na(Dist) & !is.na(FromGroupSize) ) %>% 
+  mutate(Outbreak=as.factor(ifelse(Year==2017 | Year==2018,"outbreak","not outbreak"))) %>% 
+  mutate(GLT=as.factor(GLT),
+         Dist=as.numeric(Dist)) %>% 
+  as.data.frame(.)
+
+
+library(lme4)
+library(effects)
+gg<-glmer(Change ~ Outbreak + FromGroupSize +  ToGroupSize +(1|GLT) , data = data.disp, family = binomial)
+sjPlot::plot_model(gg, show.values=TRUE, show.p=TRUE)
+sjPlot::plot_model(gg, type="pred")
+
+sjPlot::tab_model(gg, 
+                  show.re.var= TRUE, 
+                  pred.labels =c("(Intercept)", "Outbreak", "Emigr Group Size", "Immigr Group Size"))
+effect_from <- as.data.frame(effects::effect(term= "FromGroupSize", mod= gg))
+effect_to <- as.data.frame(effects::effect(term= "ToGroupSize", mod= gg))
+effect_out <- as.data.frame(effects::effect(term= "Outbreak", mod= gg))
+
+
+from<-ggplot(data.disp) +
+  geom_point(aes (x=FromGroupSize, y=Change)) +
+  geom_line(data=effect_from,aes(x=FromGroupSize, y=fit),color="blue") +
+  geom_ribbon(data=effect_from, aes(x=FromGroupSize, ymin=fit-se, ymax=fit+se), 
+              alpha= 0.3, fill="blue") 
+
+print(from)
+
 ```
