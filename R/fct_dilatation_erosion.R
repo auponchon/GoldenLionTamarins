@@ -72,7 +72,8 @@ dilatation_erosion <- function(file,seuil){
   library(terra)
 
   ### Importation du paysage
-  paysage = rast(file)
+  #paysage<-rast(file)
+  paysage<- file
   #plot(paysage)
 
   ### Binarisation du paysage : matrice - habitat

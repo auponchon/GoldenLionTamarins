@@ -1,6 +1,8 @@
 #projection for Brazil
 source(here::here("R","merge_ummp.R"))
-proj<-"+proj=utm +zone=23 +south +ellps=GRS80 +towgs84=0,0,0,0,0,0,0 +units=m +no_defs +type=crs"
+proj<-"EPSG:31983"
+
+
 
 #forest patches from shapefile
 ummp<-return_complete_ummp() #add vendaval and boa esperanza which are missing in shapefile
@@ -15,10 +17,10 @@ ummp$UMMPs<-plyr::revalue(ummp$UMMPs, c("Imbaú I" = "Imbau I",
 
 create_raster_stack<-function(layer,extreg){
   
-xx<-raster(layer) %>% 
-  raster::crop(.,extreg) %>%    #crop to the large-scale study region
-  projectRaster(., crs=proj ,method="ngb",res=30) %>% # %>%  #project 
-  raster::crop(.,ummp)  #crop to forest fragments
+xx<-terra::rast(layer) %>% 
+  terra::crop(.,extreg) %>%    #crop to the large-scale study region
+  terra::project(., proj ,method="near",res=30) #%>% # %>%  #project 
+#  raster::crop(.,ummp)  #crop to forest fragments
 #  raster::aggregate(., fact=3,fun=max) %>% 
 #  mask(.,ummp)
 
