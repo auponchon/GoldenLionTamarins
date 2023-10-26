@@ -231,7 +231,7 @@ c("2 Irmãos" =	"Faz. 2 Irmaos",
   
   data$Disp[which(data$GLT=="MK10" & data$Year > 2003 & data$Group=="ML")]<-1
   data$Disp[which(data$GLT=="PA1" & data$Year > 2005 & data$Group=="PA")]<-1
-  
+  data$Solo[which(data$GLT=="MP99" & data$Group=="PT")]<-1
 
 #  data$Region[which(data$Group=="JR")] <- "Faz. Sta Helena"
   
@@ -254,15 +254,20 @@ account_translocations<-function(data){
   data$Disp[which(data$GLT=="AF16" & data$DateObs < ym("2012-07"))]<-2
   data$Disp[which(data$GLT=="AF17" & data$DateObs < ym("2012-07"))]<-2
   data$Disp[which(data$GLT=="AF18" & data$DateObs < ym("2012-07"))]<-2
-  data$Disp[which(data$GLT=="AF19" & data$DateObs < ym("2012-07"))]<-2
+  data$Disp[which(data$GLT=="AF19" & data$DateObs < ym("2014-05"))]<-2  #CORRECTION 2023-10
   data$Disp[which(data$GLT=="AF20" & data$DateObs < ym("2012-07"))]<-2
   data$Disp[which(data$GLT=="AF21" & data$DateObs < ym("2012-07"))]<-2
   data$Disp[which(data$GLT=="MP133" & data$DateObs < ym("2015-07"))]<-2
   data$Disp[which(data$GLT=="MP134" & data$DateObs < ym("2015-07"))]<-2
   data$Disp[which(data$GLT=="MP150" & data$DateObs < ym("2015-07"))]<-2
-  data$Disp[which(data$GLT=="FA20" & data$DateObs < ym("2016-07"))]<-2
+  data$Disp[which(data$GLT=="FA15" & data$DateObs < ym("2017-10"))]<-2  #correction 2023-10
+  data$Disp[which(data$GLT=="FA16" & data$DateObs < ym("2017-10"))]<-2 #correction 2023-10
+  data$Disp[which(data$GLT=="FA20" & data$DateObs < ym("2016-08"))]<-2
+  data$Disp[which(data$GLT=="FA21" & data$DateObs < ym("2016-09"))]<-2
   data$Disp[which(data$GLT=="FA10" & data$DateObs < ym("2015-07"))]<-2
   data$Disp[which(data$GLT=="FP10" & data$DateObs < ym("2021-01"))]<-2
+  data$Disp[which(data$GLT=="FA26" & data$DateObs < ym("2018-10"))]<-2
+  data$Disp[which(data$GLT=="FA28" & data$DateObs < ym("2018-10"))]<-2 #CORRECTION 2023-10
   data$Disp[which(data$GLT=="FA39" & data$DateObs < ym("2021-07"))]<-2
   data$Disp[which(data$GLT=="UR2" & data$DateObs < ym("2021-07"))]<-2
   data$Disp[which(data$GLT=="FA41" & data$DateObs < ym("2021-07"))]<-2
@@ -276,6 +281,7 @@ account_translocations<-function(data){
   data$Disp[which(data$GLT=="MP309")]<-2  #to check
   data$Disp[which(data$GLT=="MP310")]<-2  #to check
   data$Disp[which(data$GLT=="MP311")]<-2  #to check
+  
   
   return(data)
 }

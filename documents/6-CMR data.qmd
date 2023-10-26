@@ -294,11 +294,11 @@ for (b in row.id[c(-1,-length(row.id))]){
 
 distinct.sum.up<-sum.up.correct %>% 
  correct_translocation_cmr()  %>% 
-  dplyr::select(Year,GLT,Male,Female,State ) %>% 
-  group_by(GLT,Year) %>% 
+  dplyr::select(Year,GLT,Group,Male,Female,State ) %>% 
+  group_by(GLT,Year,Group) %>% 
    slice_min(State) %>% 
   ungroup() %>% 
-  distinct(Year,GLT,State,Male,Female) %>% 
+  distinct(Year,GLT,Group,State,Male,Female) %>% 
   arrange(Year,GLT) 
 
 distinct.sum.up.short<-distinct.sum.up %>% 
@@ -308,6 +308,12 @@ distinct.sum.up.short<-distinct.sum.up %>%
                values_from=State,
               values_fill = 0) 
  
+distinct.sum.up.gp<-distinct.sum.up %>% 
+  pivot_wider(id_cols=c(GLT,Male,Female),
+              names_from=Year,
+              names_prefix="Obs",
+               values_from=Group,
+              values_fill = NA) 
 
 
 #file<-"CMR_3states_AD_Sex_UniaoI_PDA_ImbauI_II_LB_EB_EX_AX2_2009-2022"
@@ -362,18 +368,31 @@ param<-read.xlsx(here::here("CMR",
    # dplyr::mutate(Sex=rep(c("Male","Female"),each=12),
    #               Year=c(seq(2010.95,2021.95,1),seq(2011.05,2022.05,1)))
    dplyr::mutate(Year=seq(2011,2022,1))
+
+annotation <- data.frame(
+   x = 2018.1,
+   y = 0.95,
+   label = c("Yellow fever\noutbreak"))
   
 #col<-brewer.pal(5,"PuOr")[c(2,5)]
-ss<-ggplot(param,aes(Year,Estimates))+#  ,group=Sex)) +
+ss<-ggplot(param,aes(Year,Estimates)) +#  ,group=Sex)) +
+    geom_rect(aes(xmin = 2016.8, xmax = 2019.4, ymin = 0.6, ymax = 1),
+            color="red",fill="pink",
+            alpha=0.1) +
   geom_point()+#aes(color=Sex,shape=Sex)) +
   geom_line()+#aes(color=Sex,linetype=Sex)) +
-  geom_errorbar(aes(ymin=Estimates-SE., ymax=Estimates+SE.), #color=Sex), 
-                width=.1,
-                 position=position_dodge(0.05),show.legend=F)+
+  geom_errorbar(aes(ymin=Estimates-SE., 
+                    ymax=Estimates+SE.), #color=Sex), 
+                    width=.1,
+                    position=position_dodge(0.05),show.legend=F)+
+  
   scale_x_continuous(limits=c(2010.5,2022.5),breaks=seq(2011,2022,1),
                      expand=c(0.001,0.001)) +
   scale_y_continuous(limits=c(0.6,1),breaks=seq(0.6,1,0.05),
                      expand=c(0.001,0.001)) +
+  geom_text(data=annotation, aes( x=x, y=y, label=label),                 , 
+          fontface="bold" ) +
+  
   labs(x="",
        y="Survival probability")+
   theme_bw()+
@@ -384,8 +403,8 @@ ss<-ggplot(param,aes(Year,Estimates))+#  ,group=Sex)) +
 print(ss)
 
 tiff(filename=here::here("outputs","Survival_2011_2022_s(t)psi(2T)p(f).tiff"),
-     width=4000, 
-     height=2500,
+     width=3000, 
+     height=1500,
      res=400,
      compression="lzw")
 print(ss)
@@ -393,7 +412,7 @@ dev.off()
 
 ```
 
-# Creating covariates
+# Creating covariates with raw dataset
 
 ```{r}
 load(here::here("data","NewlyCreatedData","Landscape raster","Rasters",
@@ -402,15 +421,16 @@ load(here::here("data","NewlyCreatedData","Landscape raster","Rasters",
 load(here::here("data","NewlyCreatedData","Landscape raster","Rasters",
                 "TotalSizeArea.RData"))
 
-totsizearea<-totsizearea %>% 
-  dplyr::filter(Year > 2009) %>% 
-  dplyr::select(Year, UMMPs, Group,  Size) 
+source(here::here("R","calculate_patch_size.R"))
+# totsizearea<-totsizearea %>% 
+#   dplyr::filter(Year > 2009) %>% 
+#   dplyr::select(Year, UMMPs, Group,  Size) 
 #  dplyr::mutate("SizeCat"=ifelse(Size<15000,"small","big"))
 
 
 gp.size<-get_group_size(data.clean.final)
 dist<-get_distance()
-# patchsizeterr<-get_patch_size(package="terra") 
+ patchsizeterr<-get_patch_size(package="terra") 
 # save(patchsizeterr,file=here::here("data",
 #                                         "NewlyCreatedData",
 #                                         "Landscape raster",
@@ -460,6 +480,7 @@ data.disp<-data.filter %>%
   left_join(., y=totsizearea, by=c("Group","UMMPs","Year")) %>% 
  # dplyr::filter(GLT %in% dispind$GLT) %>% 
   dplyr::arrange(GLT,DateObs) %>% 
+  group_by(GLT) %>% 
   dplyr::mutate(FromGroup=dplyr::lag(Group),
                 ToGroup=Group,
                 FromRegion=dplyr::lag(Region),
@@ -523,4 +544,48 @@ from<-ggplot(data.disp) +
               alpha= 0.3, fill="blue") 
 
 print(from)
+```
+
+# Creating covariates with CMT dataset
+
+```{r}
+
+patchsize<-as.data.frame(vect(patchsizeterr),row.names = NULL)
+
+data.disp<-distinct.sum.up %>% 
+  left_join(., y=patchsize, by=c("Group","Year")) %>% 
+ # dplyr::filter(GLT %in% dispind$GLT) %>% 
+  dplyr::arrange(GLT,Year) %>% 
+  group_by(GLT) %>% 
+  dplyr::mutate(FromGroup=dplyr::lag(Group),
+                ToGroup=Group,
+                FromPatchSize=dplyr::lag(log(area)),
+                ToPatchSize=log(area),
+                Sex=as.factor(ifelse(Male=="1","male","female"))) %>% 
+#  dplyr::filter(ObsOrder>1) %>%    #remove first observation
+  dplyr::mutate(Change=ifelse(ToGroup != FromGroup, 1,0)) %>% 
+  # dplyr::filter(Transloc == 0) %>% 
+   dplyr::select(Year,GLT,Sex,State,
+                 FromGroup,ToGroup,FromPatchSize,ToPatchSize, Change) %>% 
+ dplyr::filter(!is.na(FromGroup) & !is.na(ToGroup)) %>% 
+  left_join(., y=gp.size,by=c("Year"="Year","FromGroup"="Group")) %>% 
+  rename(FromGroupSize=n) %>% 
+  left_join(., y=gp.size,by=c("Year"="Year","ToGroup"="Group")) %>% 
+  rename(ToGroupSize=n) %>% 
+  left_join(., y=dist, by=c("FromGroup"="FromGp","ToGroup" = "ToGp")) %>% 
+  dplyr::filter(!is.na(Change) &  !is.na(FromGroupSize) & !is.na(FromPatchSize) & !is.na(ToPatchSize) ) %>% 
+  mutate(Outbreak=as.factor(ifelse(Year==2017 | Year==2018,"outbreak","not outbreak"))) %>% 
+  mutate(GLT=as.factor(GLT),
+         Dist=as.numeric(Dist)) %>% 
+  as.data.frame(.)
+
+
+library(lme4)
+library(effects)
+gg<-glmer(Change ~ Outbreak + FromGroupSize + ToGroupSize +  ToPatchSize + FromPatchSize + Sex + (1|GLT) , data = data.disp, family = binomial)
+sjPlot::plot_model(gg, show.values=TRUE, show.p=TRUE)
+
+
+sjPlot::plot_model(gg, type="pred")
+
 ```
