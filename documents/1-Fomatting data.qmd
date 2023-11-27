@@ -82,7 +82,7 @@ datacapt<-extract_capture_data(filecapt) %>%
   dplyr::filter(Group %in% unique(data2000$Group)) %>% 
   revalue_names_capture()
 
-datadisp<-extract_disp_data(filedisp)
+datadisp<-extract_disp_data(filedisp) #disregard all the warnings
 
 data.regions<-extract_true_region_names()
 

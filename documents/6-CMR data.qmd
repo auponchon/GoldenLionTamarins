@@ -28,9 +28,9 @@ bad<-c("?","T0","IN","?-1","?-2","?-3","FT","?-4","?-5","?-6")
 
 #Monitoring effort over years based on the cuont of individuals
 data.clean.final %>% 
-   filter(!GLT %in% bad) %>% 
+   dplyr::filter(!GLT %in% bad) %>% 
   group_by(Year) %>% 
-  count() %>% 
+  dplyr::count() %>% 
   ggplot(., aes(x=Year,y=n)) +
   geom_point() +
   geom_line() +
@@ -44,9 +44,9 @@ data.clean.final %>%
 
 #Monitoring effort over years based on individuals
 data.clean.final %>% 
-  filter(!GLT %in% bad) %>% 
+  dplyr::filter(!GLT %in% bad) %>% 
   group_by(GLT,Year) %>% 
-  count() %>% 
+  dplyr::count() %>% 
   ggplot(., aes(x=Year,y=n)) +
   geom_point() +
   labs(y="Nb of observations per year for each individuals") +
@@ -195,6 +195,7 @@ nb.gp.obs<-read.csv(here::here("data","NewlyCreatedData",
 sum.up<-data.clean.final %>% 
    dplyr::filter(!GLT %in% bad) %>% 
   dplyr::filter(Disp!=1 & Death=="0" & Solo=="0") %>% 
+  dplyr::filter(!is.na(Group)) %>% 
   dplyr::filter(!is.na(SexOK)) %>%  #get correct sex
    dplyr::filter(IdadeOK=="AD") %>% #get only adults
 #  dplyr::filter(!is.na(IdadeOK)) %>% 
@@ -317,7 +318,7 @@ distinct.sum.up.gp<-distinct.sum.up %>%
 
 
 #file<-"CMR_3states_AD_Sex_UniaoI_PDA_ImbauI_II_LB_EB_EX_AX2_2009-2022"
- file<- "CMR_3states_AD_Sex_AldeiaI_II_1989-2007"
+ file<- "CMR_3states_AD_Sex_AldeiaI_II_2010-2022_corrected"
  
    write.table(distinct.sum.up.short, file=here::here("data", 
                                                 "NewlyCreatedData", 
@@ -460,10 +461,6 @@ dist<-get_distance()
 #   geom_point()+
 #   geom_line()
   
-
-
-
-
 #filter data and add id count over time
 data.filter<-data.clean.final %>% 
   dplyr::filter(!GLT %in% bad & Disp!=1 & Death==0 & IdadeOK=="AD" & Year > 2009) %>% 

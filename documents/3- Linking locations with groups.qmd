@@ -41,6 +41,7 @@ spatdata<-data.clean.final %>%
             multiple="first") %>% 
   dplyr::filter(!is.na(Long)) %>%
   dplyr::filter(!Group %in% excl) %>% 
+  dplyr::filter(Year > 2009) %>% 
   droplevels() %>% 
   dplyr::arrange(GLT,Group,DateObs) %>% 
   dplyr::mutate(GLT=as.factor(GLT)) %>% 
@@ -108,7 +109,7 @@ lines_disp<- lines_disp %>%
 
 write_sf(lines_disp,
          here::here("data","NewlyCreatedData","Dispersal lines",
-                    "disp_lines.shp"),
+                    "disp_lines_2010.shp"),
                     delete_dsn = T,
                     delete_layer=T)
 
@@ -145,7 +146,7 @@ fieldgg<-ggplot()+
 
 
 
-tiff(filename=here::here("outputs","Dispersal_lines.tif"), 
+tiff(filename=here::here("outputs","Dispersal_lines_2010.tif"), 
             res=300,
             units="px",
             height=1500,

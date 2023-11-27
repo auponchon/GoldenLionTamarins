@@ -200,7 +200,7 @@ c("2 Irmãos" =	"Faz. 2 Irmaos",
                         "Tabebuia"=	"TB",
                         "Tamarins"=	"TM",
                         "TETRA" = "TT",
-                        "TM-3"=	"TM3",
+        #                "TM-3"=	"TM3",
                         "TM2?"=	"TMII",
                         "Triplets"=	"TR",
                         "Unigranrio"=	"UR",
@@ -214,7 +214,7 @@ c("2 Irmãos" =	"Faz. 2 Irmaos",
                     data$Group=="JD2")] <- "Sitio Joedi"
 
   data$Region[which(data$Group=="JQ")] <- "Poco das Antas"  
-  data$Region[which(data$Group=="Ataliba")] <- "Ataliba"  
+  data$Region[which(data$Group=="Ataliba")] <- "Poco das Antas"  
   
   data$Group[which(data$GLT=="PT3" & data$Year==2004)]<-NA
   data$Group[which(data$Group=="AL" & data$Year<2007)]<-"AL1"
@@ -254,7 +254,7 @@ account_translocations<-function(data){
   data$Disp[which(data$GLT=="AF16" & data$DateObs < ym("2012-07"))]<-2
   data$Disp[which(data$GLT=="AF17" & data$DateObs < ym("2012-07"))]<-2
   data$Disp[which(data$GLT=="AF18" & data$DateObs < ym("2012-07"))]<-2
-  data$Disp[which(data$GLT=="AF19" & data$DateObs < ym("2014-05"))]<-2  #CORRECTION 2023-10
+  data$Disp[which(data$GLT=="AF19" & data$DateObs < ym("2014-11"))]<-2  #CORRECTION 2023-10
   data$Disp[which(data$GLT=="AF20" & data$DateObs < ym("2012-07"))]<-2
   data$Disp[which(data$GLT=="AF21" & data$DateObs < ym("2012-07"))]<-2
   data$Disp[which(data$GLT=="MP133" & data$DateObs < ym("2015-07"))]<-2
@@ -262,8 +262,8 @@ account_translocations<-function(data){
   data$Disp[which(data$GLT=="MP150" & data$DateObs < ym("2015-07"))]<-2
   data$Disp[which(data$GLT=="FA15" & data$DateObs < ym("2017-10"))]<-2  #correction 2023-10
   data$Disp[which(data$GLT=="FA16" & data$DateObs < ym("2017-10"))]<-2 #correction 2023-10
-  data$Disp[which(data$GLT=="FA20" & data$DateObs < ym("2016-08"))]<-2
-  data$Disp[which(data$GLT=="FA21" & data$DateObs < ym("2016-09"))]<-2
+  data$Disp[which(data$GLT=="FA20" & data$DateObs < ym("2016-08"))]<-2 #correction 2023-10
+  data$Disp[which(data$GLT=="FA21" & data$DateObs < ym("2017-11"))]<-2 #correction 2023-10
   data$Disp[which(data$GLT=="FA10" & data$DateObs < ym("2015-07"))]<-2
   data$Disp[which(data$GLT=="FP10" & data$DateObs < ym("2021-01"))]<-2
   data$Disp[which(data$GLT=="FA26" & data$DateObs < ym("2018-10"))]<-2
@@ -272,15 +272,15 @@ account_translocations<-function(data){
   data$Disp[which(data$GLT=="UR2" & data$DateObs < ym("2021-07"))]<-2
   data$Disp[which(data$GLT=="FA41" & data$DateObs < ym("2021-07"))]<-2
   data$Disp[which(data$GLT=="MP192" & data$DateObs < ym("2022-01"))]<-2  #to check
-  data$Disp[which(data$GLT=="FA33")]<-2 
-  data$Disp[which(data$GLT=="FA35")]<-2  #to check
-  data$Disp[which(data$GLT=="FB6")]<-2  #to check
-  data$Disp[which(data$GLT=="FB4")]<-2  #to check
-  data$Disp[which(data$GLT=="FB5")]<-2  #to check
-  data$Disp[which(data$GLT=="MP308")]<-2  #to check
-  data$Disp[which(data$GLT=="MP309")]<-2  #to check
-  data$Disp[which(data$GLT=="MP310")]<-2  #to check
-  data$Disp[which(data$GLT=="MP311")]<-2  #to check
+ # data$Disp[which(data$GLT=="FA33")]<-2 
+#  data$Disp[which(data$GLT=="FA35")]<-2  #to check
+ # data$Disp[which(data$GLT=="FB6")]<-2  #to check
+#  data$Disp[which(data$GLT=="FB4")]<-2  #to check
+#  data$Disp[which(data$GLT=="FB5")]<-2  #to check
+#  data$Disp[which(data$GLT=="MP308")]<-2  #to check
+#  data$Disp[which(data$GLT=="MP309")]<-2  #to check
+#  data$Disp[which(data$GLT=="MP310")]<-2  #to check
+#  data$Disp[which(data$GLT=="MP311")]<-2  #to check
   
   
   return(data)
@@ -335,6 +335,7 @@ revalue_name<-function(data){
   data$GLT[data$GLT=="SF4" & data$Sexo=="F"]<-"SF4.1"
   data$GLT[data$GLT=="SF3" & data$Sexo=="F"]<-"SF3.1"
   data$GLT[data$GLT=="RL2" & data$Tattoo=="SE5"]<-"SE5.1"
+  data$GLT[data$GLT=="MP172" & data$Group=="SP"]<-"MP172.1"
   
    data$Group[data$GLT=="979"] <-"LB"
    

@@ -18,6 +18,11 @@ data$State[data$GLT=="FA39" & data$Year>2020]<-1
 data$State[data$GLT=="FA41" & data$Year>2020]<-1
 data$State[data$GLT=="FA10" & data$Year>2014]<-1
 data$State[data$GLT=="AF17" & data$Year>2011]<-1
+data$State[data$GLT=="FA15" & data$Year>2017]<-1
+data$State[data$GLT=="FA16" & data$Year>2017]<-1
+data$State[data$GLT=="FA21" & data$Year>2017]<-1 #correction oct 2023
+data$State[data$GLT=="FA20" & data$Year>2016]<-1 #correction Oct 2023
+
 
 return(data)
 
