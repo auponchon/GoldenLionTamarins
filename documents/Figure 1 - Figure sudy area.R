@@ -4,8 +4,9 @@ library(tidyverse)
 library(sf)
 library(viridis)
 library(ggspatial)
+library(gridExtra)
 
-set.seed(123)
+set.seed(456)
 
 source(here::here("R","merge_ummp.R"))
 source(here::here("R","create_raster.R"))
@@ -17,16 +18,16 @@ extregproj<-extent(740500, 809200,7481000, 7524000)
 proj<-"+proj=utm +zone=23 +south +ellps=GRS80 +towgs84=0,0,0,0,0,0,0 +units=m +no_defs +type=crs"
 
 
-#get groups and regions retained in the final dataset from 2009 to 2022
+#get groups and regions retained in the final dataset from 2010 to 2022
 ind<-read.csv(here::here("data","NewlyCreatedData","CMR",
-                         "CMR_3states_AD_Sex_UniaoI_PDA_ImbauI_II_LB_EB_EX_AX2_2009-2022.csv"),
+                         "CMR_3states_AD_Sex_UniaoI_PDA_ImbauI_II_LB_EB_EX_AX2_2010-2022_corrected.csv"),
               header=T,
               sep=";") 
 load(here::here("data","NewlyCreatedData","data_clean_long_final.RData"))
 gp.reg<-data.clean.final %>% 
   dplyr::filter(GLT%in% ind$GLT & Year > 2008) %>% 
   distinct(Group, UMMPs) %>% 
-  dplyr::filter(!is.na(Group) | !is.na(UMMPs))
+  dplyr::filter(!is.na(Group) | !is.na(UMMPs)) 
 
 
 #load all coordinates of groups
@@ -39,7 +40,10 @@ loc<-read.table(here::here("data","rawData","Landscape","RegionsName.csv"),
   dplyr::filter(Group %in% gp.reg$Group) %>% 
   dplyr::filter_all(any_vars(!is.na(.))) %>% 
   sf::st_as_sf(., coords = c("Long","Lat")) %>% 
-  sf::st_set_crs(proj) 
+   sf::st_set_crs(proj) # %>% 
+  # st_write(.,here::here("data","NewlyCreatedData","subset_locations_fig1.shp"),
+  #          delete_layer=T,
+  #          delete_dsn=T)
 
   
 
@@ -68,65 +72,73 @@ ummp$UMMPs<-plyr::revalue(ummp$UMMPs, c("Imbaú I" = "Imbau I",
 ummp.sub<-subset(ummp, as.character(ummp$UMMPs) %in% as.character(gp.reg$UMMPs))
 ummp_centroids <- st_centroid(ummp.sub)
 
-#load road layer
-road<-read_sf(here::here("data","RawData","Landscape","Roads","rodovia-estadual.shp")) %>% 
-  st_transform(., crs=proj) %>%
-  st_crop(., ummp)
+
 
 
 #raster land cover for each year obtained from BioMAPS
 layer<-list.files(here::here("data","RawData","Landscape","Rasters land cover"),
-                 full.names=T)[34]
-
-  
-ext<-extent(-43,-41,-23,-22)
-landuse<-create_raster_stack(layer,ext)
+                 full.names=T)[32]
   
 
-ext<-extent(extent(landuse)[1],
-       extent(landuse)[2],
+landuse<-create_raster_stack(layer,extreg) 
+  
+  
+
+ext1<-terra::ext(terra::ext(ummp)[1],
+                terra::ext(ummp)[2],
        7478887,
-       extent(landuse)[4])
+       terra::ext(ummp)[4])
 
-landusecrop<-crop(landuse,ext) %>% 
+landusecrop<-landuse %>% 
+  terra::crop(.,ummp) %>% 
+  # terra::writeRaster(., here::here("data","NewlyCreatedData","landscape raster","Habitat.tif"),
+  #                    overwrite=T) %>% 
   as.data.frame(. , xy = TRUE) %>%
-  rename(value=brasil_coverage_2021) 
+  rename(value=brasil_coverage_2021)
 
 loc<-st_intersection(loc,ummp)
 
+#load road layer
+road<-read_sf(here::here("data","RawData","Landscape","Roads","Roads_BRAZIL.shp"))  %>% 
+   st_transform(., crs=proj) %>%
+  st_crop(., ummp)
+
+
 #extent of the study region
-longmn<-extent(landusecrop)[1]
-longmx<-extent(landusecrop)[2]
-latmn<-extent(landusecrop)[3]
-latmx<-extent(landusecrop)[4]
+longmn<-terra::ext(ummp)[1]
+longmx<-terra::ext(ummp)[2]
+latmn<-terra::ext(ummp)[3]
+latmx<-terra::ext(ummp)[4]
 
 
 
-  plasma<-sample(inferno(n=9,begin=0.75,end=0.95))
-col<-c("#006d2c","#c7e9c0","#c7e9c0","skyblue","white",plasma) #"#a1d99b"
+  plasma<-sample(inferno(n=10,begin=0.75,end=0.95))
+col<-c("#006d2c","#34cf61","#c7e9c0","#81dfff","#b53613") #"#a1d99b"
 # brazil<-sf::read_sf(here("data","RawData","Landscape","Shapefiles Landscape AMLD",
 #                          "World_WGS84_Fine_Reso.shp")) %>% 
 #   sf::st_transform(31983) 
 
-gg<-ggplot()+
-    # geom_sf(data=land,
-    #         fill="grey80",
-    #         col="grey80") +
+map<-ggplot()+
+   
  geom_raster(data=landusecrop, aes (x=x,y=y,fill=as.factor(value)),
-             alpha=0.9)+
+             alpha=0.9) +
+scale_fill_manual(values = c(col,plasma)) +   
   geom_sf(data=ummp,
-          mapping=aes(fill=UMMPs),alpha=0.6,
+          alpha=0.6,
           col="grey10",
-          fill="grey") +
-scale_fill_manual(values = col)+
+          fill="grey",
+          show.legend = F) +
+  geom_sf(key_glyph = "rect", color = NULL) +
    geom_sf(data=ummp.sub,
-           mapping=aes(fill=UMMPs),alpha=0.6,col="grey10")+
+           mapping=aes(fill=UMMPs),
+           alpha=0.6,col="grey10",
+           show.legend=F)+
     geom_sf(data=loc,
             aes(fill=UMMPs),
             shape=23,
             size=3,
-            show.legend = F)+
-  geom_sf(data=road,col="black")+
+            show.legend = F) +
+  geom_sf(data=road,col="black") +
   scale_color_manual(values=plasma) +
   annotation_scale(location = "br", 
                    width_hint = 0.15,
@@ -138,24 +150,41 @@ scale_fill_manual(values = col)+
                          pad_y = unit(0.9, "cm")) +
   coord_sf(xlim = c(longmn,longmx),
            ylim=c(latmn, latmx),
-           expand = FALSE) +
+           expand = F) +
  # geom_sf_text(data=ummp_centroids,aes(label=UMMPs))+
   labs(x="",
        y="") +
   theme_bw() +
   theme(legend.position = "none",
-        plot.margin = unit(c(0.5, 0.5, 0, 0), "lines"),
+        plot.margin = unit(c(0.05, 0, 0, 0), "lines"),
         axis.text = element_text(size=10),
         plot.title=element_text(hjust=0.5,
                                 face = "bold",
                                 size=12))
 
 
-tiff(here::here("outputs","Figure1_study_area.tiff"),
+legplot<-ggplot()+
+  geom_raster(data=landusecrop, aes (x=x,y=y,fill=as.factor(value)),
+              alpha=0.9) +
+  scale_fill_manual(values = col,
+                    labels=c("Forest","Non-forest","Agriculture","Water","Urban areas"))+
+  labs(fill="",
+       x="",
+       y="")+
+theme(legend.position = "bottom")
+
+leg<-g_legend(legplot)
+
+
+
+tiff(here::here("outputs","Figure1_study_area_test.tiff"),
      height=3000,
      width=5000,
-     res=400)
+     res=400,
+     type="cairo")
 #  inset(braz,)
-print(gg)    
+grid.arrange(map,leg,
+              nrow=2, 
+             heights=c(1,0.05)  )
 dev.off()
 

@@ -34,7 +34,7 @@ data.clean.final %>%
   ggplot(., aes(x=Year,y=n)) +
   geom_point() +
   geom_line() +
-  labs(y="Nb of observations per year") +
+  labs(y="Nb of total individuals observed per year") +
   scale_x_continuous(limits=c(1988,2023),
                      breaks=seq(1900,2020,5),
                      expand=c(0.001,0.001))+
@@ -43,6 +43,22 @@ data.clean.final %>%
                      expand=c(0.001,0.001))
 
 #Monitoring effort over years based on individuals
+data.clean.final %>% 
+  dplyr::filter(!GLT %in% bad) %>% 
+  group_by(Year) %>% 
+  summarize(n = n_distinct(Group)) %>% 
+  ggplot(., aes(x=Year,y=n)) +
+  geom_point() +
+  geom_line() +
+  labs(y="Nb of groups observed") +
+  scale_x_continuous(limits=c(1988,2023),
+                     breaks=seq(1900,2020,5),
+                     expand=c(0.001,0.001))+
+  scale_y_continuous(limits=c(0,120),
+                     breaks=seq(0,120,20),
+                     expand=c(0.001,0.001))
+
+
 data.clean.final %>% 
   dplyr::filter(!GLT %in% bad) %>% 
   group_by(GLT,Year) %>% 
@@ -317,8 +333,8 @@ distinct.sum.up.gp<-distinct.sum.up %>%
               values_fill = NA) 
 
 
-#file<-"CMR_3states_AD_Sex_UniaoI_PDA_ImbauI_II_LB_EB_EX_AX2_2009-2022"
- file<- "CMR_3states_AD_Sex_AldeiaI_II_2010-2022_corrected"
+file<-"3states_AD_SEX_UniaoI_PDA_ImbauI_II_LB_EB_EX_AX2_2010-2022_corrected"
+#file<- "CMR_3states_AD_Sex_AldeiaI_II_2010-2022_corrected"
  
    write.table(distinct.sum.up.short, file=here::here("data", 
                                                 "NewlyCreatedData", 
@@ -361,11 +377,11 @@ library(xlsx)
 
 param<-read.xlsx(here::here("CMR",
                            "models",
-                           "3states_AD_SEX_UniaoI_PDA_ImbauI_II_LB_EB_EX_AX2_2010-2022_chat",
+                           "3states_AD_SEX_UniaoI_PDA_ImbauI_II_LB_EB_EX_AX2_2010-2022_corrected",
                            "s(t)psi(2T)p(f).xls"),
                 sheetName="Reduced Set of Parameters", 
                 header=T)  %>% 
-  dplyr::filter(Parameters=="T" & Step==1) %>% 
+  dplyr::filter(Parameters=="S" & Step==1) %>% 
    # dplyr::mutate(Sex=rep(c("Male","Female"),each=12),
    #               Year=c(seq(2010.95,2021.95,1),seq(2011.05,2022.05,1)))
    dplyr::mutate(Year=seq(2011,2022,1))
