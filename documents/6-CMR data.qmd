@@ -17,6 +17,7 @@ We clearly see a difference in monitoring effort from 2001
 
 library(here)
 library(tidyverse)
+library(gridExtra)
 
 source(here::here("R","correct_translocations_cmr.R"))
 source(here::here("R","get_covariates.R"))
@@ -30,16 +31,16 @@ bad<-c("?","T0","IN","?-1","?-2","?-3","FT","?-4","?-5","?-6")
 data.clean.final %>% 
    dplyr::filter(!GLT %in% bad) %>% 
   group_by(Year) %>% 
-  dplyr::count() %>% 
+   summarize(n = n_distinct(GLT)) %>% 
   ggplot(., aes(x=Year,y=n)) +
   geom_point() +
   geom_line() +
-  labs(y="Nb of total individuals observed per year") +
+  labs(y="Nb of unique individuals observed per year") +
   scale_x_continuous(limits=c(1988,2023),
-                     breaks=seq(1900,2020,5),
+                     breaks=seq(1990,2020,5),
                      expand=c(0.001,0.001))+
-  scale_y_continuous(limits=c(0,3000),
-                     breaks=seq(0,3000,500),
+  scale_y_continuous(limits=c(0,1000),
+                     breaks=seq(0,1000,200),
                      expand=c(0.001,0.001))
 
 #Monitoring effort over years based on individuals
@@ -84,7 +85,7 @@ data.clean.final %>%
     #               quote=F,row.names=F ,sep=";")
 
 
-#Load file to remove duplicatedgroups for individuals within the same year
+#Load file to remove duplicated groups for individuals within the same year
 dups.gp<-read.csv(here::here("data","NewlyCreatedData",
                              "Duplicated_groups_within_years_corrected.csv"),
                   header=T,
@@ -336,15 +337,15 @@ distinct.sum.up.gp<-distinct.sum.up %>%
 file<-"3states_AD_SEX_UniaoI_PDA_ImbauI_II_LB_EB_EX_AX2_2010-2022_corrected"
 #file<- "CMR_3states_AD_Sex_AldeiaI_II_2010-2022_corrected"
  
-   write.table(distinct.sum.up.short, file=here::here("data", 
-                                                "NewlyCreatedData", 
-                                                "CMR", 
-                                                paste0(file,".csv")),
-                 quote=F,
-                 row.names=F ,
-                 sep=";",
-                 col.names=T)
-
+   # write.table(distinct.sum.up.short, file=here::here("data", 
+   #                                              "NewlyCreatedData", 
+   #                                              "CMR", 
+   #                                              paste0(file,".csv")),
+   #               quote=F,
+   #               row.names=F ,
+   #               sep=";",
+   #               col.names=T)
+   # 
 
 colNamesObs = colnames(distinct.sum.up.short)[4:ncol(distinct.sum.up.short)] #when sex included
 #colNamesObs = colnames(distinct.sum.up)[2:ncol(distinct.sum.up)] 
@@ -359,17 +360,17 @@ format<-distinct.sum.up.short %>%
   dplyr::mutate(Sex=";")
 
 
- write.table(format, file=here::here("CMR", "data", 
-                                     paste0(file,".inp")),
-                 quote=F,
-             row.names=F ,
-                 sep=" ",
-                 col.names=F)
- 
+ # write.table(format, file=here::here("CMR", "data", 
+ #                                     paste0(file,".inp")),
+ #                 quote=F,
+ #             row.names=F ,
+ #                 sep=" ",
+ #                 col.names=F)
+ # 
 
 ```
 
-# Plotting survival for 2011-2022
+# Plotting survival for 2011-2022 (old)
 
 ```{r}
 
@@ -407,7 +408,7 @@ ss<-ggplot(param,aes(Year,Estimates)) +#  ,group=Sex)) +
                      expand=c(0.001,0.001)) +
   scale_y_continuous(limits=c(0.6,1),breaks=seq(0.6,1,0.05),
                      expand=c(0.001,0.001)) +
-  geom_text(data=annotation, aes( x=x, y=y, label=label),                 , 
+  geom_text(data=annotation, aes( x=x, y=y, label=label),                  
           fontface="bold" ) +
   
   labs(x="",
@@ -426,6 +427,79 @@ tiff(filename=here::here("outputs","Survival_2011_2022_s(t)psi(2T)p(f).tiff"),
      compression="lzw")
 print(ss)
 dev.off()
+
+
+
+
+
+
+```
+
+# Plotting survival for 2011-2022 with cohorts
+
+```{r}
+
+library(viridis)
+
+# param<-read.table(here::here("CMR",
+#                            "models",
+#                            "3states_AD_NoSex_UniaoI_PDA_ImbauI_II_LB_EB_EX_AX2_2010-2022_corrected_cohort",
+#                            "s(c.t)psi(2T)p(2f)_best.csv"),
+#                   sep=";",
+#                 header=T)  %>% 
+
+param<-read.table(here::here("CMR",
+                           "models",
+                           "3states_AD_NoSex_UniaoI_PDA_ImbauI_II_LB_EB_EX_AX2_2010-2022_corrected_cohort",
+                           "s(c2.t)psi(2T)p(2f)_best_final.csv"),
+                  sep=";",
+                header=T)  %>%
+  dplyr::mutate(group=as.factor(group),
+                Year=ifelse(group=="1", year-0.05,year+0.05))
+
+annotation <- data.frame(
+   x = 2018.1,
+   y = 0.45,
+   label = c("Yellow fever\noutbreak"))
+  
+
+ss<-ggplot(param,aes(year, Estimates ) ,group=group) +
+  geom_rect(aes(xmin = 2016.8, xmax = 2019.4, ymin = 0.39, ymax = 1.02),
+            color="grey",fill="grey95",
+            alpha=0.8) +
+  geom_point(aes(color=group,shape=group), show.legend = F) +
+  geom_line(aes(color=group, linetype=group), show.legend = F) +
+  scale_color_viridis(option="D",
+                      discrete = T, 
+                      end=0.95) +
+  geom_errorbar(aes(ymin=Estimates-SE, 
+                    ymax=Estimates+SE, color=group), 
+                    width=.1,
+                    position=position_dodge(0.05),show.legend=F) +
+  
+  scale_x_continuous(limits=c(2010.5,2022.5),breaks=seq(2011,2022,1),
+                     expand=c(0.001,0.001)) +
+  scale_y_continuous(limits=c(0.39,1.02),breaks=seq(0.4,1,0.05),
+                     expand=c(0.001,0.001)) +
+  geom_text(data=annotation, aes( x=x, y=y, label=label),  
+          fontface="bold" ) +
+  labs(x="",
+       y="Survival probability")+
+  theme_bw()+
+#  scale_color_manual(values=col)+
+  theme(legend.title=element_blank(),
+        panel.grid.minor = element_blank())
+
+print(ss)
+
+tiff(filename=here::here("outputs","Survival_2011_2022_s(2cohort)psi(2T)p(f).tiff"),
+     width=3000, 
+     height=1500,
+     res=400,
+     compression="lzw")
+print(ss)
+dev.off()
+
 
 ```
 
@@ -601,4 +675,153 @@ sjPlot::plot_model(gg, show.values=TRUE, show.p=TRUE)
 
 sjPlot::plot_model(gg, type="pred")
 
+```
+
+# Monitoring effort on CMR dataset
+
+```{r}
+library(viridis)
+library(gridExtra)
+
+unique.ind<-distinct.sum.up %>% 
+  group_by(Year) %>% 
+   summarize(n = n_distinct(GLT)) %>% 
+  ggplot(., aes(x=Year,y=n)) +
+   geom_rect(aes(xmin = 2016.8, xmax = 2019.4, ymin = 0, ymax = 200),
+            color="grey",fill="grey95",
+            alpha=0.8) +
+  geom_point() +
+  geom_line() +
+  labs(y="Nb of unique individuals") +
+  scale_x_continuous(limits=c(2010,2022),
+                     breaks=seq(2010,2022,2),
+                     expand=c(0.01,0.01)) +
+   scale_y_continuous(limits=c(0,200),
+                      breaks=seq(0,200,50),
+                      expand=c(0.001,0.001))+
+    theme_classic()+
+  theme(panel.grid.major = element_line())
+
+#Monitoring effort over years based on individuals
+unique.gp<-distinct.sum.up %>% 
+  group_by(Year) %>% 
+  summarize(n = n_distinct(Group)) %>% 
+  ggplot(., aes(x=Year,y=n)) +
+   geom_rect(aes(xmin = 2016.8, xmax = 2019.4, ymin = 0, ymax = 50),
+            color="grey",fill="grey95",
+            alpha=0.8) +
+  geom_point() +
+  geom_line() +
+  labs(y="Nb of groups",
+       tag="a)") +
+  scale_x_continuous(limits=c(2010,2023),
+                     breaks=seq(2010,2022,2),
+                     expand=c(0.01,0.01))+
+  scale_y_continuous(limits=c(0,50),
+                     breaks=seq(0,50,10),
+                     expand=c(0.001,0.001)) +
+   theme_classic()+
+  theme(panel.grid.major = element_line())
+
+
+
+new.ind<-distinct.sum.up %>% 
+  group_by(GLT) %>% 
+  dplyr::summarise(MinYear=min(Year)) %>%  
+    dplyr::count(MinYear) %>% 
+  ggplot(., aes(x=MinYear,y=n)) +
+   geom_rect(aes(xmin = 2016.8, xmax = 2019.4, ymin = 0, ymax = 100),
+            color="grey",fill="grey95",
+            alpha=0.8) +
+  geom_point() +
+  geom_line()+
+  labs(y="Nb of new individuals",
+       x="Year") +
+  scale_x_continuous(limits=c(2010,2022),
+                     breaks=seq(2010,2022,2),
+                     expand=c(0.01,0.01)) +
+  scale_y_continuous(limits=c(0,100),
+                     breaks=seq(0,100,20),
+                     expand=c(0.001,0.001))+ 
+  theme_classic()+
+  theme(panel.grid.major = element_line())
+
+
+
+
+nb.ind.gp<-distinct.sum.up %>% 
+  dplyr::group_by(Group,Year) %>% 
+  dplyr::summarize(n = n_distinct(GLT)) %>% 
+   dplyr::filter(Year > 2009) %>% 
+  dplyr::group_by(Year) %>% 
+  dplyr::summarize(Mean=mean(n),
+                   SE=std.error(n)) %>% 
+  ggplot(., aes(x=Year,y=Mean)) +
+   geom_rect(aes(xmin = 2016.8, xmax = 2019.4, 
+                 ymin = 0, ymax = 8),
+            color="grey",fill="grey95",
+            alpha=0.8) +
+    # geom_ribbon(aes(ymin= Mean-SE, 
+    #                 ymax = Mean+SE),
+    #         fill="grey70",
+    #         alpha=0.8) +
+  geom_point(aes(),show.legend=F) +
+  geom_line(aes(),show.legend=F) +
+   geom_errorbar(aes(ymin=Mean-SE, 
+                    ymax=Mean+SE), 
+                    width=.1,
+                    position=position_dodge(0.05),show.legend=F) +
+  labs(y="Mean nb of ind/groups",
+      tag="b)") +
+   scale_x_continuous(limits=c(2010,2023),
+                     breaks=seq(2010,2022,2),
+                     expand=c(0.01,0.01)) +
+  scale_y_continuous(limits=c(0,8),
+                     breaks=seq(0,8,2),
+                     expand=c(0.001,0.001)) + 
+  theme_classic()+
+  theme(panel.grid.major = element_line())
+
+grid.arrange(unique.ind,unique.gp,new.ind,nb.ind.gp,
+             nrow=2,ncol=2)
+
+tiff(filename=here::here("outputs","Fig3-gp_nb.tiff"),
+     width=3000, 
+     height=1000,
+     res=400,
+     compression="lzw")
+grid.arrange(unique.gp,nb.ind.gp, ncol=2)
+dev.off()
+
+temp<-data.clean.final %>% 
+  dplyr::select(Year,GLT,Group,UMMPs) %>% 
+  distinct(Year,Group,UMMPs)
+
+cons.unit<-distinct.sum.up %>% 
+  left_join(.,temp, by=c("Year","Group")) %>% 
+  dplyr::filter(!is.na(UMMPs)) %>% 
+  distinct(Year,Group,UMMPs) %>% 
+  group_by(Year, UMMPs) %>% 
+   summarize(n=n_distinct(Group), .groups="drop") %>% 
+  ggplot(aes(x=Year,y=n))+
+   geom_rect(aes(xmin = 2016.8, xmax = 2019.4, 
+                 ymin = 0, ymax = 16),
+            color="grey",fill="grey95",
+            alpha=0.8) +
+  geom_point(aes(color=UMMPs))+
+  geom_line(aes(color=UMMPs)) +
+  labs(x="Years",y="Number of groups")+
+  scale_colour_manual(values=viridis(n=9,end=0.95),
+#  scale_colour_manual(values=met.brewer(n=9,"Renoir"),
+                      name="Conservation \nunit")+
+  scale_x_continuous(limits=c(2010,2022),
+                     breaks=seq(2010,2022,2),
+                     expand=c(0.01,0.01)) +
+  scale_y_continuous(limits=c(0,16),
+                     breaks=seq(0,16,4),
+                     expand=c(0.01,0.01)) + 
+  theme_classic()+
+  theme(panel.grid.major = element_line())
+
+print(cons.unit)
 ```

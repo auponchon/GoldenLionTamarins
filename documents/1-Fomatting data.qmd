@@ -218,49 +218,49 @@ library(gridExtra)
 
 source(here::here("R","plot_continuity.R"))
 
-fq<-data.clean.final %>%  
-  dplyr::filter(!GLT %in% bad & Disp!=1 & Death==0 & Solo==0) %>% 
-  group_by(Group,DateObs) %>% 
-  dplyr::count() %>% 
-  group_by(Group) %>% 
-  dplyr::count() %>% 
-  dplyr::arrange(n) %>% 
-  drop_na()
-
-colorme<-rep(viridis(n=22,option="H"),time=11)
-title_plot<-"Monitoring continuity in all regions"
-title_file<-"Continuity_field_effort_all_regions.tif"
-
- 
-plot_continuity(data.clean.final,fq,title_plot,title_file,W=6000,H=6500)
-  
-  
-   regio<-sort(unique(data.clean.final$UMMPs))
-   
-   
-   for (k in 1:length(regio)){
-     sub<-data.clean.final %>% 
-       dplyr::filter(UMMPs==regio[k]) 
-       
-      fq<-sub %>%  
-  group_by(Group) %>% 
-  dplyr::count() %>% 
-  dplyr::arrange(n) %>% 
-  drop_na()
-      
-
-title_plot<-paste("Monitoring continuity in ",
-                  regio[k],
-                  sep="")
-title_file<-paste("Continuity_field_effort_",
-                  regio[k],
-                  ".tif",
-                  sep="") 
-    
- plot_continuity(sub,fq,title_plot,title_file,W=6000,H=6500)   
- setTxtProgressBar(progress_bar(length(regio)),k)  
- 
-   }
+# fq<-data.clean.final %>%  
+#   dplyr::filter(!GLT %in% bad & Disp!=1 & Death==0 & Solo==0) %>% 
+#   group_by(UMMPs,Group,DateObs) %>% 
+#   dplyr::count() %>% 
+#    group_by(UMMPs,Group) %>% 
+#    dplyr::count() %>% 
+#   dplyr::arrange(UMMPs,n) %>% 
+#   drop_na()
+# 
+# colorme<-rep(viridis(n=22,option="H"),time=11)
+# title_plot<-"Monitoring continuity in all regions"
+# title_file<-"Continuity_field_effort_all_regions.tif"
+# 
+#  
+# plot_continuity(data.clean.final,fq,title_plot,title_file,W=6000,H=6500)
+#   
+#   
+#    regio<-sort(unique(data.clean.final$UMMPs))
+#    
+#    
+#    for (k in 1:length(regio)){
+#      sub<-data.clean.final %>% 
+#        dplyr::filter(UMMPs==regio[k]) 
+#        
+#       fq<-sub %>%  
+#   group_by(Group) %>% 
+#   dplyr::count() %>% 
+#   dplyr::arrange(n) %>% 
+#   drop_na()
+#       
+# 
+# title_plot<-paste("Monitoring continuity in ",
+#                   regio[k],
+#                   sep="")
+# title_file<-paste("Continuity_field_effort_",
+#                   regio[k],
+#                   ".tif",
+#                   sep="") 
+#     
+#  plot_continuity(sub,fq,title_plot,title_file,W=6000,H=6500)   
+#  setTxtProgressBar(progress_bar(length(regio)),k)  
+#  
+#    }
    
    #Nombre d'observations par groupe
    
@@ -290,6 +290,89 @@ title_file<-paste("Continuity_field_effort_",
      write.csv2(here::here("data","NewlyCreatedData","Nb_obs_gp.csv"),
                 row.names=F)
      
+  
+  ##Figure supplemental material to show monitoring effort
+  
+  
+  library(viridis)
+library(gridExtra)
+
+source(here::here("R","plot_continuity.R"))
+
+fq<-data.clean.final %>%  
+  dplyr::filter(!GLT %in% bad & Disp!=1 & Death==0 & Solo==0) %>% 
+  group_by(UMMPs,Group,DateObs) %>% 
+  dplyr::count() %>% 
+  group_by(UMMPs,Group) %>% 
+  dplyr::count() %>% 
+  dplyr::arrange(UMMPs,n) %>% 
+  drop_na()
+
+colorme<-viridis(n=length(unique(data.clean.final$UMMPs))-1,option="H")
+colo_df<-data.frame(Xcolor=colorme,UMMPs=sort(unique(data.clean.final$UMMPs)))
+
+title_plot<-"Monitoring effort in all forest fragments"
+title_file<-"Field_effort_all_regions_1989-2022.tif"
+
+
+check<-data.clean.final %>% 
+  dplyr::filter(!GLT %in% bad & Disp==0 & Death==0 & Solo==0) %>%
+  dplyr::mutate(Group=as.factor(Group),
+                DateObs=as.Date(DateObs, format="%F")) %>%
+    dplyr::mutate(Group=factor(Group,
+                               levels=fq$Group)) %>% 
+  dplyr::filter(!is.na(Group)) %>% 
+  dplyr::arrange(UMMPs) %>%  
+  left_join(.,colo_df,by="UMMPs")
+
+
+colo.nb<-check %>%   
+  dplyr::group_by(Group,UMMPs,Xcolor) %>% 
+  dplyr::slice(1) %>% 
+  dplyr::select(Group,UMMPs,Xcolor) 
+  
+ check.plot<- ggplot(check,aes(x=DateObs,
+               y=Group, colour=UMMPs)) +
+  geom_point( shape=15,
+             size=1.2) +
+ scale_colour_manual(values=colorme, name="Forest fragments") +
+  scale_y_discrete(guide=guide_axis(n.dodge = 2),
+                   labels = function(x) {
+                     col <- colo.nb$Xcolor
+                     lab <- colo.nb$Group
+                     glue::glue("<span style = 'color:{col}'>{lab}</span>")}) + 
+  scale_x_date(limits=c(as.Date("1989-01-01",format="%F"),
+                        as.Date("2024-01-01",format="%F")),
+               breaks=seq(as.Date("1989-01-01",format="%F"),
+                          as.Date("2024-11-01",format="%F"),
+                          "5 years"),
+               labels=c("1989","1994","1999","2004","2009",
+                        "2014","2019","2024")) +
+  theme_bw() +
+  labs(x="Time",
+       y="Groups",
+       title=title_plot) +
+  theme( axis.text.y = element_markdown())
+
+print(check.plot)
+
+
+# if(nrow(fq) > 50){
+#   
+# }
+# 
+tiff(here::here("outputs","Monitoring effort",title_file),
+     width=W,
+     height=H,
+     res=600,
+     compression="lzw")
+
+
+print(check)
+dev.off()
+
+col="#30123BFF"
+
   
 ```
 
